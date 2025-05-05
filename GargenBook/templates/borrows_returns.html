@@ -1,0 +1,181 @@
+{% extends 'baseLibrarian.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Borrows & Returns | GardenBook{% endblock %}
+
+{% block page %}Borrows & Returns{% endblock %}
+
+
+{% block content %}
+<div class="py-5 bg-light-brown">
+
+  <!-- START BUTTONS -->
+  <div class="d-flex justify-content-end m-2 gap-3">
+
+    <!-- ADD A NEW BORROW -->
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#borrow-modal">+New Borrow</button>
+    <!-- ADD A NEW BORROW MODAL -->
+    <div class="modal fade" id="borrow-modal" tabindex="-1" aria-labelledby="borrowModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="borrowModalLabel">Add a New Borrow</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form method="POST" >
+
+              {% csrf_token %}
+              {% crispy form %}
+
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- END ADD A NEW BORROW MODAL -->
+
+  </div>
+  <!-- END BUTTONS -->
+
+
+  <!-- START DISPLAY BOOK BORROWINGS -->
+  <div class="container-fluid row m-2">
+    <!-- START SEARCH BAR SECTION -->
+    <div class="col-md-3 p-4">
+
+      <!-- Book Title Search -->
+      <div class="row my-2">
+        <p class="fs-5">Book Title</p>
+        <input type="search" class="form-control" id="searchTitle" placeholder="Enter Book Title">
+      </div>
+
+      <!-- Borrowed On -->
+      <div class="row my-2">
+        <p class="fs-5">Borrowed On</p>
+        <input type="date" class="form-control" id="searchBorrowedOn">
+      </div>
+
+      <!-- Due Date -->
+      <div class="row my-2">
+        <p class="fs-5">Due Date</p>
+        <input type="date" class="form-control" id="searchDueDate">
+      </div>
+
+      <!-- Returned On -->
+      <div class="row my-2">
+        <p class="fs-5">Returned On</p>
+        <input type="date" class="form-control" id="searchReturnedOn">
+      </div>
+    </div>
+    <!-- END SEARCH BAR SECTION -->
+
+    <!-- START TABLE SECTION -->
+    <div class="overflow-hidden shadow-sm p-0 rounded-20">
+
+      <table class="table align-middle m-0">
+        <thead class="bg-brown-second">
+          <tr>
+            <th scope="col">BOOK</th>
+            <th scope="col">BORROWER</th>
+            <th scope="col">BORROWED ON</th>
+            <th scope="col">DUE DATE</th>
+            <th scope="col">RETURNED ON</th>
+            <th scope="col">FINE</th>
+            <th scope="col">RETURN BOOK</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          {% for borrow in borrows %}
+          <tr>
+            <td class="d-flex align-items-center gap-3">
+              <img src="book-cover-placeholder.png" alt="Book Cover" class="rounded"
+                style="width: 40px; height: 40px; background-color: #e0e0e0;">
+              <div>
+                <div class="fw-bold">{{borrow.book.title}}</div>
+                <small class="text-muted">{{borrow.book.author}}</small>
+              </div>
+            </td>
+            <td>{{borrow.borrower}}</td>
+            <td>{{borrow.borrow_date}}</td>
+            <td>{{borrow.due_date}}</td>
+            <td>{{borrow.return_date}}</td>
+            <td>{{borrow.fine}}</td>
+            <td>
+
+              {% if borrow.return_date %}
+              <span class="text-success">Returned</span>
+              {% else %}
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="return_book">
+                <input type="hidden" name="borrow_id" value="{{ borrow.id }}">
+                <button type="submit" class="btn btn-primary">Return</button>
+              </form>
+              {% endif %}
+
+            </td>
+          </tr>
+          {% endfor %}
+          {% if not borrows %}
+          <tr>
+            <td colspan="7" class="text-center">No borrowings found.</td>
+          </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+
+
+    <!-- END TABLE SECTION -->
+  </div>
+  <!-- END DISPLAY BOOK BORROWINGS -->
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const titleInput = document.getElementById("searchTitle");
+      const borrowedOnInput = document.getElementById("searchBorrowedOn");
+      const dueDateInput = document.getElementById("searchDueDate");
+      const returnedOnInput = document.getElementById("searchReturnedOn");
+
+      const tableRows = document.querySelectorAll("tbody tr");
+
+      function filterBorrowings() {
+        const titleValue = titleInput.value.toLowerCase();
+        const borrowedValue = borrowedOnInput.value;
+        const dueValue = dueDateInput.value;
+        const returnedValue = returnedOnInput.value;
+
+        tableRows.forEach(row => {
+          const title = row.cells[0].textContent.toLowerCase();
+          const borrowedOn = row.cells[1].textContent;
+          const dueDate = row.cells[2].textContent;
+          const returnedOn = row.cells[3].textContent;
+
+          const matchTitle = title.includes(titleValue);
+          const matchBorrowed = borrowedValue === "" || borrowedOn === borrowedValue;
+          const matchDue = dueValue === "" || dueDate === dueValue;
+          const matchReturned = returnedValue === "" || returnedOn === returnedValue;
+
+          if (matchTitle && matchBorrowed && matchDue && matchReturned) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
+      }
+
+      titleInput.addEventListener("input", filterBorrowings);
+      borrowedOnInput.addEventListener("input", filterBorrowings);
+      dueDateInput.addEventListener("input", filterBorrowings);
+      returnedOnInput.addEventListener("input", filterBorrowings);
+    });
+  </script>
+
+  {% endblock content %}

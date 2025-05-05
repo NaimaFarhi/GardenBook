@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}{{ book.title }} | GardenBook{% endblock %}
+
+{% block content %}
+
+<div class="py-5 bg-light-brown">
+
+  <div class="container py-2">
+    <a href="/catalog" class="text-decoration-none text-dark">
+      <i class="bi bi-arrow-left me-1"></i> Back to Catalog
+    </a>
+  </div>
+
+  <div class="container my-5">
+
+    <div class="row bg-white g-4 rounded-20 shadow-sm">
+      <!-- Cover -->
+      <div class="col-md-4 text-center">
+        {% if book.cover %}
+        <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="book-cover">
+        {% else %}
+        <img src="/placeholder.svg" alt="No cover available" class="book-cover">
+        {% endif %}
+      </div>
+
+      <!-- Book Details -->
+      <div class="col-md-8">
+        <h1 class="text-dark">{{ book.title }}</h1>
+        <p class="text-muted">by {{ book.author }}</p>
+        <div class="d-flex align-items-center mb-3">
+          <div class="text-warning me-2">
+            {% for i in "12345" %}
+            {% if book.review|floatformat:1 >= i %}
+            <i class="bi bi-star-fill"></i>
+            {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
+            <i class="bi bi-star-half"></i>
+            {% else %}
+            <i class="bi bi-star"></i>
+            {% endif %}
+            {% endfor %}
+          </div>
+          <span class="text-muted">{{ book.review }}/10</span>
+          {% with book.genres.first as first_genre %}
+          {% if first_genre %}
+          <span class="ms-3 badge genre-badge">{{ first_genre.name }}</span>
+          {% endif %}
+          {% endwith %}
+        </div>
+
+        <h5 class="text-dark">Description</h5>
+        <p class="text-muted">{{ book.description }}</p>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5>Details</h5>
+            <ul class="list-unstyled">
+              <li><strong>ISBN:</strong> {{ book.ISBN }}</li>
+              <li><strong>Publisher:</strong> {{ book.edition }}</li>
+              <li><strong>Published Date:</strong> {{ book.publication_year|date:"Y" }}</li>
+              <li><strong>Pages:</strong> {{ book.nbPage }}</li>
+              <li><strong>Language:</strong> {{ book.lang }}</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h6>Availability</h6>
+            <ul class="list-unstyled">
+              <li><strong>Status:</strong>
+                <span class="{% if book.availability == 'Available' %}text-success{% else %}text-danger{% endif %}">
+                  {{ book.availability }}
+                </span>
+              </li>
+              <li><strong>Copies:</strong> {{ book.nb_borrows }}</li>
+              <li><strong>Location:</strong> Fiction Section, Shelf B4</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <form method="POST">
+            {% csrf_token %}
+
+            <input type="hidden" name="action" value="borrow">
+
+            {% if book.availability == 'Available' and not book.is_reserved %}
+            <button type="submit" class="btn btn-outline-brown"><i class="bi bi-book me-2"></i>Borrow Book</button>
+            {% else %}
+            <button type="submit" class="btn btn-outline-brown disabled"><i class="bi bi-book me-2"></i>Borrow
+              Book</button>
+            {% endif %}
+
+          </form>
+
+          <form method="POST">
+            {% csrf_token %}
+
+            <input type="hidden" name="action" value="reserve">
+
+            {% if book.availability != 'Available' and not book.is_reserved %}
+            <button type="submit" class="btn btn-outline-brown"><img src="{% static 'reserve_icon.png' %}"
+                alt="Reserve icon" width="25">Reserve Book</button>
+            {% else %}
+            <button type="submit" class="btn btn-outline-brown disabled"><img src="{% static 'reserve_icon.png' %}" alt="Reserve icon"
+                width="25">Reserve Book</button>
+            {% endif %}
+
+          </form>
+
+          <form method="POST">
+            {% csrf_token %}
+
+            <input type="hidden" name="action" value="add_to_wishlist">
+
+            <button type="submit" class="btn btn-outline-brown"><img src="{% static 'wishlist_icon.png' %}"
+                alt="Wishlist icon" width="25">Add to Wishlist</button>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <h4 class="text-dark">Categories</h4>
+      <div class="d-flex gap-2">
+        {% for genre in book.genres.all %}
+        <span class="badge category-badge bg-green text-brown">{{ genre.name }}</span>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <h4 class="text-dark">Reader Reviews</h4>
+      <div class="bg-white p-4 rounded shadow-sm mt-3">
+        <h3>Leave a Review</h3>
+        <form method="post">
+          {% csrf_token %}
+
+          {% crispy form %}
+
+        </form>
+
+      </div>
+    </div>
+
+    <div class="mt-5">
+      <h2>Average Rating</h2>
+      <p>{{ average_rating }} / 5</p>
+
+      <h2>All Reviews</h2>
+      {% for review in reviews %}
+      <div style="border-bottom: 1px solid #ccc; margin-bottom: 10px;">
+        <strong>{{ review.user.username }}</strong> — Rated it {{ review.rating }} stars<br />
+        <p>{{ review.comment }}</p>
+        <small>{{ review.created_at|date:"M d, Y" }}</small>
+      </div>
+      {% empty %}
+      <p>No reviews yet.</p>
+      {% endfor %}
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

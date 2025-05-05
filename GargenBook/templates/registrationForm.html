@@ -1,0 +1,55 @@
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Library Reader Registration</title>
+  <link href="{% static 'assets/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+</head>
+
+<body>
+  <div class="container my-5">
+    <div class="card rounded-3 shadow-sm">
+      <div class="card-header bg-brown text-white">
+        <h4 class="mb-0">Registration Form</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST">
+
+          {% csrf_token %}
+          {% crispy form %}
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- START JS VALIDATION -->
+  <script>
+    const form = document.getElementById('registrationForm');
+    const password = document.getElementById('password');
+    const confirmPassword = document.getElementById('confirmPassword');
+    const mismatchMessage = document.getElementById('passwordMismatch');
+
+    form.addEventListener('change', function (e) {
+      if (password.value !== confirmPassword.value) {
+        e.preventDefault();
+        mismatchMessage.classList.remove('d-none');
+      } else {
+        mismatchMessage.classList.add('d-none');
+      }
+    });
+  </script>
+  <!-- END JS VALIDATION -->
+
+  <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+{% extends 'baseLibrarian.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}{{ book.title }} | GardenBook{% endblock %}
+
+{% block page %}Edit Book{% endblock %}
+
+{% block content %}
+<div class="py-5 bg-light-brown">
+  <div class="container mt-2">
+    <div class="card shadow-sm">
+      <div class="card-header bg-brown text-white">
+        <div class="row">
+          <div class="col-md-1 rounded-circle bg-green px-0 d-flex justify-content-center" style="width: 30px;"><i
+              class="bi bi-person-add text-brown"></i></div>
+          <h4 class="col mb-0 mx-auto">Edit A Book's Informations</h4>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <form method="POST">
+          {% csrf_token %}
+          {% crispy form %}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

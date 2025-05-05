@@ -1,0 +1,216 @@
+/*Main colors #8a9982 #aabda0 #5d432f #402e21*/
+@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap");
+@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+
+body {
+  font-family: "Geist Mono", sans-serif;
+  min-height: 100vh;
+  zoom: 0.8;
+}
+
+.modal-backdrop {
+  zoom: 1.25;
+}
+
+.bd-placeholder-img {
+  font-size: 1.125rem;
+  text-anchor: middle;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.btn-brown {
+  background: #5c4033 !important;
+}
+
+.bg-green,
+.btn-green {
+  background: #e8f3e8 !important;
+}
+
+.bg-brown {
+  background: #5c4033 !important;
+}
+
+.bg-light-brown {
+  background-color: #f8f5f0;
+}
+
+.bg-brown-second {
+  background: #f0e8d9;
+}
+
+/* for the status attribute */
+.bg-success-soft {
+  background-color: #e8f3e8 !important;
+}
+.bg-warning-soft {
+  background-color: #fff3cd !important;
+}
+.bg-danger-soft {
+  background-color: #5d432f !important;
+}
+
+.text-green {
+  color: #8a9982;
+}
+
+.text-light-green {
+  color: #e8f3e8;
+}
+
+.text-brown {
+  color: #402e21;
+}
+
+a {
+  text-decoration: none;
+  padding: 7px 15px;
+}
+header a {
+  color: #402e21;
+}
+
+footer a {
+  color: #fff;
+}
+
+header a:hover,
+.dropdown {
+  color: #402e21 !important;
+}
+
+footer a:hover {
+  color: #fff;
+}
+
+.border {
+  border: 40px solid transparent;
+}
+
+.profile-infos {
+  label {
+    font-size: 1.15em;
+  }
+
+  p {
+    font-style: italic;
+  }
+}
+
+.clickable-row {
+  cursor: pointer;
+}
+
+/* Carousel base class */
+.carousel {
+  margin: 4rem auto;
+}
+
+/* Since positioning the image, we need to help out the caption */
+.carousel-caption {
+  height: 75%;
+  top: 3rem;
+  bottom: 3rem;
+  z-index: 10;
+}
+
+/* Declare heights because of positioning of img element */
+.carousel-item {
+  height: 32rem;
+}
+
+.carousel-item > img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  min-width: 100%;
+  height: 32rem;
+}
+
+.rounded-20 {
+  border-radius: 15px;
+}
+
+#myCarouselNewArrivals .carousel-caption,
+#myCarouselNewArrivals .carousel-caption h1,
+#myCarouselNewArrivals .carousel-caption p,
+#myCarouselNewArrivals .carousel-caption a {
+  color: #402e21 !important;
+}
+
+.btn-outline-brown {
+  border-color: #402e21 !important;
+  color: #402e21 !important;
+}
+
+.btn-outline-brown:hover {
+  background-color: #402e21 !important;
+  color: #e8f3e8 !important;
+}
+
+#myCarouselRecommendations .carousel-caption,
+#myCarouselRecommendations .carousel-caption h1,
+#myCarouselRecommendations .carousel-caption p,
+#myCarouselRecommendations .carousel-caption a {
+  color: #e8f3e8 !important;
+}
+
+.btn-outline-green {
+  border-color: #e8f3e8 !important;
+  color: #e8f3e8 !important;
+}
+
+.btn-outline-green:hover {
+  background-color: #e8f3e8 !important;
+  color: #402e21 !important;
+}
+
+.btn-outline-darkgreen {
+  border-color: #8a9982 !important;
+  color: #8a9982 !important;
+}
+
+.btn-outline-darkgreen:hover {
+  background-color: #8a9982 !important;
+  color: #402e21 !important;
+}
+
+/* Featurettes
+------------------------- */
+
+/* Thin out the marketing headings */
+.featurette-heading {
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.05rem;
+}
+
+/* RESPONSIVE CSS
+-------------------------------------------------- */
+
+@media (min-width: 40em) {
+  /* Bump up size of carousel content */
+  .carousel-caption p {
+    margin-bottom: 1.25rem;
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+
+  .featurette-heading {
+    font-size: 50px;
+  }
+}
+
+@media (min-width: 62em) {
+  .featurette-heading {
+    margin-top: 7rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .bd-placeholder-img-lg {
+    font-size: 3.5rem;
+  }
+}

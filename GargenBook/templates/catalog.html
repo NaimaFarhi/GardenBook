@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Catalog | GardenBook{% endblock %}
+
+
+{% block content %}
+<div class="py-5 bg-light-brown">
+  <div class="container-fluid row m-2">
+
+    <!-- START SEARCH / FILTER SECTION -->
+    <div class="col-md-3 p-4 bg-white shadow-sm rounded-20">
+      <h2>Search Bar</h2>
+      <div class="row">
+        <input type="search" class="form-control form-control-dark" id="searchBar" placeholder="Title, Author..."
+          aria-label="Search">
+      </div>
+
+      <!-- GENRE SECTION -->
+      <div class="row my-2">
+        <p class="fs-5">Genre</p>
+        <div class="bg-light border rounded" style="max-height: 100px; overflow: auto;">
+          <!-- Add your checkboxes here -->
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" value="fiction" id="genreFiction">
+            <label class="form-check-label text-uppercase small text-muted" for="genreFiction">Fiction</label>
+          </div>
+          <!-- More checkboxes... -->
+        </div>
+      </div>
+
+      <!-- PUBLICATION YEAR SECTION -->
+      <div class="row my-2">
+        <div class="col-md-6">
+          <p class="fs-5">Publication Year (from)</p>
+          <input type="number" name="publicationYearFrom" id="publicationYearFrom" min="1980" max="2025"
+            class="form-control form-control-dark">
+        </div>
+        <div class="col-md-6">
+          <p class="fs-5">Publication Year (to)</p>
+          <input type="number" name="publicationYearTo" id="publicationYearTo" min="1980" max="2025"
+            class="form-control form-control-dark">
+        </div>
+      </div>
+
+      <!-- LANGUAGE SECTION -->
+      <div class="row my-2">
+        <p class="fs-5">Language</p>
+        <select class="form-control" name="language" id="language">
+          <option value="">select a language</option>
+          <option value="arabic">Arabic</option>
+          <option value="french">French</option>
+          <option value="english">English</option>
+          <option value="german">German</option>
+          <option value="spanish">Spanish</option>
+        </select>
+      </div>
+
+      <!-- RESET BUTTON -->
+      <div class="row my-2">
+        <button type="button" class="btn btn-secondary" id="resetButton">Reset</button>
+      </div>
+    </div>
+    <!-- END SEARCH / FILTER SECTION -->
+
+
+    <!-- START BOOK DISPLAY SECTION -->
+    <div class="col">
+
+      <!-- START ROW OF 4 BOOKS SECTION -->
+      <div class="row m-4 d-flex justify-content-center align-items-center gap-5">
+
+        {% for book in catalog %}
+        <!-- START ONE CARD BOOK SECTION -->
+        <div class="col-sm-6 col-md-4 col-lg-3 mb-4">
+
+          <div class="card shadow-sm border-light rounded" data-isbn="{{ book.ISBN }}" data-title="{{ book.title }}"
+            data-author="{{ book.author }}" data-edition="{{ book.edition }}"
+            data-availability="{{ book.availability }}" data-publication-year="{{ book.publication_year }}"
+            data-nbpage="{{ book.nbPage }}" data-lang="{{ book.lang }}" data-genres="{{ book.genres.all|join:', ' }}"
+            data-keywords="{{ book.keywords }}" data-description="{{ book.description }}"
+            data-audience="{{ book.audience }}">
+
+            <div class="position-relative p-2">
+              <img src="{{ book.cover.url }}" class="card-img-top rounded" alt="Book Cover" height="250">
+            </div>
+            <div class="card-body">
+              <h5 class="card-title text-dark">{{ book.title }}</h5>
+              <p class="card-text text-muted">Author: {{ book.author }}</p>
+              <p class="card-text text-muted">Edition: {{ book.edition }}</p>
+              <p class="text-muted mb-3">ISBN: {{ book.ISBN }}</p>
+              <p class="text-muted mb-3">Availability: {{book.availability}}</p>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- END ONE CARD BOOK SECTION -->
+        {% endfor %}
+
+      </div>
+      <!-- END ROW OF 4 BOOKS SECTION -->
+    </div>
+    <!-- END BOOK DISPLAY SECTION -->
+
+
+
+
+    <!-- END BOOK DISPLAY SECTION -->
+  </div>
+</div>
+<script>
+
+  // Update review label
+  function updateReview() {
+    document.getElementById("review_number").textContent =
+      document.getElementById("review").value + "/5";
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const books = document.querySelectorAll('.card');
+    const searchInput = document.getElementById('searchInput');
+    const resetButton = document.getElementById('resetButton');
+    const startYearInput = document.getElementById('startYear');
+    const endYearInput = document.getElementById('endYear');
+    const availabilityRadios = document.querySelectorAll('input[name="availability"]');
+    const genreCheckboxes = document.querySelectorAll('.form-check-input');
+
+    // Search and filter function
+    function filterBooks() {
+      const searchQuery = searchInput.value.toLowerCase();
+      const startYear = parseInt(startYearInput.value) || 0;
+      const endYear = parseInt(endYearInput.value) || 2025;
+      const selectedAvailability = Array.from(availabilityRadios).find(radio => radio.checked)?.value;
+      const selectedGenres = Array.from(genreCheckboxes).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
+
+      books.forEach(book => {
+        const bookTitle = book.dataset.title.toLowerCase();
+        const bookAuthor = book.dataset.author.toLowerCase();
+        const bookGenres = book.dataset.genres.split(', ');
+        const bookYear = parseInt(book.dataset.publicationYear);
+        const bookAvailability = book.dataset.availability;
+
+        const matchesSearch = bookTitle.includes(searchQuery) || bookAuthor.includes(searchQuery);
+        const matchesAvailability = !selectedAvailability || bookAvailability === selectedAvailability;
+        const matchesGenres = selectedGenres.length === 0 || selectedGenres.some(genre => bookGenres.includes(genre));
+        const matchesYear = (bookYear >= startYear && bookYear <= endYear);
+
+        if (matchesSearch && matchesAvailability && matchesGenres && matchesYear) {
+          book.style.display = '';
+        } else {
+          book.style.display = 'none';
+        }
+      });
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', filterBooks);
+    startYearInput.addEventListener('input', filterBooks);
+    endYearInput.addEventListener('input', filterBooks);
+    availabilityRadios.forEach(radio => radio.addEventListener('change', filterBooks));
+    genreCheckboxes.forEach(checkbox => checkbox.addEventListener('change', filterBooks));
+
+    // Reset button functionality
+    resetButton.addEventListener('click', function () {
+      searchInput.value = '';
+      startYearInput.value = '';
+      endYearInput.value = '';
+      availabilityRadios.forEach(radio => radio.checked = false);
+      genreCheckboxes.forEach(checkbox => checkbox.checked = false);
+      filterBooks(); // Reapply filters after reset
+    });
+  });
+
+</script>
+{% endblock %}

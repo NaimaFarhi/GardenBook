@@ -1,0 +1,42 @@
+{% extends 'baseLibrarian.html' %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Add A New Book | GardenBook{% endblock %}
+
+
+{% block content %}
+
+<div class="bg-light-brown py-5">
+
+  <!-- START CONTAINER SECTION -->
+  <div class="container">
+
+    <!-- START CARD SECTION -->
+    <div class="card shadow-sm rounded-4">
+
+      <!-- START HEADER SECTION -->
+      <div class="card-header bg-brown text-white">
+        <h4 class="mb-0">Add New Book</h4>
+      </div>
+      <!-- END HEADER SECTION -->
+
+      <!-- START FORM BODY SECTION -->
+      <div class="card-body">
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% crispy form %}
+
+
+        </form>
+      </div>
+      <!-- END FORM BODY SECTION -->
+
+    </div>
+    <!-- END CARD SECTION -->
+
+  </div>
+  <!-- END CONTAINER SECTION -->
+
+</div>
+{% endblock %}

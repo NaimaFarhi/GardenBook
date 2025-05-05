@@ -1,0 +1,62 @@
+{% extends 'baseLibrarian.html' %}
+
+{% block title %}Dashboard | GardenBook{% endblock %}
+
+{% block content %}
+<div class="py-5 bg-light-brown">
+  <div class="container mt-4">
+
+    <h1 class="text-center text-brown mb-5">Dashboard Overview</h1>
+
+    <!-- Dashboard Cards -->
+    <div class="row g-4">
+
+      <!-- Total Books -->
+      <div class="col-md-4">
+        <div class="card bg-brown-second shadow-sm text-center py-4">
+          <div class="card-body">
+            <i class="bi bi-book-half display-4 text-brown"></i>
+            <h5 class="card-title mt-3">Total Books</h5>
+            <p class="card-text fs-4">{{ total_books }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Users -->
+      <div class="col-md-4">
+        <div class="card bg-brown-second shadow-sm text-center py-4">
+          <div class="card-body">
+            <i class="bi bi-people-fill display-4 text-brown"></i>
+            <h5 class="card-title mt-3">Total Users</h5>
+            <p class="card-text fs-4">{{ total_users }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Orders -->
+      <div class="col-md-4">
+        <div class="card bg-brown-second shadow-sm text-center py-4">
+          <div class="card-body">
+            <i class="bi bi-clipboard2-data display-4 text-brown"></i>
+            <h5 class="card-title mt-3">Active Orders</h5>
+            <p class="card-text fs-4">{{ active_orders }}</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-5">
+      <div class="col text-center">
+        <a href="{% url 'create-book' %}" class="btn btn-outline-brown mx-2 ">Add New Book</a>
+        <a href="{% url 'create-user' %}" class="btn btn-outline-brown mx-2">Add New User</a>
+        <a href="{% url 'orders' %}" class="btn btn-outline-brown mx-2">Manage Orders</a>
+      </div>
+    </div>
+
+    
+
+  </div>
+</div>
+{% endblock %}

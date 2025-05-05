@@ -1,0 +1,92 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="{% static 'assets/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'assets/brand/logo-white-rbg.png' %}">
+
+  <title>{% block title %}Librarian Base page{% endblock %}</title>
+</head>
+
+<body class="row">
+
+  <header class="col-md-2 p-4">
+
+    <!-- LOGO -->
+    <a href="{% url 'dashboard' %}" class="d-flex align-items-center mb-2 mb-lg-0 text-brown text-decoration-none">
+      <img src="{% static 'assets/brand/_logo-nobg.png' %}" class="bi me-2" width="60" height="60" role="img"
+        aria-label="GardenBook">
+    </a>
+
+    <!-- LIKNS -->
+    <div>
+      <ul>
+        <li>
+          <a href="{% url 'dashboard' %}">
+            <i class="bi bi-clipboard2-data"></i>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'manage-users' %}">
+            <i class="bi bi-people"></i>
+            Manage Users
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'borrows-returns' %}">
+            <i class="bi bi-ui-checks"></i>
+            Borrows & returns
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'stock' %}">
+            <i class="bi bi-archive"></i>
+            Stock
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'orders' %}">
+            <i class="bi bi-bag-dash"></i>
+            Orders
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'events' %}">
+            <i class="bi bi-calendar2-event"></i>
+            Events
+          </a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="text-end">
+      <a href="#" class=""><i class="bi bi-box-arrow-left"></i>Logout</a>
+    </div>
+
+  </header>
+
+  <main class="col">
+
+    <div class="p-2">
+      <h3>{% block page%} Current page name {% endblock page %}</h3>
+    </div>
+
+    <div>
+      {% block content %}
+
+      {% endblock content %}
+    </div>
+
+  </main>
+
+  <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
+
+</body>
+
+</html>

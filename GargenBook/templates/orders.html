@@ -1,0 +1,321 @@
+{% extends 'baseLibrarian.html' %}
+
+{% load static %}
+
+{% load crispy_forms_tags %}
+
+{% block title %}Orders | GardenBook{% endblock %}
+
+{% block page %}Orders{% endblock %}
+
+{% block content %}
+<div class="py-5 bg-light-brown">
+
+  <div class="container-fluid row m-2">
+
+
+    <!-- ________________________________________________________________________ -->
+    <!-- START BUTTONS -->
+    <div class="d-flex justify-content-end m-2 gap-3">
+
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-modal">print</button> <!-- popover that contains a form
+        it selects 2 dates then prints all the orders between those dates in a pdf form  -->
+
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#order-modal">+New
+        Order</button>
+
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#supplier-modal">+New
+        Supplier</button>
+
+    </div>
+    <!-- END BUTTONS -->
+    <!-- ________________________________________________________________________ -->
+    <!-- START PRINT MULTIPLE ORDERS MODAL -->
+    <div class="modal fade" id="print-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+
+      <div class="modal-dialog">
+
+        <div class="modal-content">
+
+          <div class="modal-header bg-brown">
+            <h5 class="modal-title text-light" id="modal-title">Print Orders</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+
+          <form method="POST" name="print_multiple_orders">
+            {% csrf_token %}
+
+            <div class="modal-body">
+
+              <p class="text-secondary">Choose the dates: </p>
+
+              <label for="modal-fromdate" class="form-label">From:</label>
+              <input type="date" class="form-control" id="modal-fromdate" name="from_date" required>
+
+              <label for="modal-todate" class="form-label">To:</label>
+              <input type="date" class="form-control" id="modal-todate" name="to_date" required>
+
+              <fieldset class="form-group">
+                <legend class="form-label">Status:</legend>
+
+                <input type="checkbox" class="form-check-input" name="status" id="status-pending" value="pending">
+                <label for="status-pending" class="form-label">Pending</label>
+
+                <input type="checkbox" class="form-check-input" name="status" id="status-delivered" value="delivered">
+                <label for="status-delivered" class="form-label">Delivered</label>
+
+                <input type="checkbox" class="form-check-input" name="status" id="status-cancelled" value="cancelled">
+                <label for="status-cancelled" class="form-label">Cancelled</label>
+
+              </fieldset>
+
+            </div>
+
+            <div class="modal-footer bg-brown">
+              <input type="hidden" name="action" value="print_multiple_orders">
+
+              <button type="submit" class="btn btn-outline-green" name="format" value="pdf">PDF</button>
+              <button type="submit" class="btn btn-outline-green" name="format" value="csv">CSV</button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- END PRINT MODAL -->
+    <!-- ________________________________________________________________________ -->
+
+    <!-- START ADD NEW ORDER MODAL -->
+    <div class="modal fade" id="order-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+
+      <div class="modal-dialog">
+
+        <div class="modal-content">
+
+          <div class="modal-header bg-brown">
+            <h5 class="modal-title text-light" id="modal-title">Add Order</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form method="POST">
+
+              {% csrf_token %}
+              {% crispy formOrder %}
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- END ADD NEW ORDER MODAL -->
+    <!-- ________________________________________________________________________ -->
+
+    <!-- START ADD NEW SUPPLIER MODAL -->
+    <div class="modal fade" id="supplier-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+
+      <div class="modal-dialog">
+
+        <div class="modal-content">
+
+          <div class="modal-header bg-brown">
+            <h5 class="modal-title text-light" id="modal-title">Add Supplier</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form method="POST">
+
+              {% csrf_token %}
+              {% crispy formSupplier %}
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- END ADD NEW SUPPLIER MODAL -->
+    <!-- ________________________________________________________________________ -->
+
+
+    <!-- START SEARCH SIDEBAR -->
+    <div class="col-md-3 bg-white shadow-sm p-4 rounded-20">
+      <h2>Search Orders</h2>
+
+      <!-- Order ID -->
+      <div class="mb-3">
+        <label for="orderIdSearch" class="form-label">Order ID</label>
+        <input type="text" class="form-control" id="orderIdSearch" placeholder="Enter Order ID">
+      </div>
+
+      <!-- Supplier -->
+      <div class="mb-3">
+        <label for="supplierSearch" class="form-label">Supplier</label>
+        <input type="text" class="form-control" id="supplierSearch" placeholder="Enter Supplier Name">
+      </div>
+
+      <!-- Book Title -->
+      <div class="mb-3">
+        <label for="bookSearch" class="form-label">Book Title</label>
+        <input type="text" class="form-control" id="bookSearch" placeholder="Enter Book Title">
+      </div>
+
+      <!-- Status -->
+      <div class="mb-3">
+        <label for="statusSearch" class="form-label">Status</label>
+        <input type="text" class="form-control" id="statusSearch" placeholder="Pending, Received...">
+      </div>
+
+      <!-- Order Date -->
+      <div class="mb-3">
+        <label for="orderDateSearch" class="form-label">Order Date</label>
+        <input type="date" class="form-control" id="orderDateSearch">
+      </div>
+    </div>
+    <!-- END SEARCH SIDEBAR -->
+    <!-- ________________________________________________________________________ -->
+
+    <!-- START TABLE -->
+    <div class="col">
+      <div class="overflow-hidden shadow-sm p-0 rounded-20">
+        <table class="table align-middle table-bordered m-0">
+          <thead class="bg-brown-second">
+            <tr>
+              <th>Order ID</th>
+              <th>Supplier</th>
+              <th>Book Title</th>
+              <th>Status</th>
+              <th>Order Date</th>
+              <th>Expected Delivery Date</th>
+              <th>Delivered On</th>
+              <th>Details</th>
+              <th>Update status</th>
+            </tr>
+          </thead>
+          <tbody id="ordersTable" class="bg-white">
+            {% for order in orders %}
+            <tr>
+              <td>{{order.id}}</td>
+              <td>{{order.supplier.name}}</td>
+              <td>{{order.book.title}}</td>
+              <td>{{order.status}}</td>
+              <td>{{order.order_date}}</td>
+              <td>{{order.expected_delivery_date}}</td>
+              <td>{{order.delivery_date}}</td>
+              <td>
+                <!-- button to open the modal to see and print order details -->
+                <button class="btn btn-outline-darkgreen" data-bs-toggle="modal" data-bs-target="#orderDetails-modal"><i
+                    class="bi bi-eye"></i></button>
+
+                <!-- The modal itself -->
+                <div class="modal fade" id="orderDetails-modal" tabindex="-1" aria-labelledby="modal-title"
+                  aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header bg-brown text-green">
+                        <h5 class="modal-title" id="modal-title">Order #{{order.id}}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+
+                        <ul class="list-group list-group-flush mb-4">
+                          <li class="list-group-item"><strong>Book:</strong> {{order.book.title}}</li>
+                          <li class="list-group-item"><strong>Supplier:</strong> {{order.supplier.name}}</li>
+                          <li class="list-group-item"><strong>Status:</strong> {{order.status}}</li>
+                          <li class="list-group-item"><strong>Order Date:</strong> {{order.order_date}}</li>
+                          <li class="list-group-item"><strong>Expected Delivery:</strong>
+                            {{order.expected_delivery_date}}</li>
+                          <li class="list-group-item"><strong>Delivery:</strong> {{order.delivery_date}}</li>
+                          <li class="list-group-item"><strong>Updated by:</strong> {{order.updated_by}}</li>
+                          <li class="list-group-item"><strong>Updated at:</strong> {{order.updated_at}}</li>
+                        </ul>
+
+                      </div>
+                      <div class="modal-footer bg-brown">
+                        <form method="POST" name="print_order">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="print_order">
+
+                          <input type="hidden" name="order_id" value="{{order.id}}">
+                          <button type="submit" class="btn btn-outline-green" name="format" value="pdf">PDF</button>
+                          <button type="submit" class="btn btn-outline-green" name="format" value="csv">CSV</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </td>
+              <td>
+                <form method="POST">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update_status">
+                  <input type="hidden" name="order_id" value="{{order.id}}">
+                  <button type="submit" class="btn btn-outline-darkgreen" name="status" value="Delivered"><i
+                      class="bi bi-check-circle"></i></button>
+                  <button type="submit" class="btn btn-outline-darkgreen" name="status" value="Cancelled"><i
+                      class="bi bi-x-circle"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <!-- END TABLE -->
+    <!-- ________________________________________________________________________ -->
+
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const tableRows = document.querySelectorAll("#ordersTable tr");
+
+    const filters = {
+      orderId: document.getElementById("orderIdSearch"),
+      supplier: document.getElementById("supplierSearch"),
+      book: document.getElementById("bookSearch"),
+      status: document.getElementById("statusSearch"),
+      date: document.getElementById("orderDateSearch"),
+    };
+
+    const filterOrders = () => {
+      const orderId = filters.orderId.value.toLowerCase();
+      const supplier = filters.supplier.value.toLowerCase();
+      const book = filters.book.value.toLowerCase();
+      const status = filters.status.value.toLowerCase();
+      const date = filters.date.value.trim();
+
+      tableRows.forEach(row => {
+        const cells = row.querySelectorAll("td");
+        if (cells.length === 0) return;
+
+        const orderIdText = cells[0]?.textContent.trim().toLowerCase();
+        const supplierText = cells[1]?.textContent.trim().toLowerCase();
+        const bookText = cells[2]?.textContent.trim().toLowerCase();
+        const statusText = cells[4]?.textContent.trim().toLowerCase();
+        const dateText = cells[5]?.textContent.trim();
+
+        const matches =
+          orderIdText.includes(orderId) &&
+          supplierText.includes(supplier) &&
+          bookText.includes(book) &&
+          statusText.includes(status) &&
+          (date === "" || dateText === date);
+
+        row.style.display = matches ? "" : "none";
+      });
+    };
+
+    // Attach event listeners
+    Object.values(filters).forEach(input => {
+      input.addEventListener("input", filterOrders);
+      input.addEventListener("change", filterOrders); // For date input
+    });
+  });
+</script>
+{% endblock %}
