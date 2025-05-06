@@ -8,8 +8,16 @@
 {% block content %}
 <div class="py-5 bg-light-brown">
   <div class="container-fluid row m-2">
+    <!-- START BUTTONS -->
+    <div>
+      <a href="{% url 'create-book' %}" class="btn btn-outline-brown">+New Book</a>
+
+      
+    </div>
+    <!-- END BUTTONS -->
+
     <!-- START SEARCH SIDEBAR -->
-    <div class="col-md-3 bg-white shadow-sm p-4 rounded-20">
+    <div class="col-md-2 bg-white shadow-sm p-4 rounded-20">
       <h2>Search Stock</h2>
 
       <!-- ISBN -->
@@ -75,7 +83,8 @@
                 {% if book.cover %}
                 <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail" width="50">
                 {% else %}
-                <img src="{% static 'missingbook.webp' %}" alt="Unavailable book cover" class="img-thumbnail" width="50">
+                <img src="{% static 'missingbook.webp' %}" alt="Unavailable book cover" class="img-thumbnail"
+                  width="50">
                 {% endif %}
               </td>
               <td>{{book.title}}</td>
@@ -84,7 +93,10 @@
               <td>{{book.publication_year}}</td>
               <td>{{book.date_creation}}</td>
               <td>{{book.availability}}</td>
-              <td><a href="{% url 'edit-book' book.id %}" class="btn bg-white"><img src="{% static 'edit_icon.png' %}" alt="#" class="border-light" width="25"></a></td>
+              <td>
+                <a href="{% url 'edit-book' book.id %}" class="btn bg-white"><img src="{% static 'edit_icon.png' %}"
+                    alt="#" class="border-light" width="25"></a>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -97,7 +109,7 @@
 
 <script>
 
-document.querySelectorAll(".clickable-row").forEach(row => {
+  document.querySelectorAll(".clickable-row").forEach(row => {
     row.addEventListener("click", () => {
       window.location.href = row.dataset.href;
     });
@@ -105,7 +117,7 @@ document.querySelectorAll(".clickable-row").forEach(row => {
 
   document.addEventListener("DOMContentLoaded", () => {
     const tableRows = document.querySelectorAll("#stockTable tr");
-  
+
     const filters = {
       isbn: document.getElementById("isbnSearch"),
       title: document.getElementById("titleSearch"),
@@ -114,7 +126,7 @@ document.querySelectorAll(".clickable-row").forEach(row => {
       year: document.getElementById("yearSearch"),
       stock: document.getElementById("stockSearch")
     };
-  
+
     const filterStock = () => {
       const isbn = filters.isbn.value.toLowerCase();
       const title = filters.title.value.toLowerCase();
@@ -122,33 +134,33 @@ document.querySelectorAll(".clickable-row").forEach(row => {
       const edition = filters.edition.value.toLowerCase();
       const year = filters.year.value.trim();
       const minStock = filters.stock.value.trim(); // not used for now, unless you have stock quantity
-  
+
       tableRows.forEach(row => {
         const cells = row.querySelectorAll("td");
         if (cells.length === 0) return; // Skip empty rows
-        
+
         const isbnText = cells[0]?.textContent.trim().toLowerCase();
         const titleText = cells[2]?.textContent.trim().toLowerCase();
         const authorText = cells[3]?.textContent.trim().toLowerCase();
         const editionText = cells[4]?.textContent.trim().toLowerCase();
         const yearText = cells[5]?.textContent.trim();
-  
+
         const matches =
           isbnText.includes(isbn) &&
           titleText.includes(title) &&
           authorText.includes(author) &&
           editionText.includes(edition) &&
           (year === "" || yearText === year);
-  
+
         row.style.display = matches ? "" : "none";
       });
     };
-  
+
     // Listen to all filters
     Object.values(filters).forEach(input => {
       input.addEventListener("input", filterStock);
     });
   });
-  </script>
-  
+</script>
+
 {% endblock %}

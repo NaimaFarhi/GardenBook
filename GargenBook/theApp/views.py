@@ -3,9 +3,10 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from .utils import generate_csv, generate_pdf
+from .utils import generate_csv_orders, generate_csv_users, generate_pdf_orders, generate_pdf_users
 from .models import Borrow, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist
 from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
+from django.db.models import Q,Sum
 
 #_____________________________________________________________
 
@@ -182,9 +183,9 @@ def orders(request):
             order = Order.objects.get(id=order_id)
             
             if request.POST.get('format') == 'pdf':
-                return generate_pdf([order])  # Pass a list of orders, even if it's just one
+                return generate_pdf_orders([order])  # Pass a list of orders, even if it's just one
             elif request.POST.get('format') == 'csv':
-                return generate_csv([order])  # samething here
+                return generate_csv_orders([order])  # samething here
 
         # Print a list of orders (generate PDF/CSV for multiple orders)
         elif action == 'print_multiple_orders':
@@ -201,9 +202,9 @@ def orders(request):
 
             # Generate PDF or CSV for the filtered orders
             if request.POST.get('format') == 'pdf':
-                return generate_pdf(selected_orders)  # Generate PDF for multiple orders
+                return generate_pdf_orders(selected_orders)  # Generate PDF for multiple orders
             elif request.POST.get('format') == 'csv':
-                return generate_csv(selected_orders)  # Generate CSV for multiple orders
+                return generate_csv_orders(selected_orders)  # Generate CSV for multiple orders
             
         elif action == 'add_supplier':
           formSupplier = SupplierForm(request.POST)
@@ -300,7 +301,7 @@ def edit_user(request, pk):
     form = CustomPersonEditingForm(request.POST, instance=person)
     if form.is_valid():
       form.save()
-      return redirect('users-list')
+      return redirect('manage-users')
   
   context = {'form' : form, 'person': person}
   return render(request, 'editUser.html', context)
@@ -310,8 +311,74 @@ def edit_user(request, pk):
 @login_required(login_url='login')
 def users(request):
   users = Person.objects.filter(is_superuser=False)
-  context = {'users': users}
+  user_fines = {}
+
+  for user in users:
+      total_fine = Borrow.objects.filter(borrower=user, is_fine_paid=False).aggregate(
+          total=Sum('fine')
+      )['total'] or 0
+      user_fines[user.id] = total_fine
+
+      #update the status to 'Suspended if the fines aren't paid
+      if total_fine > 0 and user.status != 'Suspended':
+        user.status = 'Suspended'
+        user.save(update_fields=['status'])
+
+  if request.method == 'POST':
+    action = request.POST.get('action')
+
+    if action == 'print_users':
+      dob_from = request.POST.get('dob_from')
+      dob_to = request.POST.get('dob_to')
+      role = request.POST.get('role')
+      status = request.POST.get('status')
+      city = request.POST.get('city')
+      country = request.POST.get('country')
+      from_date_joined = request.POST.get('from_date_joined')
+      to_date_joined = request.POST.get('to_date_joined')
+
+      filters = Q()
+
+      if dob_from and dob_to:
+        filters &= Q(dob__range=[dob_from, dob_to])
+      if role:
+        filters &= Q(role=role)
+      if status:
+        filters &= Q(status=status)
+      if city:
+        filters &= Q(city__icontains=city)
+      if country:
+        filters &= Q(country__icontains=country)
+      if from_date_joined and to_date_joined:
+        filters &= Q(date_joined__date__range=[from_date_joined, to_date_joined])
+
+      selected_users = Person.objects.filter(is_superuser=False).filter(filters)
+
+      # Export
+      if request.POST.get('format') == 'pdf':
+          return generate_pdf_users(selected_users)
+      elif request.POST.get('format') == 'csv':
+          return generate_csv_users(selected_users)
+
+  context = {'users': users, 'user_fines': user_fines}
   return render(request, 'manageUsers.html', context)
+
+#________________________________________________________________
+#for suspending/banning an account
+def change_account_status(request, pk, new_status):
+  user = Person.objects.get(id=pk)
+
+  if new_status == 'Suspend':
+    if user.status != 'Banned':
+      user.status = 'Suspended'
+      user.save()
+      return redirect('manage-users')
+    else:
+      messages.warning(request, "This account is already banned. Go to Edit")
+  else:
+    user.status = 'Banned'
+    user.save()
+    return redirect('manage-users')
 
 #_______________________________________________________________
 # for adding a new staff member
@@ -322,7 +389,7 @@ def registerStaff(request):
     form = StaffCreationForm(request.POST)
     if form.is_valid():
       form.save()
-      return redirect('users-list')
+      return redirect('manage-users')
   
   context = {'form' : form}
   return render(request, 'addUser.html', context)

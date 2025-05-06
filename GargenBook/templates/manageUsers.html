@@ -13,12 +13,94 @@
 <div class="py-5 bg-light-brown">
 
   <!-- START BUTTONS -->
-   <div class="row">
+  <div class="row">
     <div class="col">
       <a href="{% url 'create-user' %}" class="btn btn-outline-brown">+New User</a>
-      
+
     </div>
-   </div>
+    <div class="col">
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-users-modal">Print List Of
+        users</button>
+      <!-- ________________________________________________________________________ -->
+      <!-- START PRINT MULTIPLE ORDERS MODAL -->
+      <div class="modal fade" id="print-users-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+
+        <div class="modal-dialog">
+
+          <div class="modal-content">
+
+            <div class="modal-header bg-brown">
+              <h5 class="modal-title text-light" id="modal-title">Print Users</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <form method="POST">
+              {% csrf_token %}
+
+              <div class="modal-body">
+                <p class="text-secondary">Filter users:</p>
+
+                <!-- Date of Birth Range -->
+                <label for="dob-from" class="form-label">Date of Birth From:</label>
+                <input type="date" class="form-control" id="dob-from" name="dob_from">
+
+                <label for="dob-to" class="form-label">Date of Birth To:</label>
+                <input type="date" class="form-control" id="dob-to" name="dob_to">
+
+                <!-- Role -->
+                <label for="role" class="form-label mt-3">Role:</label>
+                <select name="role" class="form-select" id="role">
+                  <option value="">-- All --</option>
+                  <option value="READER">Reader</option>
+                  <option value="LIBRARIAN">Librarian</option>
+                  <option value="ADMIN">Admin</option>
+                </select>
+
+                <!-- Status -->
+                <fieldset class="form-group mt-3">
+                  <legend class="form-label">Status:</legend>
+
+                  <input type="checkbox" class="form-check-input" name="status" id="status-active" value="ACTIVE">
+                  <label for="status-active" class="form-label">Active</label>
+
+                  <input type="checkbox" class="form-check-input" name="status" id="status-inactive" value="SUSPENDED">
+                  <label for="status-inactive" class="form-label">Suspended</label>
+
+                  <input type="checkbox" class="form-check-input" name="status" id="status-banned" value="BANNED">
+                  <label for="status-banned" class="form-label">Banned</label>
+                </fieldset>
+
+                <!-- City -->
+                <label for="city" class="form-label mt-3">City:</label>
+                <input type="text" class="form-control" id="city" name="city">
+
+                <!-- Country -->
+                <label for="country" class="form-label mt-3">Country:</label>
+                <input type="text" class="form-control" id="country" name="country">
+
+                <!-- Date Added -->
+                <label for="date-added" class="form-label mt-3">Joined From:</label>
+                <input type="date" class="form-control" id="date-added" name="from_date_joined">
+
+                <label for="date-added" class="form-label mt-3">To:</label>
+                <input type="date" class="form-control" id="date-added" name="to_date_joined">
+              </div>
+
+              <div class="modal-footer bg-brown">
+                <input type="hidden" name="action" value="print_users">
+                <button type="submit" class="btn btn-outline-green" name="format" value="pdf">PDF</button>
+                <button type="submit" class="btn btn-outline-green" name="format" value="csv">CSV</button>
+              </div>
+            </form>
+
+
+          </div>
+        </div>
+      </div>
+
+      <!-- END PRINT MODAL -->
+    </div>
+  </div>
   <!-- END BUTTONS -->
 
   <!-- START DISPLAY USERS -->
@@ -91,7 +173,15 @@
     </div>
     <!-- END SEARCH BAR SECTION -->
 
-
+    <!-- START MESSAGE -->
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+      <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <!-- END MASSAGE -->
     <!-- START TABLE OF USERS -->
 
     <div class="col mx-3">
@@ -107,8 +197,14 @@
               <th>Phone Number</th>
               <th>Role</th>
               <th>DOB</th>
+              <th>Fines</th>
               <th>Membership Status</th>
-              <th>Edit</th>
+              {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
+                <th>Suspend Account</th>
+                <th>Ban Account</th>
+                <th>Edit</th>
+              {% endif %}
+              <th>Print</th>
             </tr>
           </thead>
           <tbody class="bg-white">
@@ -122,14 +218,86 @@
                 <img src="{% static 'profile_pic2.png' %}" alt="Default User" class="img-thumbnail" width="50">
                 {% endif %}
               </td>
-              <td>{{user.id}}</td>
+              <td>{{user.cin}}</td>
               <td>{{user.first_name}}</td>
               <td>{{user.last_name}}</td>
               <td>{{user.phone}}</td>
               <td>{{user.role}}</td>
               <td>{{user.dob}}</td>
+              <td>
+                {% if user_fines.user.id %}
+                  {{ user_fines.user.id }}
+                {% else %}
+                  No fines
+                {% endif %}
+              </td>
               <td>{{user.status}}</td>
-              <td><a href="{% url 'edit-user' user.id %}" class="btn bg-white"><img src="{% static 'edit_icon.png' %}" alt="#" class="border-light" width="25"></a></td>
+              {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
+
+              <td>
+                <button class="btn btn-outline-brown" data-bs-toggle="modal"
+                  data-bs-target="#suspendModal{{ user.id }}">suspend</button>
+                <!-- ______________________________________________________________________________________________________________ -->
+                <div class="modal fade" id="suspendModal{{ user.id }}" tabindex="-1"
+                  aria-labelledby="suspendModalLabel{{ user.id }}" aria-hidden="true">
+
+                  <div class="modal-dialog">
+
+                    <div class="modal-content">
+
+                      <div class="modal-header bg-brown">
+                        <h5 class="modal-title text-light" id="suspendModalLabel{{ user.id }}">Suspend User {{
+                          user.username }}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <p>Are you sure you want to SUSPEND the account of <em>{{user.last_name}}
+                            {{user.first_name}}</em></p>
+                      </div>
+                      <div class="modal-footer bg-brown">
+                        <a href="{% url 'change-account-status' user.id 'Suspend' %}" class="btn btn-outline-green">Yes! I'm sure</a>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">No.</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <button class="btn btn-outline-brown" data-bs-toggle="modal"
+                  data-bs-target="#banModal{{ user.id }}">Ban</button>
+                <!-- ______________________________________________________________________________________________________________ -->
+                <div class="modal fade" id="banModal{{ user.id }}" tabindex="-1"
+                  aria-labelledby="banModalLabel{{ user.id }}" aria-hidden="true">
+
+                  <div class="modal-dialog">
+
+                    <div class="modal-content">
+
+                      <div class="modal-header bg-brown">
+                        <h5 class="modal-title text-light" id="banModalLabel{{ user.id }}">Ban User {{ user.username }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <p>Are you sure you want to BAN the account of <em>{{user.last_name}}
+                            {{user.first_name}}</em></p>
+                      </div>
+                      <div class="modal-footer bg-brown">
+                        <a href="{% url 'change-account-status' user.id 'Ban' %}" class="btn btn-outline-green">Yes! I'm sure</a>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">No.</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <a href="{% url 'edit-user' user.id %}" class="btn bg-white"><img src="{% static 'edit_icon.png' %}"
+                    alt="#" class="border-light" width="25"></a>
+              </td>
+              {% endif %}
+              <td>
+
+              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -153,6 +321,9 @@
 
   document.querySelectorAll(".clickable-row").forEach(row => {
     row.addEventListener("click", () => {
+      if (event.target.closest("button") || event.target.closest("a")) {
+        return;
+      }
       window.location.href = row.dataset.href;
     });
   });

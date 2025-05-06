@@ -8,10 +8,14 @@ urlpatterns = [
 
 
   path('', views.home, name="home"),
+
   path('manage-users', views.users, name="manage-users"),
   path('create-user', views.registerStaff, name="create-user"),
   path('profile/<str:pk>/', views.profile, name='profile'),
   path('edit-user/<str:pk>/', views.edit_user, name='edit-user'),
+  path('change-account-status/<str:pk>/<str:new_status>', views.change_account_status, name='change-account-status'),
+ 
+
   path('catalog', views.catalog, name='catalog'),
   path('book-detail/<str:pk>/', views.book_detail, name='book-detail'),
   path('create-book', views.create_book, name='create-book'),

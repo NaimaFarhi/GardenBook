@@ -12,8 +12,8 @@ class RoleName(models.TextChoices):
 
 class MembershipStatus(models.TextChoices):
     ACTIVE = 'Active'
-    INACTIVE = 'Inactive'
     SUSPENDED = 'Suspended'
+    BANNED = 'Banned'
 
 class AudienceType(models.TextChoices):
    CHILDREN = "children"
@@ -45,7 +45,9 @@ class Person(AbstractUser):
     def __str__(self):
         return self.first_name + " " + self.last_name
 
-    #order the users from newest to oldest
+    class Meta:
+        ordering = ['-date_joined']
+
 
 
 class Genre(models.Model):

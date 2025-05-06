@@ -6,7 +6,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
 
-def generate_csv(orders):
+def generate_csv_orders(orders):
     # Create a response object and set content type for CSV
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="orders_report.csv"'
@@ -24,7 +24,7 @@ def generate_csv(orders):
     return response
 
 
-def generate_pdf(orders):
+def generate_pdf_orders(orders):
     # Create a file-like buffer to receive PDF data
     buffer = BytesIO()
 
@@ -76,5 +76,70 @@ def generate_pdf(orders):
     # Create a response to serve the PDF file
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="orders_report.pdf"'
+
+    return response
+
+
+#________________________________________________________________
+def generate_csv_users(users):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="users_report.csv"'
+
+    writer = csv.writer(response)
+
+    writer.writerow(['ID', 'Full Name', 'Role', 'Status', 'City', 'Country', 'Date of Birth', 'Date Joined'])
+
+    for user in users:
+        writer.writerow([
+            user.id,
+            f"{user.first_name} {user.last_name}",
+            user.role,
+            user.status,
+            user.city or '',
+            user.country or '',
+            user.dob or '',
+            user.date_joined.date() if user.date_joined else ''
+        ])
+
+    return response
+
+def generate_pdf_users(users):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+
+    table_data = [
+        ['ID', 'Full Name', 'Role', 'Status', 'City', 'Country', 'DOB', 'Date Joined']
+    ]
+
+    for user in users:
+        table_data.append([
+            user.id,
+            f"{user.first_name} {user.last_name}",
+            user.role,
+            user.status,
+            user.city or '',
+            user.country or '',
+            str(user.dob) if user.dob else '',
+            user.date_joined.date() if user.date_joined else ''
+        ])
+
+    table = Table(table_data)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), '#D3D3D3'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), '#000000'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('TOPPADDING', (0, 1), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 1, '#000000'),
+    ]))
+
+    doc.build([table])
+    pdf = buffer.getvalue()
+    buffer.close()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="users_report.pdf"'
 
     return response
