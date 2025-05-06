@@ -14,13 +14,15 @@ urlpatterns = [
   path('profile/<str:pk>/', views.profile, name='profile'),
   path('edit-user/<str:pk>/', views.edit_user, name='edit-user'),
   path('change-account-status/<str:pk>/<str:new_status>', views.change_account_status, name='change-account-status'),
+  path('print-user-details/<str:pk>', views.print_user_details, name='print-user-details'),
  
-
   path('catalog', views.catalog, name='catalog'),
   path('book-detail/<str:pk>/', views.book_detail, name='book-detail'),
   path('create-book', views.create_book, name='create-book'),
   path('stock', views.stock, name='stock'),
   path('edit-book/<str:pk>/', views.edit_book, name='edit-book'),
+  path('change-availability/<str:pk>/<str:new_status>', views.change_availability, name='change-availability'),
+  path('print-book-details', views.print_book_details, name='print-book-details'),
   
   path('orders', views.orders, name='orders'),
   path('dashboard', views.dashboard, name='dashboard'),

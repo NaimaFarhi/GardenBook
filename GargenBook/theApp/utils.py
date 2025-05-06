@@ -1,9 +1,12 @@
 import csv
-from django.http import HttpResponse
+from django.http import HttpResponse,FileResponse
 from io import BytesIO
 # downloaded reportLab to generate a pdf "pip install reportlab"
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+
 
 
 def generate_csv_orders(orders):
@@ -143,3 +146,133 @@ def generate_pdf_users(users):
     response['Content-Disposition'] = 'attachment; filename="users_report.pdf"'
 
     return response
+
+
+#______________________________________________________________
+def generate_pdf_books(books):
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    y = height - 50
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(200, y, "Book Stock Report")
+    y -= 40
+
+    p.setFont("Helvetica", 10)
+    for book in books:
+        if y < 100:
+            p.showPage()
+            y = height - 50
+
+        line = f"{book.title} | {book.author} | {book.availability} | {book.lang} | Reserved: {book.is_reserved}"
+        p.drawString(50, y, line)
+        y -= 20
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename="books_report.pdf")
+
+def generate_csv_books(books):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="books_report.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Title', 'Author', 'Availability', 'Language', 'Reserved'])
+
+    for book in books:
+        writer.writerow([book.title, book.author, book.availability, book.lang, 'Yes' if book.is_reserved else 'No'])
+
+    return response
+
+#_______________________________________________________________________________
+def generate_pdf_user_detail(user):
+
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    y = height - inch
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, y, "User Details Report")
+    y -= 40
+
+    p.setFont("Helvetica", 12)
+
+    details = [
+        ("CIN", user.cin),
+        ("Full Name", f"{user.first_name} {user.last_name}"),
+        ("Role", user.role),
+        ("Date of Birth", user.dob.strftime("%Y-%m-%d") if user.dob else "N/A"),
+        ("Phone", user.phone or "N/A"),
+        ("Status", user.status),
+        ("Address", user.address or "N/A"),
+        ("City", user.city or "N/A"),
+        ("Postal Code", user.postal_code or "N/A"),
+        ("Country", user.country or "N/A"),
+        ("Bio", user.bio or "N/A"),
+    ]
+
+    for label, value in details:
+        p.drawString(80, y, f"{label}: {value}")
+        y -= 20
+        if y < 100:
+            p.showPage()
+            y = height - inch
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f"user_{user.id}_details.pdf")
+
+#_______________________________________________________________________
+def generate_pdf_book_detail(book):
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    y = height - inch
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(200, y, "Book Details Report")
+    y -= 40
+
+    p.setFont("Helvetica", 12)
+
+    details = [
+        ("ISBN", book.ISBN),
+        ("Title", book.title),
+        ("Author", book.author),
+        ("Edition", book.edition),
+        ("Availability", book.availability),
+        ("Publication Year", book.publication_year.strftime("%Y-%m-%d") if book.publication_year else "N/A"),
+        ("Pages", book.nbPage),
+        ("Language", book.lang),
+        ("Keywords", book.keywords),
+        ("Description", book.description),
+        ("Audience", book.audience),
+        ("Review Score", book.review),
+        ("Number of Borrows", book.nb_borrows),
+        ("Creation Date", book.date_creation.strftime("%Y-%m-%d")),
+        ("Reserved", "Yes" if book.is_reserved else "No")
+    ]
+
+    for label, value in details:
+        p.drawString(80, y, f"{label}: {value}")
+        y -= 20
+        if y < 100:
+            p.showPage()
+            y = height - inch
+
+    # Handle ManyToMany Field: Genres
+    genre_list = ", ".join([genre.name for genre in book.genres.all()])
+    p.drawString(80, y, f"Genres: {genre_list}")
+    y -= 20
+
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return FileResponse(buffer, as_attachment=True, filename=f"book_{book.id}_details.pdf")
+
+
+

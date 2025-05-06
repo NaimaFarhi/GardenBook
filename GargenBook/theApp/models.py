@@ -25,7 +25,7 @@ class Availability(models.TextChoices):
    AVAILABLE = "Available"
    RESERVED = "Reserved"
    BORROWED = "Borrowed"
-   DELETED = "Deleted"
+   REMOVED = "Remove"
 
 class Person(AbstractUser):
     cin = models.CharField(max_length=20, unique=True, default="")

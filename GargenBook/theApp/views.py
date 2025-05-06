@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from .utils import generate_csv_orders, generate_csv_users, generate_pdf_orders, generate_pdf_users
+from .utils import generate_csv_books, generate_csv_orders, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
 from .models import Borrow, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist
 from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
 from django.db.models import Q,Sum
@@ -138,6 +138,12 @@ def book_detail(request, pk):
       'form': form
   })
 
+#_____________________________________________________________
+#for printing one books detrails
+def print_book_details(request, pk):
+  book = Book.objects.get(id=pk)
+  return generate_pdf_book_detail(book)
+
 #_______________________________________________________________
 
 @login_required(login_url='login')
@@ -244,6 +250,39 @@ def dashboard(request):
 #shows all the books in stock
 def stock(request):
   stock = Book.objects.all()
+
+  if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'print_stock':
+            title = request.POST.get('title')
+            author = request.POST.get('author')
+            availability = request.POST.get('availability')
+            lang = request.POST.get('lang')
+            is_reserved = request.POST.get('is_reserved')
+
+            filters = Q()
+
+            if title:
+                filters &= Q(title__icontains=title)
+            if author:
+                filters &= Q(author__icontains=author)
+            if availability:
+                filters &= Q(availability=availability)
+            if lang:
+                filters &= Q(lang__icontains=lang)
+            if is_reserved == 'on':
+                filters &= Q(is_reserved=True)
+
+            filtered_books = Book.objects.filter(filters)
+
+            # Handle export
+            format = request.POST.get('format')
+            if format == 'pdf':
+                return generate_pdf_books(filtered_books)
+            elif format == 'csv':
+                return generate_csv_books(filtered_books)
+
   context = {'stock': stock}
   return render(request, 'stock.html', context)
 
@@ -272,9 +311,9 @@ def change_availability(request, book_id, new_status):
   book = Book.objects.get(Book, id=book_id)
     # Check if new_status is a valid option in Availability
   if new_status in Book.Availability.values:
-      book.availability = new_status
-      book.save()
-      return redirect('stock')  # redirect back to the page you want
+    book.availability = new_status
+    book.save()
+    return redirect('stock')  # redirect back to the page you want
   
 
 #_______________________________________________________________
@@ -379,6 +418,13 @@ def change_account_status(request, pk, new_status):
     user.status = 'Banned'
     user.save()
     return redirect('manage-users')
+
+#______________________________________________________________
+#for print a users informations
+def print_user_details(request, pk):
+  user = Person.objects.get(id=pk)
+  return generate_pdf_user_detail(user)
+
 
 #_______________________________________________________________
 # for adding a new staff member

@@ -22,7 +22,7 @@
       <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-users-modal">Print List Of
         users</button>
       <!-- ________________________________________________________________________ -->
-      <!-- START PRINT MULTIPLE ORDERS MODAL -->
+      <!-- START PRINT MULTIPLE USERS MODAL -->
       <div class="modal fade" id="print-users-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
 
         <div class="modal-dialog">
@@ -200,9 +200,9 @@
               <th>Fines</th>
               <th>Membership Status</th>
               {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
-                <th>Suspend Account</th>
-                <th>Ban Account</th>
-                <th>Edit</th>
+              <th>Suspend Account</th>
+              <th>Ban Account</th>
+              <th>Edit</th>
               {% endif %}
               <th>Print</th>
             </tr>
@@ -226,9 +226,9 @@
               <td>{{user.dob}}</td>
               <td>
                 {% if user_fines.user.id %}
-                  {{ user_fines.user.id }}
+                {{ user_fines.user.id }}
                 {% else %}
-                  No fines
+                No fines
                 {% endif %}
               </td>
               <td>{{user.status}}</td>
@@ -255,7 +255,8 @@
                             {{user.first_name}}</em></p>
                       </div>
                       <div class="modal-footer bg-brown">
-                        <a href="{% url 'change-account-status' user.id 'Suspend' %}" class="btn btn-outline-green">Yes! I'm sure</a>
+                        <a href="{% url 'change-account-status' user.id 'Suspend' %}" class="btn btn-outline-green">Yes!
+                          I'm sure</a>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">No.</button>
                       </div>
                     </div>
@@ -283,7 +284,8 @@
                             {{user.first_name}}</em></p>
                       </div>
                       <div class="modal-footer bg-brown">
-                        <a href="{% url 'change-account-status' user.id 'Ban' %}" class="btn btn-outline-green">Yes! I'm sure</a>
+                        <a href="{% url 'change-account-status' user.id 'Ban' %}" class="btn btn-outline-green">Yes! I'm
+                          sure</a>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">No.</button>
                       </div>
                     </div>
@@ -296,7 +298,7 @@
               </td>
               {% endif %}
               <td>
-
+                <a href="{% url 'print-user-details' user.id %}" class="btn btn-outline-brown">Print</a>
               </td>
             </tr>
             {% endfor %}
