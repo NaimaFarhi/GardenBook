@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from .utils import generate_csv_books, generate_csv_orders, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
-from .models import Borrow, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist
+from .models import Availability, Borrow, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist
 from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
 from django.db.models import Q,Sum
 
@@ -313,8 +313,23 @@ def reader_borrow(request, book_id):
     book=book,
     borrow_date=date.today()
   )
-  book.availability = 'Borrowed'
+  book.availability = Availability.BORROWED
   book.nb_borrows += 1
+  book.save()
+  return redirect('book-detail', pk=book.pk)
+
+#______________________________________________________________
+@login_required(login_url='login')
+def reserve(request, book_id):
+  book = Book.objects.get(id=book_id)
+
+  #if the same user is already borrowing it he can't reserve it
+  Reservation.objects.create(
+    person=request.user,
+    book=book
+  )
+
+  book.is_reserved = True
   book.save()
   return redirect('book-detail', pk=book.pk)
 

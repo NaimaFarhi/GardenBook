@@ -21,8 +21,8 @@
       <!-- Cover -->
       <div class="col-md-4 text-center m-2 p-0" style="height: fit-content; width: 25rem;">
 
-        <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-fluid rounded shadow"
-          style="max-height: 100%; width: 100%; object-fit: contain;">
+        <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-fluid rounded-20 shadow"
+          style="max-height: 38rem; width: 100%; object-fit: contain;">
 
       </div>
 
@@ -54,7 +54,7 @@
         <p class="text-muted">{{ book.description }}</p>
 
         <div class="row mb-4">
-          <div class="col-md-6">
+          <div class="col-md-8">
             <h5>Details</h5>
             <ul class="list-unstyled">
               <li><strong>ISBN:</strong> {{ book.ISBN }}</li>
@@ -62,9 +62,10 @@
               <li><strong>Published Date:</strong> {{ book.publication_year|date:"Y" }}</li>
               <li><strong>Pages:</strong> {{ book.nbPage }}</li>
               <li><strong>Language:</strong> {{ book.lang }}</li>
+              <li><strong>Keywords:</strong> {{ book.keywords }}</li>
             </ul>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <h6>Availability</h6>
             <ul class="list-unstyled">
               <li><strong>Status:</strong>
@@ -72,42 +73,34 @@
                   {{ book.availability }}
                 </span>
               </li>
-              <li><strong>Borrowed:</strong> {{ book.nb_borrows }}</li>
-              <li><strong>Location:</strong> Fiction Section, Shelf B4</li>
+              <li><strong>Borrowed:</strong> {{ book.nb_borrows }} <strong>times</strong></li>
             </ul>
           </div>
         </div>
 
         <div class="d-flex flex-wrap gap-2 mb-3">
+          <!-- For borrowing -->
+          {% if book.availability == 'Available' and not book.is_reserved %}
+          <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown"><i
+              class="bi bi-book me-2"></i>Borrow Book</a>
+          {% else %}
+          <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown disabled"><i
+              class="bi bi-book me-2"></i>Borrow
+            Book</a>
+          {% endif %}
+          <!-- For reserving -->
+          {% if book.availability != 'Available' and not book.is_reserved %}
+          <a href="{% url 'reserve' book.id %}" class="btn btn-outline-brown"><img src="{% static 'reserve_icon.png' %}" alt="Reserve icon"
+              width="25">Reserve Book</a>
+          {% else %}
+          <a href="{% url 'reserve' book.id %}" class="btn btn-outline-brown disabled"><img src="{% static 'reserve_icon.png' %}"
+              alt="Reserve icon" width="25">Reserve Book</a>
+          {% endif %}
 
-            {% if book.availability == 'Available' and not book.is_reserved %}
-            <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown"><i class="bi bi-book me-2"></i>Borrow Book</a>
-            {% else %}
-            <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown disabled"><i class="bi bi-book me-2"></i>Borrow
-              Book</a>
-            {% endif %}
+          <!-- For wishlist -->
+          <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="btn btn-outline-brown"><img
+              src="{% static 'wishlist_icon.png' %}" alt="Wishlist icon" width="30">Add to Wishlist</a>
 
-          
-
-          <form method="POST">
-            {% csrf_token %}
-
-            <input type="hidden" name="action" value="reserve">
-
-            {% if book.availability != 'Available' and not book.is_reserved %}
-            <a href="#" class="btn btn-outline-brown"><img src="{% static 'reserve_icon.png' %}"
-                alt="Reserve icon" width="25">Reserve Book</a>
-            {% else %}
-            <a href="#" class="btn btn-outline-brown disabled"><img src="{% static 'reserve_icon.png' %}"
-                alt="Reserve icon" width="25">Reserve Book</a>
-            {% endif %}
-
-          </form>
-
-        
-            <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="btn btn-outline-brown"><img src="{% static 'wishlist_icon.png' %}"
-                alt="Wishlist icon" width="30">Add to Wishlist</a>
-          
 
         </div>
       </div>

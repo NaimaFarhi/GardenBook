@@ -123,7 +123,6 @@ class Borrow(models.Model):
 
 
 class Reservation(models.Model):
-    id_reservation = models.CharField(max_length=50, unique=True)
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     reservation_date = models.DateField(auto_now_add=True, null=True, blank=True)
