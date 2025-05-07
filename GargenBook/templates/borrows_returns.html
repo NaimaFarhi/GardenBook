@@ -87,6 +87,7 @@
             <th scope="col">RETURNED ON</th>
             <th scope="col">FINE</th>
             <th scope="col">RETURN BOOK</th>
+            <th scope="col">PROCESS FINE</th>
           </tr>
         </thead>
         <tbody class="bg-white">
@@ -118,6 +119,9 @@
               </form>
               {% endif %}
 
+            </td>
+            <td>
+              <a href="{% url 'payment-page' borrow.borrower.id %}">Pay</a>
             </td>
           </tr>
           {% endfor %}

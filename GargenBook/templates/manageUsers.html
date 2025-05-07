@@ -1,6 +1,7 @@
 {% extends 'baseLibrarian.html' %}
 
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Users | GardenBook{% endblock %}
 
@@ -225,11 +226,7 @@
               <td>{{user.role}}</td>
               <td>{{user.dob}}</td>
               <td>
-                {% if user_fines.user.id %}
-                {{ user_fines.user.id }}
-                {% else %}
-                No fines
-                {% endif %}
+                {{ user_fines|get_item:user.id }}
               </td>
               <td>{{user.status}}</td>
               {% if request.user.is_authenticated and request.user.role == 'Administrator' %}

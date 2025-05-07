@@ -22,11 +22,16 @@ urlpatterns = [
   path('stock', views.stock, name='stock'),
   path('edit-book/<str:pk>/', views.edit_book, name='edit-book'),
   path('change-availability/<str:pk>/<str:new_status>', views.change_availability, name='change-availability'),
-  path('print-book-details', views.print_book_details, name='print-book-details'),
+  path('print-book-details/<str:pk>/', views.print_book_details, name='print-book-details'),
   
   path('orders', views.orders, name='orders'),
   path('dashboard', views.dashboard, name='dashboard'),
   path('events', views.events, name='events'),
-  path('borrows-returns', views.borrowsReturns, name='borrows-returns')
+  path('borrows-returns', views.borrowsReturns, name='borrows-returns'),
+  path('add-wishlist/<str:book_id>/<str:user_id>/<str:current_page>', views.add_wishlist, name='add-wishlist'),
+  path('reader_borrow/<str:book_id>', views.reader_borrow, name='reader-borrow'),
+ 
+  path('payment/<int:pk>/', views.payment_page, name='payment-page'),
+
 
 ]

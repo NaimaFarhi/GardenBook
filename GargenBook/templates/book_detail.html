@@ -10,21 +10,20 @@
 <div class="py-5 bg-light-brown">
 
   <div class="container py-2">
-    <a href="/catalog" class="text-decoration-none text-dark">
+    <a href="{% url 'catalog' %}" class="text-decoration-none text-dark">
       <i class="bi bi-arrow-left me-1"></i> Back to Catalog
     </a>
   </div>
 
   <div class="container my-5">
 
-    <div class="row bg-white g-4 rounded-20 shadow-sm">
+    <div class="row bg-white g-4 rounded-20">
       <!-- Cover -->
-      <div class="col-md-4 text-center">
-        {% if book.cover %}
-        <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="book-cover">
-        {% else %}
-        <img src="/placeholder.svg" alt="No cover available" class="book-cover">
-        {% endif %}
+      <div class="col-md-4 text-center m-2 p-0" style="height: fit-content; width: 25rem;">
+
+        <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-fluid rounded shadow"
+          style="max-height: 100%; width: 100%; object-fit: contain;">
+
       </div>
 
       <!-- Book Details -->
@@ -73,26 +72,22 @@
                   {{ book.availability }}
                 </span>
               </li>
-              <li><strong>Copies:</strong> {{ book.nb_borrows }}</li>
+              <li><strong>Borrowed:</strong> {{ book.nb_borrows }}</li>
               <li><strong>Location:</strong> Fiction Section, Shelf B4</li>
             </ul>
           </div>
         </div>
 
         <div class="d-flex flex-wrap gap-2 mb-3">
-          <form method="POST">
-            {% csrf_token %}
-
-            <input type="hidden" name="action" value="borrow">
 
             {% if book.availability == 'Available' and not book.is_reserved %}
-            <button type="submit" class="btn btn-outline-brown"><i class="bi bi-book me-2"></i>Borrow Book</button>
+            <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown"><i class="bi bi-book me-2"></i>Borrow Book</a>
             {% else %}
-            <button type="submit" class="btn btn-outline-brown disabled"><i class="bi bi-book me-2"></i>Borrow
-              Book</button>
+            <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown disabled"><i class="bi bi-book me-2"></i>Borrow
+              Book</a>
             {% endif %}
 
-          </form>
+          
 
           <form method="POST">
             {% csrf_token %}
@@ -100,23 +95,19 @@
             <input type="hidden" name="action" value="reserve">
 
             {% if book.availability != 'Available' and not book.is_reserved %}
-            <button type="submit" class="btn btn-outline-brown"><img src="{% static 'reserve_icon.png' %}"
-                alt="Reserve icon" width="25">Reserve Book</button>
+            <a href="#" class="btn btn-outline-brown"><img src="{% static 'reserve_icon.png' %}"
+                alt="Reserve icon" width="25">Reserve Book</a>
             {% else %}
-            <button type="submit" class="btn btn-outline-brown disabled"><img src="{% static 'reserve_icon.png' %}" alt="Reserve icon"
-                width="25">Reserve Book</button>
+            <a href="#" class="btn btn-outline-brown disabled"><img src="{% static 'reserve_icon.png' %}"
+                alt="Reserve icon" width="25">Reserve Book</a>
             {% endif %}
 
           </form>
 
-          <form method="POST">
-            {% csrf_token %}
-
-            <input type="hidden" name="action" value="add_to_wishlist">
-
-            <button type="submit" class="btn btn-outline-brown"><img src="{% static 'wishlist_icon.png' %}"
-                alt="Wishlist icon" width="25">Add to Wishlist</button>
-          </form>
+        
+            <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="btn btn-outline-brown"><img src="{% static 'wishlist_icon.png' %}"
+                alt="Wishlist icon" width="30">Add to Wishlist</a>
+          
 
         </div>
       </div>

@@ -302,6 +302,21 @@ def edit_book(request, pk):
   context = {'form' : form, 'book': book}
   return render(request, 'editBook.html', context)
 
+#_______________________________________________________________
+#for adding a new borrow made by user
+@login_required(login_url='login')
+def reader_borrow(request, book_id):
+  book = Book.objects.get(id=book_id)
+
+  Borrow.objects.create(
+    borrower=request.user,
+    book=book,
+    borrow_date=date.today()
+  )
+  book.availability = 'Borrowed'
+  book.nb_borrows += 1
+  book.save()
+  return redirect('book-detail', pk=book.pk)
 
 #_______________________________________________________________
 @login_required(login_url='login')
@@ -325,9 +340,27 @@ def profile(request, pk):
   borrowed_books = Borrow.objects.filter(borrower__id=pk)
   reserved_books = Reservation.objects.filter(person__id=pk)
   read_books =ReadingHistory.objects.filter(person__id=pk)
+  wishlist = Wishlist.objects.filter(person=pk)
 
-  context = {'person': person, 'borrowed_books': borrowed_books, 'reserved_books': reserved_books, 'read_books': read_books}
+  context = {'person': person, 'borrowed_books': borrowed_books, 'reserved_books': reserved_books, 'read_books': read_books, 'wishlist': wishlist}
   return render(request, 'profile.html', context)
+
+#_________________________________________________________
+#for adding to wishlist
+@login_required(login_url='login')
+def add_wishlist(request, book_id, user_id, current_page):
+  user = Person.objects.get(id=user_id)
+  book = Book.objects.get(id=book_id)
+
+  # Check if the wishlist item already exists
+  if not Wishlist.objects.filter(person=user, book=book).exists():
+    Wishlist.objects.create(person=user, book=book)
+    messages.success(request, "Book added to your wishlist.")
+  else:
+    messages.info(request, "This book is already in your wishlist.")
+
+  return redirect(current_page)
+
 
 #_______________________________________________________________
 #for edit a users infos
@@ -353,15 +386,13 @@ def users(request):
   user_fines = {}
 
   for user in users:
-      total_fine = Borrow.objects.filter(borrower=user, is_fine_paid=False).aggregate(
-          total=Sum('fine')
-      )['total'] or 0
-      user_fines[user.id] = total_fine
+    total_fine = Borrow.objects.filter(borrower=user, is_fine_paid=False).aggregate(total=Sum('fine'))['total'] or 0
+    user_fines[user.id] = total_fine
 
-      #update the status to 'Suspended if the fines aren't paid
-      if total_fine > 0 and user.status != 'Suspended':
-        user.status = 'Suspended'
-        user.save(update_fields=['status'])
+    #update the status to 'Suspended if the fines aren't paid
+    if total_fine > 0 and user.status != 'Suspended':
+      user.status = 'Suspended'
+      user.save(update_fields=['status'])
 
   if request.method == 'POST':
     action = request.POST.get('action')
@@ -495,4 +526,33 @@ def borrowsReturns(request):
 
   context = {'borrows': borrows, 'form': form}
   return render(request, 'borrows_returns.html', context)
+
+#________________________________________________________________
+@login_required(login_url='login')
+def payment_page(request, pk):
+    user = Person.objects.get(id=pk)
+
+    # Get all borrow entries with unpaid fines (e.g., returned = True, fine > 0, and not marked as paid)
+    unpaid_fines = Borrow.objects.filter(borrower=user, returned=True, fine__gt=0, is_fine_paid=False)
+
+    total_fine = sum(b.fine for b in unpaid_fines)
+
+    if request.method == 'POST':
+        # Dummy payment logic (add your gateway or Stripe integration here)
+        for borrow in unpaid_fines:
+            borrow.fine_paid = True
+            borrow.save()
+
+        messages.success(request, "Payment successful.")
+        return redirect('Borrows-returns', user_id=user.id)  # or any success page
+
+    context = {
+        'user': user,
+        'fines': unpaid_fines,
+        'total_fine': total_fine,
+    }
+    return render(request, 'payment.html', context)
+
+
+
 

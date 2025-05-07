@@ -101,11 +101,13 @@ class Borrow(models.Model):
     return_date = models.DateField(null=True, blank=True)
     fine = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)# the fine should be updated every day
     is_fine_paid = models.BooleanField(default=False)
+    returned = models.BooleanField(default=False)
 
     # Method that calculates the fine
     def calculate_fine(self):
         if self.return_date:
             late_days = (self.return_date - self.due_date).days
+            self.returned = True
         else:
             late_days = (date.today() - self.due_date).days
 

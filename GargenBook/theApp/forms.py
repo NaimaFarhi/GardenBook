@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from .models import Borrow, Order, Person, Book, Review, Supplier
+from .models import Borrow, Order, Person, Book, Review, RoleName, Supplier
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Hidden
 
@@ -298,6 +298,9 @@ class BorrowForm(forms.ModelForm):
         self.helper.form_method = 'POST'
         self.helper.add_input(Hidden('action', 'add_borrow'))
         self.helper.add_input(Submit('submit', 'Add Borrow', css_class="btn btn-outline-green"))
+
+        # Filter borrowers to only show READER users
+        self.fields['borrower'].queryset = Person.objects.filter(role=RoleName.READER)
 
 #_____________________________________________________________
 class ReviewForm(forms.ModelForm):
