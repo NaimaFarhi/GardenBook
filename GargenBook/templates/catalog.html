@@ -6,66 +6,109 @@
 
 {% block content %}
 <div class="py-5 bg-light-brown">
+  <!-- RESULT COUNT -->
+  <div class="row d-flex justify-content-end">
+    <div class="col-auto">
+      <p><i><strong>{{ result_count }}</strong> out of <strong>{{ book_count }}</strong> book results found.</i></p>
+    </div>
+  </div>
   <div class="container-fluid row m-2">
 
     <!-- START SEARCH / FILTER SECTION -->
     <div class="col-md-2 p-4 bg-white shadow-sm rounded-20">
       <h2>Search Bar</h2>
-      <div class="row">
-        <input type="search" class="form-control form-control-dark" id="searchBar" placeholder="Title, Author..."
-          aria-label="Search">
-      </div>
 
-      <!-- GENRE SECTION -->
-      <div class="row my-2">
-        <p class="fs-5">Genre</p>
-        <div class="bg-light border rounded" style="max-height: 100px; overflow: auto;">
-          <!-- Add your checkboxes here -->
-          <div class="form-check mb-3">
-            <input class="form-check-input" type="checkbox" value="fiction" id="genreFiction">
-            <label class="form-check-label text-uppercase small text-muted" for="genreFiction">Fiction</label>
+      <form method="GET" action="{% url 'catalog' %}">
+
+        <!-- FOR : TITLE AUTHOR EDITION KEYWORDS -->
+        <div class="row">
+          <input type="search" name="q" class="form-control form-control-dark" id="searchBar"
+            placeholder="ISBN, Title, Author, Edition, Keywords..." aria-label="Search">
+        </div>
+
+        <!-- GENRE SECTION -->
+        <div class="row my-2">
+          <p class="fs-5">Genre</p>
+          <div class="bg-light border rounded" style="max-height: 100px; overflow: auto;">
+
+            {% if genres %}
+            {% for genre in genres %}
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" name="genre" value="{{ genre }}" id="genre{{ genre }}">
+              <label class="form-check-label text-uppercase small text-muted" for="genre{{ genre }}">{{ genre }}</label>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p><small>No genres available</small></p>
+            {% endif %}
+
           </div>
-          <!-- More checkboxes... -->
         </div>
-      </div>
 
-      <!-- PUBLICATION YEAR SECTION -->
-      <div class="row my-2">
-        <div class="col-md-6">
-          <p class="fs-5">Publication Year (from)</p>
-          <input type="number" name="publicationYearFrom" id="publicationYearFrom" min="1980" max="2025"
-            class="form-control form-control-dark">
+        <!-- PUBLICATION YEAR SECTION -->
+        <div class="row my-2">
+          <p class="fs-5">Publication Year</p>
+          <div class="col-md-6">
+            <p class="fs-5">From</p>
+            <input type="number" name="publicationYearFrom" id="publicationYearFrom" value="{{pub_year_min}}"
+              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control form-control-dark">
+          </div>
+          <div class="col-md-6">
+            <p class="fs-5"> To </p>
+            <input type="number" name="publicationYearTo" id="publicationYearTo" value="{{pub_year_max}}"
+              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control form-control-dark">
+          </div>
         </div>
-        <div class="col-md-6">
-          <p class="fs-5">Publication Year (to)</p>
-          <input type="number" name="publicationYearTo" id="publicationYearTo" min="1980" max="2025"
-            class="form-control form-control-dark">
+
+        <!-- LANGUAGE SECTION -->
+        <div class="row my-2">
+          <p class="fs-5">Language</p>
+          <select class="form-control" name="language" id="language">
+            <option value="">select a language</option>
+
+            {% for lang in langs %}
+            <option value="{{lang}}">{{lang}}</option>
+            {% endfor%}
+
+          </select>
         </div>
-      </div>
 
-      <!-- LANGUAGE SECTION -->
-      <div class="row my-2">
-        <p class="fs-5">Language</p>
-        <select class="form-control" name="language" id="language">
-          <option value="">select a language</option>
-          <option value="arabic">Arabic</option>
-          <option value="french">French</option>
-          <option value="english">English</option>
-          <option value="german">German</option>
-          <option value="spanish">Spanish</option>
-        </select>
-      </div>
+        <!-- AUDIENCE SECTION -->
+        <div class="row my-2">
+          <p class="fs-5">Audience</p>
+          <select class="form-control" name="audience" id="audience">
+            <option value="">select an audience</option>
 
-      <!-- RESET BUTTON -->
-      <div class="row my-2">
-        <button type="button" class="btn btn-secondary" id="resetButton">Reset</button>
-      </div>
+            {% for aud in auds %}
+            <option value="{{aud}}">{{aud}}</option>
+            {% endfor%}
+
+          </select>
+        </div>
+
+        <!-- REVIEW SECTION -->
+        <div class="row my-2">
+          <p class="fs-5">Review (minimum)</p>
+          <input type="number" name="review" id="review" min="0" max="10" class="form-control form-control-dark">
+        </div>
+
+        <!-- SEARCH BUTTON -->
+        <div class="row my-2">
+          <button type="submit" class="btn btn-green" id="resetButton">Search</button>
+        </div>
+
+        <!-- RESET BUTTON -->
+        <div class="row my-2">
+          <a href="{% url 'catalog' %}" class="btn btn-green" id="resetButton">Reset</a>
+        </div>
+      </form>
+
     </div>
     <!-- END SEARCH / FILTER SECTION -->
 
 
     <!-- START BOOK DISPLAY SECTION -->
-    <div class="col">
+    <div class="col-auto">
 
       <!-- START ROW OF 4 BOOKS SECTION -->
       <div class="row m-4 d-flex justify-content-center align-items-center gap-5">
@@ -85,17 +128,30 @@
               <span>{{ book.title }}</span>
             </h4>
 
-            <p class="card-text">{{ book.author }}</p>
-          
-            <p class="card-text">{{ book.edition }}</p>
-           
-            <p class="card-text">{{ book.review }}</p>
+            <p>{{ book.author }}</p>
+
+            <p>{{ book.edition }}</p>
+
+            <div class="text-warning me-2">
+              {% for i in "12345" %}
+              {% if book.review|floatformat:1 >= i %}
+              <i class="bi bi-star-fill"></i>
+              {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
+              <i class="bi bi-star-half"></i>
+              {% else %}
+              <i class="bi bi-star"></i>
+              {% endif %}
+              {% endfor %}
+              <span class="text-muted">{{ book.review }}/10</span>
+            </div>
+
 
           </div>
           <div class="card-footer d-flex justify-content-between my-2" style="background: inherit;">
             <a href="{% url 'book-detail' book.id %}" class="btn btn-outline-brown">Details</a>
             <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}">
-              <img src="{% static 'wishlist_icon.png' %}" width="30" data-bs-toggle="tooltip" data-bs-placement="right" title="Add To Wishlist">
+              <img src="{% static 'wishlist_icon.png' %}" width="30" data-bs-toggle="tooltip" data-bs-placement="right"
+                title="Add To Wishlist">
             </a>
           </div>
         </div>
@@ -115,70 +171,9 @@
 <script>
 
   var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-      return new bootstrap.Tooltip(tooltipTriggerEl)
-    })
-
-  // Update review label
-  function updateReview() {
-    document.getElementById("review_number").textContent =
-      document.getElementById("review").value + "/5";
-  }
-
-  document.addEventListener('DOMContentLoaded', function () {
-    const books = document.querySelectorAll('.card');
-    const searchInput = document.getElementById('searchInput');
-    const resetButton = document.getElementById('resetButton');
-    const startYearInput = document.getElementById('startYear');
-    const endYearInput = document.getElementById('endYear');
-    const availabilityRadios = document.querySelectorAll('input[name="availability"]');
-    const genreCheckboxes = document.querySelectorAll('.form-check-input');
-
-    // Search and filter function
-    function filterBooks() {
-      const searchQuery = searchInput.value.toLowerCase();
-      const startYear = parseInt(startYearInput.value) || 0;
-      const endYear = parseInt(endYearInput.value) || 2025;
-      const selectedAvailability = Array.from(availabilityRadios).find(radio => radio.checked)?.value;
-      const selectedGenres = Array.from(genreCheckboxes).filter(checkbox => checkbox.checked).map(checkbox => checkbox.value);
-
-      books.forEach(book => {
-        const bookTitle = book.dataset.title.toLowerCase();
-        const bookAuthor = book.dataset.author.toLowerCase();
-        const bookGenres = book.dataset.genres.split(', ');
-        const bookYear = parseInt(book.dataset.publicationYear);
-        const bookAvailability = book.dataset.availability;
-
-        const matchesSearch = bookTitle.includes(searchQuery) || bookAuthor.includes(searchQuery);
-        const matchesAvailability = !selectedAvailability || bookAvailability === selectedAvailability;
-        const matchesGenres = selectedGenres.length === 0 || selectedGenres.some(genre => bookGenres.includes(genre));
-        const matchesYear = (bookYear >= startYear && bookYear <= endYear);
-
-        if (matchesSearch && matchesAvailability && matchesGenres && matchesYear) {
-          book.style.display = '';
-        } else {
-          book.style.display = 'none';
-        }
-      });
-    }
-
-    // Event listeners
-    searchInput.addEventListener('input', filterBooks);
-    startYearInput.addEventListener('input', filterBooks);
-    endYearInput.addEventListener('input', filterBooks);
-    availabilityRadios.forEach(radio => radio.addEventListener('change', filterBooks));
-    genreCheckboxes.forEach(checkbox => checkbox.addEventListener('change', filterBooks));
-
-    // Reset button functionality
-    resetButton.addEventListener('click', function () {
-      searchInput.value = '';
-      startYearInput.value = '';
-      endYearInput.value = '';
-      availabilityRadios.forEach(radio => radio.checked = false);
-      genreCheckboxes.forEach(checkbox => checkbox.checked = false);
-      filterBooks(); // Reapply filters after reset
-    });
-  });
+  tooltipTriggerList.map(function (tooltipTriggerEl) {
+    return new bootstrap.Tooltip(tooltipTriggerEl)
+  })
 
 </script>
 {% endblock %}

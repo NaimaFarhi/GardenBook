@@ -65,7 +65,7 @@ class Book(models.Model):
     author = models.CharField(max_length=255,default="")
     edition = models.CharField(max_length=255,default="")
     availability = models.CharField(max_length=30,choices=Availability.choices, default=Availability.AVAILABLE)
-    publication_year = models.DateField(null=True, blank=True)
+    publication_year = models.IntegerField(default=0)
     nbPage = models.IntegerField(default="")
     lang = models.CharField(max_length=244,default="")
     genres = models.ManyToManyField(Genre)

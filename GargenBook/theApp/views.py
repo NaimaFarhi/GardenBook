@@ -4,9 +4,9 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from .utils import generate_csv_books, generate_csv_orders, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
-from .models import Availability, Borrow, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist
+from .models import Availability, Borrow, Genre, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist
 from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
-from django.db.models import Q,Sum
+from django.db.models import Q,Sum,Min, Max
 
 #_____________________________________________________________
 
@@ -72,8 +72,71 @@ def home(request):
 # for the catalog page where all the books are displayed
 # + a filter to see the wishlist(liked books)
 def catalog(request):
-    context = {'catalog': Book.objects.all()}
-    return render(request,"catalog.html",context)
+  catalog = Book.objects.filter(~Q(availability=Availability.REMOVED))
+
+  # Search bar query
+  q = request.GET.get('q')
+  if q:
+    catalog = catalog.filter(
+        Q(ISBN__icontains=q) |
+        Q(title__icontains=q) |
+        Q(author__icontains=q) |
+        Q(edition__icontains=q) |
+        Q(keywords__icontains=q)
+    )
+
+  # Genre filter (multiple checkboxes)
+  selected_genres = request.GET.getlist('genres')
+  if selected_genres:
+    catalog = catalog.filter(genre__name__in=selected_genres).distinct()
+
+  # Publication year filter
+  pub_year_from = request.GET.get('publicationYearFrom')
+  pub_year_to = request.GET.get('publicationYearTo')
+  if pub_year_from:
+    catalog = catalog.filter(publication_year__gte=int(pub_year_from))
+  if pub_year_to:
+    catalog = catalog.filter(publication_year__lte=int(pub_year_to))
+
+  # Language filter
+  language = request.GET.get('language')
+  if language:
+    catalog = catalog.filter(lang__iexact=language)
+
+  # Audience filter
+  audience = request.GET.get('audience')
+  if audience:
+    catalog = catalog.filter(audience__iexact=audience)
+
+  # Review filter
+  review = request.GET.get('review')
+  if review:
+    catalog = catalog.filter(review__gte=int(review))
+
+  # Dropdown/select data
+  genres = Genre.objects.all()
+  langs = Book.objects.values_list('lang', flat=True).distinct()
+  auds = Book.objects.values_list('audience', flat=True).distinct()
+
+  # Get real min/max from DB for publication_year
+  pub_year_stats = Book.objects.aggregate(pub_year_min=Min('publication_year'), pub_year_max=Max('publication_year'))
+  pub_year_min = pub_year_stats['pub_year_min'] or 0
+  pub_year_max = pub_year_stats['pub_year_max'] or 9999
+
+  result_count = catalog.count()
+  book_count = Book.objects.filter(~Q(availability=Availability.REMOVED)).count()
+  context = {
+    'catalog': catalog,
+    'genres': genres,
+    'langs': langs,
+    'auds': auds,
+    'pub_year_min': pub_year_min,
+    'pub_year_max': pub_year_max,
+    'result_count': result_count,
+    'book_count': book_count,
+  }
+
+  return render(request, "catalog.html", context)
 
 #_______________________________________________________________
 # for displaying one book in detail
@@ -100,34 +163,6 @@ def book_detail(request, pk):
             )
             return redirect('book-detail', pk=book.pk)
         
-        # borrow a book
-        elif action == 'borrow':
-          Borrow.objects.create(
-              borrower=request.user,
-              book=book,
-              borrow_date=date.today()
-          )
-          book.availability = 'Borrowed'
-          book.save()
-          return redirect('book-detail', pk=book.pk)
-          
-        elif action == 'reserve':
-          Reservation.objects.create(
-              person=request.user,
-              book=book,
-              reservation_date=date.today()
-          )
-          book.availability = 'Reserved'
-          book.save()
-          return redirect('book-detail', pk=book.pk)
-        
-        # add to wishlist
-        elif action == 'add_to_wishlist':
-          Wishlist.objects.create(
-              user=request.user,
-              book=book
-          )
-          return redirect('book-detail', pk=book.pk)
     else:
       return redirect('login')
 
@@ -323,14 +358,17 @@ def reader_borrow(request, book_id):
 def reserve(request, book_id):
   book = Book.objects.get(id=book_id)
 
-  #if the same user is already borrowing it he can't reserve it
-  Reservation.objects.create(
-    person=request.user,
-    book=book
-  )
+  if not Borrow.objects.filter(person=request.user, book=book, returned=False, is_fine_paid=False).exists():
+    Reservation.objects.create(
+      person=request.user,
+      book=book
+    )
 
-  book.is_reserved = True
-  book.save()
+    book.is_reserved = True
+    book.save()
+    messages.success(request, "Book added to your Reservations.")
+  else:
+    messages.info(request, "You alrady borrowed this book.")
   return redirect('book-detail', pk=book.pk)
 
 #_______________________________________________________________
