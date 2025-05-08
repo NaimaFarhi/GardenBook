@@ -5,28 +5,46 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 # Create your models here.
 
+#_________________________________________________________________________
+class PaymentType(models.TextChoices):
+    CASH = 'Cash'
+    CARD = 'Card'
+
+#______________________________________________________________________________
+class EventType(models.TextChoices):
+    BOOK_READING = 'Book Reading'
+    WORKSHOP = 'Workshop'
+    AUTHOR_VISIT = 'Author Visit'
+    EXHIBITION = 'Exhibition'
+    OTHER = 'Other'
+
+#______________________________________________________________________________
 class RoleName(models.TextChoices):
     ADMIN = 'Administrator'
     LIBRARIAN = 'Librarian'
     READER = 'Reader'
 
+#______________________________________________________________________________
 class MembershipStatus(models.TextChoices):
     ACTIVE = 'Active'
     SUSPENDED = 'Suspended'
     BANNED = 'Banned'
 
+#______________________________________________________________________________
 class AudienceType(models.TextChoices):
    CHILDREN = "children"
    YA = "Young Adult"
    ADULT = "Adult"
    ALL = "All"
 
+#______________________________________________________________________________
 class Availability(models.TextChoices):
    AVAILABLE = "Available"
    RESERVED = "Reserved"
    BORROWED = "Borrowed"
    REMOVED = "Remove"
 
+#______________________________________________________________________________
 class Person(AbstractUser):
     cin = models.CharField(max_length=20, unique=True, default="")
     profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
@@ -49,14 +67,14 @@ class Person(AbstractUser):
         ordering = ['-date_joined']
 
 
-
+#______________________________________________________________________________
 class Genre(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
 
-
+#______________________________________________________________________________
 class Book(models.Model):
     ISBN = models.CharField(max_length=13, unique=True)
     cover = models.ImageField(upload_to='book_covers/', null=True, blank=True, default="book_covers/default_cover.webp") # 'ImageField' handels image uploads
@@ -93,6 +111,7 @@ class Book(models.Model):
     def __str__(self):
         return self.title 
 
+#______________________________________________________________________________
 class Borrow(models.Model):
     borrower = models.ForeignKey(Person, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -121,7 +140,7 @@ class Borrow(models.Model):
 
         super().save(*args, **kwargs)
 
-
+#______________________________________________________________________________
 class Reservation(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -136,6 +155,8 @@ class Reservation(models.Model):
     def __str__(self):
         return f"Reservation {self.id_reservation} - {self.book.title} by {self.person.username}"
 
+
+#______________________________________________________________________________
 class ReadingHistory(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -145,7 +166,7 @@ class ReadingHistory(models.Model):
     def __str__(self):
         return f"{self.person.username} - {self.book.title}"
     
-
+#______________________________________________________________________________
 class Supplier(models.Model):
     name = models.CharField(max_length=255, default="")
     email = models.EmailField(default="")
@@ -155,7 +176,7 @@ class Supplier(models.Model):
     def __str__(self):
         return self.name
     
-
+#______________________________________________________________________________
 class Order(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
@@ -176,6 +197,7 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} - {self.book.title} ({self.status})"
 
+#______________________________________________________________________________
 class Wishlist(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -184,6 +206,7 @@ class Wishlist(models.Model):
     def __str__(self):
         return f"{self.person.username} - {self.book.title}"    
 
+#___________________________________________________________________________
 class Review(models.Model):
     RATING_CHOICES = [(x / 2, str(x / 2)) for x in range(1, 11)]  # Allows 0.5 to 5 stars
 
@@ -195,3 +218,31 @@ class Review(models.Model):
 
     class Meta:
         unique_together = ('user', 'book')  # A user can only review a book once
+
+
+#______________________________________________________________________________
+class Event(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    location = models.CharField(max_length=255)
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField()
+    image = models.ImageField(upload_to='event_images/', blank=True, null=True)
+    nbr_reservations = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    event_type = models.CharField(max_length=20, choices=EventType.choices, default="")
+    is_public = models.BooleanField(default=True)
+    is_canceled = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+
+#______________________________________________________________________________
+class Payment(models.Model):
+    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+    borrow = models.ForeignKey(Borrow, on_delete=models.CASCADE)
+    type_payment = models.CharField(max_length=20, choices=PaymentType.choices, default="")
+
+
+

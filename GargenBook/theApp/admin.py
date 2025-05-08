@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Person, Book, Genre, Borrow, ReadingHistory, Reservation, Order, Review, Supplier, Wishlist, RoleName
+from .models import Person, Book, Genre, Borrow, ReadingHistory, Reservation, Order, Review, Supplier, Wishlist, RoleName, Event
 
 # Unregister Borrow if already registered
 try:
@@ -25,3 +25,4 @@ admin.site.register(Supplier)
 admin.site.register(ReadingHistory)
 admin.site.register(Wishlist)
 admin.site.register(Review)
+admin.site.register(Event)

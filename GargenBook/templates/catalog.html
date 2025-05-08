@@ -6,12 +6,16 @@
 
 {% block content %}
 <div class="py-5 bg-light-brown">
-  <!-- RESULT COUNT -->
+  
+  <!-- START RESULT COUNT -->
   <div class="row d-flex justify-content-end">
     <div class="col-auto">
       <p><i><strong>{{ result_count }}</strong> out of <strong>{{ book_count }}</strong> book results found.</i></p>
     </div>
   </div>
+  <!-- END RESULT COUNT -->
+
+  <!-- START SEARCH BAR + DISPLAY SECTION -->
   <div class="container-fluid row m-2">
 
     <!-- START SEARCH / FILTER SECTION -->
@@ -113,7 +117,7 @@
       <!-- START ROW OF 4 BOOKS SECTION -->
       <div class="row m-4 d-flex justify-content-center align-items-center gap-5">
 
-        {% for book in catalog %}
+        {% for book in page_obj %}
         <!-- START ONE CARD BOOK SECTION -->
 
         <div class="card rounded-20" style="width: 22rem;">
@@ -167,6 +171,51 @@
 
     <!-- END BOOK DISPLAY SECTION -->
   </div>
+  <!-- START SEARCH BAR + DISPLAY SECTION -->
+
+  <!-- START _ SECTION -->
+  <div class="row">
+    <div class="col-auto bg-green">
+      {% if page_obj.has_other_pages %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+
+          {# Previous button #}
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+              href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+              Previous
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+
+          {# Current page number #}
+          <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
+
+          {# Next button #}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+              href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+              Next
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Next</span></li>
+          {% endif %}
+
+        </ul>
+      </nav>
+      {% endif %}
+
+
+    </div>
+  </div>
+  <!-- END _ SECTION -->
+
 </div>
 <script>
 

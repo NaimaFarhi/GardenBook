@@ -4,5 +4,72 @@
 
 {% block content %}
 
-{% endblock %}
+<div class="container-fluid row d-flex justify-content-center my-4">
 
+  <!-- START HORIZONTAL EVENT SEARCH BAR -->
+  <form method="GET" action="{% url 'events' %}" class="bg-white shadow-sm rounded-20 p-4" style="width: 75%;">
+    <div class="row align-items-end g-3">
+
+      <!-- SEARCH TEXT -->
+      <div class="col-md-6">
+        <label for="searchBar" class="form-label">Search</label>
+        <input type="search" name="q" class="form-control" id="searchBar" placeholder="Title, Description, Keywords...">
+      </div>
+
+      <!-- EVENT TYPE -->
+      <div class="col-md-3">
+        <label for="event_type" class="form-label">Event Type</label>
+        <select class="form-control" name="event_type" id="event_type">
+          <option value="">All types</option>
+          {% for type in types %}
+          <option value="{{ type }}">{{ type }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- DATE FILTER -->
+      <div class="col-md-3">
+        <label for="date_filter" class="form-label">Date</label>
+        <select class="form-control" name="date_filter" id="date_filter">
+          <option value="">Any Time</option>
+          <option value="year">This Year</option>
+          <option value="month">This Month</option>
+          <option value="week">This Week</option>
+        </select>
+      </div>
+
+    </div>
+  </form>
+  <!-- END HORIZONTAL EVENT SEARCH BAR -->
+
+  <div class="m-4">
+    <h3>Upcoming Events</h3>
+
+    <div class="row">
+      <div class="col-auto">
+        <div class="card mb-3 rounded-20" style="width: 40rem; height: 20rem;">
+          <div class="row g-0" style="height: 100%">
+            <div class="col-md-4">
+              <img src="..." class="img-fluid rounded-start" alt="event poster">
+            </div>
+            <div class="col-md-8">
+              <div class="card-body overflow-hidden" style="height: 72%;">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text">EVENT DESCRIPTION</p>
+              </div>
+              <div class="card-footer">
+                <p class="card-text"><small class="text-body-secondary">Event Dates / Location</small></p>
+                <button>Details(is a modal)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+</div>
+
+{% endblock %}

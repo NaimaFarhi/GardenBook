@@ -1,12 +1,14 @@
-from datetime import date
+from datetime import date, timedelta
+from django.utils import timezone
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from .utils import generate_csv_books, generate_csv_orders, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
-from .models import Availability, Borrow, Genre, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist
+from .models import Availability, Borrow, Genre, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist, Event
 from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
 from django.db.models import Q,Sum,Min, Max
+from django.core.paginator import Paginator
 
 #_____________________________________________________________
 
@@ -125,8 +127,14 @@ def catalog(request):
 
   result_count = catalog.count()
   book_count = Book.objects.filter(~Q(availability=Availability.REMOVED)).count()
+
+  # Pagination
+  paginator = Paginator(catalog, 12)  # 10 books per page
+  page_number = request.GET.get('page')  # Get the current page number from URL
+  page_obj = paginator.get_page(page_number)  # Get the page object
+  
   context = {
-    'catalog': catalog,
+    'page_obj': page_obj,
     'genres': genres,
     'langs': langs,
     'auds': auds,
@@ -528,7 +536,39 @@ def registerStaff(request):
 @login_required(login_url='login')
 #for events
 def events(request):
-   return render(request, 'events.html')
+  events = Event.objects.all()
+  query = request.GET.get("q", "")
+  event_type = request.GET.get("event_type", "")
+  date_filter = request.GET.get("date_filter", "")
+
+  # Filter by search keywords
+  if query:
+      events = events.filter(title__icontains=query) | events.filter(description__icontains=query)
+
+  # Filter by event type
+  if event_type:
+      events = events.filter(event_type=event_type)
+
+  # Filter by date
+  today = timezone.now().date()
+  if date_filter == "year":
+      events = events.filter(start_datetime__year=today.year)
+  elif date_filter == "month":
+      events = events.filter(start_datetime__year=today.year, start_datetime__month=today.month)
+  elif date_filter == "week":
+      start_of_week = today - timedelta(days=today.weekday())
+      end_of_week = start_of_week + timedelta(days=6)
+      events = events.filter(start_datetime__date__range=[start_of_week, end_of_week])
+
+  # Unique event types for the dropdown
+  types = Event.objects.values_list("event_type", flat=True).distinct()
+
+  context = {
+      "events": events,
+      "types": types,
+  }
+
+  return render(request, 'events.html', context)
 
 #_______________________________________________________________
 @login_required(login_url='login')
