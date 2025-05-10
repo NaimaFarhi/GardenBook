@@ -32,7 +32,12 @@ urlpatterns = [
   path('reader_borrow/<str:book_id>', views.reader_borrow, name='reader-borrow'),
   path('reserve/<str:book_id>', views.reserve, name='reserve'),
  
-  path('payment/<int:pk>/', views.payment_page, name='payment-page'),
+  path('payment/<int:pk>//<str:current_page>', views.payment_page, name='payment-page'),
+  path('generate_invoice/<int:pk>/', views.generate_invoice, name='generate_invoice'),
+  path('manage-payment', views.payment_staff, name='manage-payment'),
+  path('manage-event', views.event_staff, name='manage-event'),
+  path('cancel-event/<str:pk>/', views.cancel_event, name='cancel-event'),
+  path('create-event', views.create_event, name='create-event'),
 
 
 ]

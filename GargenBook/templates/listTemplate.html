@@ -1,0 +1,104 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice PDF</title>
+  <style>
+    body {
+font-family: Arial, sans-serif;
+color: #333;
+margin: 40px;
+font-size: 14px;
+}
+
+.top-info {
+display: flex;
+justify-content: space-between;
+font-size: 12px;
+margin-bottom: 10px;
+}
+
+.title {
+text-align: center;
+font-size: 24px;
+margin: 20px 0;
+font-weight: bold;
+}
+
+.item-table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 20px;
+}
+
+.item-table th,
+.item-table td {
+border: 1px solid #ccc;
+padding: 8px;
+text-align: left;
+}
+
+.item-table thead {
+background-color: #f0f0f0;
+}
+
+.item-table tfoot {
+background-color: #f9f9f9;
+font-weight: bold;
+}
+
+.total-label {
+text-align: right;
+}
+
+.total-amount {
+text-align: left;
+}
+  </style>
+</head>
+
+<body>
+  <!-- Header line with date, username, and website -->
+  <div class="top-info">
+    <span class="left">{{ current_date_time }}</span>
+    <span class="center">Username: {{ request.user.username }}</span>
+    <span class="right">GardenBook.com</span>
+  </div>
+
+  <!-- Title -->
+  <h1 class="title">{{ report.title }}</h1>
+
+  <!-- Table of items -->
+  <table class="item-table">
+    <thead>
+      <tr>
+        {% for cols in report.col %}
+        <th>{{ col }}</th>
+        
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for rows in report.rows %}
+      <tr>
+        {% for value in rows.values %}
+        <td>{{ value }}</td>
+        
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3" class="total-label">Total</td>
+        <td class="total-amount">{{ report.total }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</body>
+
+</html>

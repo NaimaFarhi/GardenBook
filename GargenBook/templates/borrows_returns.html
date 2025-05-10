@@ -45,34 +45,43 @@
 
   <!-- START DISPLAY BOOK BORROWINGS -->
   <div class="container-fluid row m-2">
-    <!-- START SEARCH BAR SECTION -->
-    <div class="col-md-3 p-4">
 
-      <!-- Book Title Search -->
-      <div class="row my-2">
-        <p class="fs-5">Book Title</p>
-        <input type="search" class="form-control" id="searchTitle" placeholder="Enter Book Title">
+    <!-- Horizontal Search Bar -->
+    <form method="GET" class="bg-white shadow-sm rounded-20 p-4 mb-4">
+      <div class="row g-3 align-items-end">
+    
+        <div class="col-md-3">
+          <label for="q" class="form-label">Book Title</label>
+          <input type="search" name="q" id="q" class="form-control" placeholder="Enter Book Title">
+        </div>
+    
+        <div class="col-md-2">
+          <label for="borrowed_on" class="form-label">Borrowed On</label>
+          <input type="date" name="borrowed_on" id="borrowed_on" class="form-control">
+        </div>
+    
+        <div class="col-md-2">
+          <label for="due_date" class="form-label">Due Date</label>
+          <input type="date" name="due_date" id="due_date" class="form-control">
+        </div>
+    
+        <div class="col-md-2">
+          <label for="returned_on" class="form-label">Returned On</label>
+          <input type="date" name="returned_on" id="returned_on" class="form-control">
+        </div>
+    
+        <div class="col-md-1">
+          <button class="btn btn-green w-100" type="submit">Search</button>
+        </div>
+    
+        <div class="col-md-2">
+          <a href="{% url 'borrows-returns' %}" class="btn btn-green w-100">Reset</a>
+        </div>
+    
       </div>
+      <small>Press Enter <i class="bi bi-arrow-return-left"></i></small>
+    </form>
 
-      <!-- Borrowed On -->
-      <div class="row my-2">
-        <p class="fs-5">Borrowed On</p>
-        <input type="date" class="form-control" id="searchBorrowedOn">
-      </div>
-
-      <!-- Due Date -->
-      <div class="row my-2">
-        <p class="fs-5">Due Date</p>
-        <input type="date" class="form-control" id="searchDueDate">
-      </div>
-
-      <!-- Returned On -->
-      <div class="row my-2">
-        <p class="fs-5">Returned On</p>
-        <input type="date" class="form-control" id="searchReturnedOn">
-      </div>
-    </div>
-    <!-- END SEARCH BAR SECTION -->
 
     <!-- START TABLE SECTION -->
     <div class="overflow-hidden shadow-sm p-0 rounded-20">
@@ -121,7 +130,13 @@
 
             </td>
             <td>
-              <a href="{% url 'payment-page' borrow.borrower.id %}">Pay</a>
+              {% if borrow.is_fine_paid %}
+              <span class="text-success">Paid</span>
+              {% elif borrow.fine == 0 %}
+              <span class="text-success">No Fine</span>
+              {% else %}
+              <a href="{% url 'payment-page' borrow.borrower.id 'borrow' %}" class="btn btn-outline-brown">Pay</a>
+              {% endif %}
             </td>
           </tr>
           {% endfor %}

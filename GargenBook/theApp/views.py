@@ -1,14 +1,21 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
+from decimal import Decimal
+from io import BytesIO
+import tempfile
+from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from weasyprint import HTML
 from .utils import generate_csv_books, generate_csv_orders, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
-from .models import Availability, Borrow, Genre, Order, Person, Book, ReadingHistory, Reservation, Review, Wishlist, Event
-from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
+from .models import Availability, Borrow, EventType, Genre, Order, Payment, Person, Book, ReadingHistory, Reservation, Review, RoleName, Wishlist, Event
+from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, EventCreateForm, EventEditForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
 from django.db.models import Q,Sum,Min, Max
 from django.core.paginator import Paginator
+import uuid
+from django.template.loader import render_to_string
 
 #_____________________________________________________________
 
@@ -294,40 +301,117 @@ def dashboard(request):
 def stock(request):
   stock = Book.objects.all()
 
-  if request.method == 'POST':
-        action = request.POST.get('action')
+  if request.method == 'GET':
+    q = request.GET.get('q')
+    genres = request.GET.getlist('genre')
+    publicationYearFrom = request.GET.get('publicationYearFrom')
+    publicationYearTo = request.GET.get('publicationYearTo')
+    language = request.GET.get('language')
+    audience = request.GET.get('audience')
+    review = request.GET.get('review')
 
-        if action == 'print_stock':
-            title = request.POST.get('title')
-            author = request.POST.get('author')
-            availability = request.POST.get('availability')
-            lang = request.POST.get('lang')
-            is_reserved = request.POST.get('is_reserved')
+    filters = Q()
 
-            filters = Q()
+    if q:
+      filters &= (
+        Q(title__icontains=q) |
+        Q(ISBN__icontains=q) |
+        Q(author__icontains=q) |
+        Q(edition__icontains=q) |
+        Q(keywords__icontains=q)
+      )
 
-            if title:
-                filters &= Q(title__icontains=title)
-            if author:
-                filters &= Q(author__icontains=author)
-            if availability:
-                filters &= Q(availability=availability)
-            if lang:
-                filters &= Q(lang__icontains=lang)
-            if is_reserved == 'on':
-                filters &= Q(is_reserved=True)
+    if genres:
+      filters &= Q(genres__name__in=genres)
 
-            filtered_books = Book.objects.filter(filters)
+    if publicationYearFrom:
+      try:
+        filters &= Q(publication_year__gte=int(publicationYearFrom))
+      except ValueError:
+        pass
 
-            # Handle export
-            format = request.POST.get('format')
-            if format == 'pdf':
-                return generate_pdf_books(filtered_books)
-            elif format == 'csv':
-                return generate_csv_books(filtered_books)
+    if publicationYearTo:
+      try:
+        filters &= Q(publication_year__lte=int(publicationYearTo))
+      except ValueError:
+        pass
 
-  context = {'stock': stock}
+    if language:
+      filters &= Q(lang__icontains=language)
+
+    if audience:
+      filters &= Q(audience=audience)
+
+    if review:
+      try:
+        filters &= Q(review__gte=int(review))
+      except ValueError:
+        pass
+
+    stock = stock.filter(filters).distinct()
+
+  elif request.method == 'POST':
+    action = request.POST.get('action')
+
+    if action == 'print_stock':
+      title = request.POST.get('title')
+      author = request.POST.get('author')
+      availability = request.POST.get('availability')
+      lang = request.POST.get('lang')
+      is_reserved = request.POST.get('is_reserved')
+
+      filters = Q()
+
+      if title:
+        filters &= Q(title__icontains=title)
+      if author:
+        filters &= Q(author__icontains=author)
+      if availability:
+        filters &= Q(availability=availability)
+      if lang:
+        filters &= Q(lang__icontains=lang)
+      if is_reserved == 'on':
+        filters &= Q(is_reserved=True)
+
+      filtered_books = Book.objects.filter(filters)
+
+      format = request.POST.get('format')
+      if format == 'pdf':
+        return generate_stock_report(request, filtered_books)
+      elif format == 'csv':
+        return generate_csv_books( filtered_books)
+      
+  genres = Genre.objects.all()
+  langs = Book.objects.values_list('lang', flat=True).distinct()
+  auds = Book.objects.values_list('audience', flat=True).distinct()
+
+  # Get real min/max from DB for publication_year
+  pub_year_stats = Book.objects.aggregate(pub_year_min=Min('publication_year'), pub_year_max=Max('publication_year'))
+  pub_year_min = pub_year_stats['pub_year_min'] or 0
+  pub_year_max = pub_year_stats['pub_year_max'] or 9999
+
+  result_count = stock.count()
+  book_count = Book.objects.filter(~Q(availability=Availability.REMOVED)).count()
+
+  # Pagination
+  paginator = Paginator(stock, 15)  # 10 books per page
+  page_number = request.GET.get('page')  # Get the current page number from URL
+  page_obj = paginator.get_page(page_number)  # Get the page object
+  
+  context = {
+    'page_obj': page_obj,
+    'genres': genres,
+    'langs': langs,
+    'auds': auds,
+    'pub_year_min': pub_year_min,
+    'pub_year_max': pub_year_max,
+    'result_count': result_count,
+    'book_count': book_count,
+    'stock': stock
+    }
   return render(request, 'stock.html', context)
+
+
 
 #_______________________________________________________________
 @login_required(login_url='login')
@@ -540,32 +624,42 @@ def events(request):
   query = request.GET.get("q", "")
   event_type = request.GET.get("event_type", "")
   date_filter = request.GET.get("date_filter", "")
+  page = request.GET.get("page", 1)
 
   # Filter by search keywords
   if query:
-      events = events.filter(title__icontains=query) | events.filter(description__icontains=query)
+    events = events.filter(
+      Q(title__icontains=query) | Q(description__icontains=query)
+    )
 
   # Filter by event type
   if event_type:
-      events = events.filter(event_type=event_type)
+    events = events.filter(event_type=event_type)
 
   # Filter by date
   today = timezone.now().date()
   if date_filter == "year":
-      events = events.filter(start_datetime__year=today.year)
+    events = events.filter(start_datetime__year=today.year)
   elif date_filter == "month":
-      events = events.filter(start_datetime__year=today.year, start_datetime__month=today.month)
+    events = events.filter(start_datetime__year=today.year, start_datetime__month=today.month)
   elif date_filter == "week":
-      start_of_week = today - timedelta(days=today.weekday())
-      end_of_week = start_of_week + timedelta(days=6)
-      events = events.filter(start_datetime__date__range=[start_of_week, end_of_week])
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    events = events.filter(start_datetime__date__range=(start_of_week, end_of_week))
 
-  # Unique event types for the dropdown
+  # Pagination
+  paginator = Paginator(events.order_by('start_datetime'), 5)  # 5 events per page
+  page_obj = paginator.get_page(page)
+
+  # Unique event types for filter dropdown
   types = Event.objects.values_list("event_type", flat=True).distinct()
 
   context = {
-      "events": events,
-      "types": types,
+    "events": page_obj,
+    "types": types,
+    "query": query,
+    "selected_type": event_type,
+    "selected_date": date_filter,
   }
 
   return render(request, 'events.html', context)
@@ -577,75 +671,286 @@ def borrowsReturns(request):
   borrows = Borrow.objects.all()
   form = BorrowForm()
 
-  if request.method == 'POST':
-      action = request.POST.get('action')
+  # Filtering logic (GET request)
+  if request.method == 'GET':
+    q = request.GET.get('q')
+    borrowed_on = request.GET.get('borrowed_on')
+    due_date = request.GET.get('due_date')
+    returned_on = request.GET.get('returned_on')
 
-      # Return a book
-      if action == 'return_book':
-        borrow_id = request.POST.get('borrow_id')
-        borrow = Borrow.objects.get(id=borrow_id)
+    if q:
+      borrows = borrows.filter(
+        Q(book__title__icontains=q) |
+        Q(borrower__first_name__icontains=q) |
+        Q(borrower__last_name__icontains=q)
+      )
 
-        # Mark book as returned
-        borrow.return_date = date.today()
-        if borrow.book.is_reserved:
-          borrow.book.availability = 'Reserved'
+    if borrowed_on:
+      borrows = borrows.filter(borrow_date=borrowed_on)
+
+    if due_date:
+      borrows = borrows.filter(due_date=due_date)
+
+    if returned_on:
+      borrows = borrows.filter(return_date=returned_on)
+
+  # Action logic (POST request)
+  elif request.method == 'POST':
+    action = request.POST.get('action')
+
+    if action == 'return_book':
+      borrow_id = request.POST.get('borrow_id')
+      borrow = Borrow.objects.get(id=borrow_id)
+
+      # Update status and return date
+      borrow.return_date = date.today()
+      borrow.returned = True
+      if borrow.book.is_reserved:
+        borrow.book.availability = Availability.RESERVED
+      else:
+        borrow.book.availability = Availability.AVAILABLE
+
+      borrow.book.save()
+      borrow.save()
+
+      # Log to reading history
+      ReadingHistory.objects.create(
+        person=borrow.borrower,
+        book=borrow.book,
+        date_borrowed=borrow.borrow_date,
+        date_returned=borrow.return_date
+      )
+
+      return redirect('borrows-returns')
+
+    elif action == 'add_borrow':
+      form = BorrowForm(request.POST)
+      if form.is_valid():
+        book = form.cleaned_data['book']
+        if book.availability == Availability.BORROWED:
+          form.add_error('book', 'This book is currently borrowed.')
         else:
-          borrow.book.availability = 'Available'
-        borrow.book.save()
-        borrow.save()
-
-        # Add to ReadingHistory
-        ReadingHistory.objects.create(
-            person=borrow.borrower,
-            book=borrow.book,
-            date_borrowed=borrow.borrow_date,
-            date_returned=borrow.return_date
-        )
-
-        return redirect('borrows-returns')
-      
-      elif action == 'add_borrow':
-          form = BorrowForm(request.POST)
-          if form.is_valid():
-              book = form.cleaned_data['book']
-              if book.availability == 'Borrowed':
-                  form.add_error('book', 'This book is currently borrowed.')
-              else:
-                  borrow = form.save(commit=False)
-                  book.availability = 'Borrowed'
-                  book.save()
-                  borrow.save()
-          return redirect('borrows-returns')
+          borrow = form.save(commit=False)
+          book.availability = Availability.BORROWED
+          book.save()
+          borrow.save()
+      return redirect('borrows-returns')
 
   context = {'borrows': borrows, 'form': form}
   return render(request, 'borrows_returns.html', context)
+  return render(request, 'borrows_returns.html', context)
 
 #________________________________________________________________
+#for the payment page
 @login_required(login_url='login')
-def payment_page(request, pk):
-    user = Person.objects.get(id=pk)
+def payment_page(request, pk, current_page):
+  payer = Person.objects.get(id=pk)
 
-    # Get all borrow entries with unpaid fines (e.g., returned = True, fine > 0, and not marked as paid)
-    unpaid_fines = Borrow.objects.filter(borrower=user, returned=True, fine__gt=0, is_fine_paid=False)
+  # Get all unpaid fines
+  unpaid_fines = Borrow.objects.filter(borrower=payer, returned=True , fine__gt=0, is_fine_paid=False)
+  print(unpaid_fines)
+  total_fine = sum((fine.fine or Decimal("0.00")) for fine in unpaid_fines)
+  print(total_fine)
 
-    total_fine = sum(b.fine for b in unpaid_fines)
+  if request.method == 'POST' and total_fine > 0:
+    if current_page == 'pro':
+      # Get card info from form
+      card_name = request.POST.get('card_name')
+      card_number = request.POST.get('card_number')
+      expiry_date = request.POST.get('expiry_date')
+      cvv = request.POST.get('cvv')
+      type_payment = 'Card'
+      card_info = f"{card_name}, {card_number}, {expiry_date}, {cvv}"
+    else:
+      # Librarian or admin paying in cash
+      type_payment = 'Cash'
+      card_info = '######PAID CASH######'
 
-    if request.method == 'POST':
-        # Dummy payment logic (add your gateway or Stripe integration here)
-        for borrow in unpaid_fines:
-            borrow.fine_paid = True
-            borrow.save()
+    # Save payment and mark each borrow as paid
+    for borrow in unpaid_fines:
+      borrow.is_fine_paid = True
+      borrow.save()
 
-        messages.success(request, "Payment successful.")
-        return redirect('Borrows-returns', user_id=user.id)  # or any success page
+      Payment.objects.create(
+        transaction_Id=str(uuid.uuid4()),
+        person=payer,
+        borrow=borrow,
+        type_payment=type_payment,
+        amount=borrow.fine,
+        card_info=card_info
+      )
+
+    messages.success(request, "Payment successful.")
+    if request.user.role == RoleName.READER:
+      return redirect('profile', user_id=payer.id)
+    else:
+      return redirect('borrows-returns')
+
+  context = {
+      'user': payer,
+      'fines': unpaid_fines,
+      'total_fine': total_fine,
+  }
+  return render(request, 'pay.html', context)
+
+#________________________________________________________________
+#for the staff payments page
+def payment_staff(request):
+  payments = Payment.objects.select_related('person', 'borrow', 'borrow__book')
+  query = request.GET.get("q", "")
+  type_payment = request.GET.get("type_payment", "")
+  date_filter = request.GET.get("date", "")
+
+  # Search by person or transaction ID
+  if query:
+    payments = payments.filter(
+      Q(person__first_name__icontains=query) |
+      Q(person__last_name__icontains=query) |
+      Q(person__email__icontains=query) |
+      Q(person__cin__icontains=query) |
+      Q(transaction_Id__icontains=query)
+    )
+
+  # Filter by payment type
+  if type_payment:
+    payments = payments.filter(type_payment__iexact=type_payment)
+
+  # Filter by date
+  if date_filter:
+    try:
+      selected_date = datetime.strptime(date_filter, "%Y-%m-%d").date()
+      payments = payments.filter(transaction_date__date=selected_date)
+    except ValueError:
+      pass  # Ignore invalid date
+
+  context = {
+    "payments": payments.order_by("-transaction_date"),
+  }
+
+  return render(request, "manage_payment.html", context)
+
+
+#________________________________________________________________
+def event_staff(request):
+  events = Event.objects.all()
+  query = request.GET.get("q", "")
+  event_type = request.GET.get("event_type", "")
+  date_filter = request.GET.get("date_filter", "")
+  create_form = EventCreateForm()
+  edit_forms = {event.id: EventEditForm(instance=event) for event in events}
+
+  # Search
+  if query:
+    events = events.filter(
+      Q(title__icontains=query) |
+      Q(host__icontains=query) |
+      Q(description__icontains=query)
+    )
+
+  # Filter by type
+  if event_type:
+    events = events.filter(event_type=event_type)
+
+  # Filter by date
+  today = timezone.now().date()
+  if date_filter == "year":
+    events = events.filter(start_datetime__year=today.year)
+  elif date_filter == "month":
+      events = events.filter(start_datetime__year=today.year, start_datetime__month=today.month)
+  elif date_filter == "week":
+      start_of_week = today - timedelta(days=today.weekday())
+      end_of_week = start_of_week + timedelta(days=6)
+      events = events.filter(start_datetime__date__range=(start_of_week, end_of_week))
+
+  types = Event.objects.values_list("event_type", flat=True).distinct()
+
+  context = {
+      "events": events.order_by("-start_datetime"),
+      "types": types,
+      "create_form": create_form,
+      "edit_forms": edit_forms,
+  }
+
+  return render(request, "manage_event.html", context)
+
+#________________________________________________________________
+#for creating a new event
+def create_event(request):
+  if request.method == 'POST':
+    form = EventCreateForm(request.POST, request.FILES)
+    if form.is_valid():
+      form.save()
+      return redirect('manage_events')
+
+#_______________________________________________________________
+#for canceling an event
+def cancel_event(request, pk):
+  event = Event.objects.get(id=pk)
+  event.is_canceled = True
+  event.save()
+  return redirect('manage_events')
+
+#_______________________________________________________________
+def generate_invoice(request, pk):
+  payment = Payment.objects.get(id=pk)
+  html_string = render_to_string('invoice.html', {'payment': payment})
+  html = HTML(string=html_string, base_url=request.build_absolute_uri())
+
+  pdf_file = html.write_pdf()
+
+  response = HttpResponse(content_type='application/pdf')
+  response['Content-Disposition'] = f'inline; filename="event_{payment.id}.pdf"'
+  response.write(pdf_file)
+  return response
+
+
+#________________________________________________________________
+#for generating the stock report
+def generate_stock_report(request, books=None):
+    if books is None:
+        from .models import Book
+        books = Book.objects.all()
+
+    # Define table columns
+    columns = ["Title", "Author", "Language", "Availability", "Number of Borrows"]
+
+    # Build rows
+    rows = []
+    for book in books:
+        rows.append({
+            "values": [
+                book.title,
+                book.author,
+                book.lang,
+                book.availability,
+                book.nb_borrows
+            ]
+        })
+
+    total_borrows = sum(book.nb_borrows for book in books)
 
     context = {
-        'user': user,
-        'fines': unpaid_fines,
-        'total_fine': total_fine,
+        "report": {
+            "title": "Library Stock Report",
+            "col": columns,
+            "rows": rows,
+            "total": f"{total_borrows} Borrows",
+        },
+        "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "request": request,
     }
-    return render(request, 'payment.html', context)
 
+    html_string = render_to_string("listT emplate.html", context)
 
+    # Use in-memory buffer
+    pdf_file = BytesIO()
+    HTML(string=html_string).write_pdf(target=pdf_file)
+
+    # Build response
+    pdf_file.seek(0)
+    response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+    response["Content-Disposition"] = "inline; filename=stock_report.pdf"
+
+    return response
 
 

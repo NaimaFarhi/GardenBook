@@ -16,29 +16,29 @@
       <!-- ________________________________________________________________________ -->
       <!-- START PRINT MULTIPLE USERS MODAL -->
       <div class="modal fade" id="print-stock-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
-      
+
         <div class="modal-dialog">
-      
+
           <div class="modal-content">
-      
+
             <div class="modal-header bg-brown">
               <h5 class="modal-title text-light" id="modal-title">Print Stock</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-      
+
             <form method="POST">
               {% csrf_token %}
               <div class="modal-body">
                 <p class="text-secondary">Filter books:</p>
-            
+
                 <!-- Title -->
                 <label for="title" class="form-label">Title:</label>
                 <input type="text" name="title" id="title" class="form-control">
-            
+
                 <!-- Author -->
                 <label for="author" class="form-label mt-2">Author:</label>
                 <input type="text" name="author" id="author" class="form-control">
-            
+
                 <!-- Availability -->
                 <label for="availability" class="form-label mt-2">Availability:</label>
                 <select name="availability" id="availability" class="form-select">
@@ -47,17 +47,17 @@
                   <option value="BORROWED">Borrowed</option>
                   <option value="UNAVAILABLE">Unavailable</option>
                 </select>
-            
+
                 <!-- Language -->
                 <label for="lang" class="form-label mt-2">Language:</label>
                 <input type="text" name="lang" id="lang" class="form-control">
-            
+
                 <!-- Is Reserved -->
                 <div class="form-check mt-2">
                   <input class="form-check-input" type="checkbox" name="is_reserved" id="is_reserved">
                   <label class="form-check-label" for="is_reserved">Only show reserved books</label>
                 </div>
-            
+
                 <!-- Submit -->
                 <div class="modal-footer bg-brown mt-3">
                   <input type="hidden" name="action" value="print_stock">
@@ -67,56 +67,101 @@
               </div>
             </form>
 
-      
+
           </div>
         </div>
       </div>
-      
+
       <!-- END PRINT MODAL -->
     </div>
     <!-- END BUTTONS -->
 
-    <!-- START SEARCH SIDEBAR -->
-    <div class="col-md-2 bg-white shadow-sm p-4 rounded-20">
-      <h2>Search Stock</h2>
+    <!-- START SEARCH / FILTER SECTION -->
+    <div class="container-fluid bg-white shadow-sm rounded-20 p-4 mb-4">
+      <h2 class="mb-3">Search & Filter</h2>
+      <form method="GET" action="{% url 'stock' %}">
+        <div class="row gx-3 gy-2 align-items-end">
 
-      <!-- ISBN -->
-      <div class="mb-3">
-        <label for="isbnSearch" class="form-label">ISBN</label>
-        <input type="text" class="form-control" id="isbnSearch" placeholder="Enter ISBN">
-      </div>
+          <!-- Search Bar -->
+          <div class="col-md-4">
+            <label for="searchBar" class="form-label">Search</label>
+            <input type="search" name="q" class="form-control" id="searchBar"
+              placeholder="ISBN, Title, Author, Edition, Keywords...">
+          </div>
 
-      <!-- Title -->
-      <div class="mb-3">
-        <label for="titleSearch" class="form-label">Book Title</label>
-        <input type="text" class="form-control" id="titleSearch" placeholder="Enter Title">
-      </div>
+          <!-- Publication Year From -->
+          <div class="col-md-1">
+            <label for="publicationYearFrom" class="form-label">Year From</label>
+            <input type="number" name="publicationYearFrom" id="publicationYearFrom" value="{{pub_year_min}}"
+              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control">
+          </div>
 
-      <!-- Author -->
-      <div class="mb-3">
-        <label for="authorSearch" class="form-label">Author</label>
-        <input type="text" class="form-control" id="authorSearch" placeholder="Enter Author">
-      </div>
+          <!-- Publication Year To -->
+          <div class="col-md-1">
+            <label for="publicationYearTo" class="form-label">Year To</label>
+            <input type="number" name="publicationYearTo" id="publicationYearTo" value="{{pub_year_max}}"
+              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control">
+          </div>
 
-      <!-- Edition -->
-      <div class="mb-3">
-        <label for="editionSearch" class="form-label">Edition</label>
-        <input type="text" class="form-control" id="editionSearch" placeholder="Enter Edition">
-      </div>
+          <!-- Language -->
+          <div class="col-md-2">
+            <label for="language" class="form-label">Language</label>
+            <select class="form-select" name="language" id="language">
+              <option value="">Select a language</option>
+              {% for lang in langs %}
+              <option value="{{lang}}">{{lang}}</option>
+              {% endfor %}
+            </select>
+          </div>
 
-      <!-- Publication Year -->
-      <div class="mb-3">
-        <label for="yearSearch" class="form-label">Publication Year</label>
-        <input type="number" class="form-control" id="yearSearch" placeholder="Enter Year">
-      </div>
+          <!-- Audience -->
+          <div class="col-md-2">
+            <label for="audience" class="form-label">Audience</label>
+            <select class="form-select" name="audience" id="audience">
+              <option value="">Select an audience</option>
+              {% for aud in auds %}
+              <option value="{{aud}}">{{aud}}</option>
+              {% endfor %}
+            </select>
+          </div>
+          
+          <!-- Review -->
+          <div class="col-md-1">
+            <label for="review" class="form-label">Min Review</label>
+            <input type="number" name="review" id="review" min="0" max="10" class="form-control">
+          </div>
 
-      <!-- Min Stock -->
-      <div class="mb-3">
-        <label for="stockSearch" class="form-label">Minimum Stock</label>
-        <input type="number" class="form-control" id="stockSearch" placeholder="Min Quantity">
-      </div>
+          <!-- Genre -->
+          <div class="col-md-2">
+            <label class="form-label">Genre</label>
+            <div class="border rounded p-2" style="max-height: 120px; overflow-y: auto;">
+              {% if genres %}
+              {% for genre in genres %}
+              <div class="form-check small">
+                <input class="form-check-input" type="checkbox" name="genre" value="{{ genre }}" id="genre{{ genre }}">
+                <label class="form-check-label text-muted" for="genre{{ genre }}">{{ genre }}</label>
+              </div>
+              {% endfor %}
+              {% else %}
+              <small class="text-muted">No genres available</small>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="col-md-2 d-grid">
+            <button type="submit" class="btn btn-green">Search</button>
+          </div>
+
+          <div class="col-md-2 d-grid">
+            <a href="{% url 'stock' %}" class="btn btn-outline-secondary">Reset</a>
+          </div>
+
+        </div>
+      </form>
     </div>
-    <!-- END SEARCH SIDEBAR -->
+    <!-- END SEARCH / FILTER SECTION -->
+
 
     <!-- START TABLE -->
     <div class="col mx-3">

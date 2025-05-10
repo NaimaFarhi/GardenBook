@@ -10,21 +10,22 @@
   <!-- User Info Section -->
   <div class="mb-4">
     <h5>User Details</h5>
-    <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+    <p><strong>Full Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
     <p><strong>CIN:</strong> {{ user.cin }}</p>
     <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Role:</strong> {{ user.role }}</p>
+    <p><strong>Address:</strong> {{ user.address }}</p>
   </div>
 
   <!-- Outstanding Fines Section -->
   <div class="mb-4">
-    <h5>Outstanding Fines</h5>
+    <h5>Outstanding Fines {{ fines_count }}</h5>
     {% if fines %}
     <table class="table table-bordered">
       <thead class="table-secondary">
         <tr>
           <th>#</th>
           <th>Book Title</th>
+          <th>Due Date</th>
           <th>Return Date</th>
           <th>Fine Amount</th>
         </tr>
@@ -34,6 +35,7 @@
         <tr>
           <td>{{ forloop.counter }}</td>
           <td>{{ fine.book.title }}</td>
+          <td>{{ fine.due_date }}</td>
           <td>{{ fine.return_date }}</td>
           <td>{{ fine.fine }} MAD</td>
         </tr>
@@ -67,10 +69,12 @@
         <label for="cardNumber" class="form-label">Card Number</label>
         <input type="text" class="form-control" id="cardNumber" name="card_number" maxlength="16" required>
       </div>
+      
       <div class="col-md-3 mb-3">
         <label for="expiryDate" class="form-label">Expiry Date</label>
         <input type="text" class="form-control" id="expiryDate" name="expiry_date" placeholder="MM/YY" required>
       </div>
+
       <div class="col-md-3 mb-3">
         <label for="cvv" class="form-label">CVV</label>
         <input type="password" class="form-control" id="cvv" name="cvv" maxlength="3" required>

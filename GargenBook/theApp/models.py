@@ -223,12 +223,17 @@ class Review(models.Model):
 #______________________________________________________________________________
 class Event(models.Model):
     title = models.CharField(max_length=200)
-    description = models.TextField()
+    host = models.CharField(max_length=200, blank=True, null=True)
+    poster = models.ImageField(upload_to='event_posters/', null=True, blank=True, default='event_posters/default_poster.jpg')
+    description = models.TextField() 
+    event_price = models.FloatField(default=0.0)
+    audience = models.CharField(max_length=20, choices=AudienceType.choices, default="")
     location = models.CharField(max_length=255)
     start_datetime = models.DateTimeField()
     end_datetime = models.DateTimeField()
-    image = models.ImageField(upload_to='event_images/', blank=True, null=True)
     nbr_reservations = models.IntegerField(default=0)
+    current_reservations = models.IntegerField(default=0)
+    guests = models.ManyToManyField(Person, blank=True, related_name='events')
     created_at = models.DateTimeField(auto_now_add=True)
     event_type = models.CharField(max_length=20, choices=EventType.choices, default="")
     is_public = models.BooleanField(default=True)
@@ -240,9 +245,19 @@ class Event(models.Model):
 
 #______________________________________________________________________________
 class Payment(models.Model):
+    transaction_Id = models.CharField(max_length=70, unique=True)
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     borrow = models.ForeignKey(Borrow, on_delete=models.CASCADE)
     type_payment = models.CharField(max_length=20, choices=PaymentType.choices, default="")
+    amount = models.FloatField(default=0.0)
+    #if its via card (cardholder name, card number, expiration date, cvv/cvc)
+    # else will be filled with '######PAID CASH######'
+    card_info = models.CharField(max_length=150, default="")
+    transaction_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.transaction_Id
+
 
 
 

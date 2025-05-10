@@ -57,9 +57,15 @@
           </a>
         </li>
         <li>
-          <a href="{% url 'events' %}">
+          <a href="{% url 'manage-event' %}">
             <i class="bi bi-calendar2-event"></i>
             Events
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'manage-payment' %}">
+            <i class="bi bi-wallet2"></i>
+            Payments
           </a>
         </li>
       </ul>
@@ -73,8 +79,16 @@
 
   <main class="col">
 
-    <div class="p-2">
-      <h3>{% block page%} Current page name {% endblock page %}</h3>
+    <div class="p-2 row">
+      <div class="col-6">
+        <h3>{% block page%} Current page name {% endblock page %}</h3>
+      </div>
+
+      <div class="col-6 d-flex justify-content-end">
+        <a href="{% url 'dashboard' %}">
+          <img src="{{ request.user.profile_pic.url }}" alt="Profile" class="rounded-circle" style="height: 30px; width: 30px;">
+        </a>
+      </div>
     </div>
 
     <div>
