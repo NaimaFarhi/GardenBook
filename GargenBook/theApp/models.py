@@ -122,6 +122,9 @@ class Borrow(models.Model):
     is_fine_paid = models.BooleanField(default=False)
     returned = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"Borrow {self.id} - {self.book.title} by {self.borrower.username}"
+
     # Method that calculates the fine
     def calculate_fine(self):
         if self.return_date:
@@ -246,14 +249,12 @@ class Event(models.Model):
 #______________________________________________________________________________
 class Payment(models.Model):
     transaction_Id = models.CharField(max_length=70, unique=True)
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
     borrow = models.ForeignKey(Borrow, on_delete=models.CASCADE)
     type_payment = models.CharField(max_length=20, choices=PaymentType.choices, default="")
     amount = models.FloatField(default=0.0)
     #if its via card (cardholder name, card number, expiration date, cvv/cvc)
     # else will be filled with '######PAID CASH######'
     card_info = models.CharField(max_length=150, default="")
-    transaction_date = models.DateTimeField(auto_now_add=True)
     transaction_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

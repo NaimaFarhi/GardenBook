@@ -4,10 +4,85 @@
 
 {% block title %}Payments | GardenBook{% endblock %}
 
-{% block page %}Payments{% endblock %} {% block content%}
+{% block page %}Manage Payments{% endblock %} {% block content%}
 
-<div class="py-5 bg-light-brown">
+
   <div class="container-fluid row m-2">
+    <div class="row d-flex justify-content-end align-items-center mb-4">
+      <div class="col-auto">
+        <button type="button" class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#printModal">
+          <i class="bi bi-printer"></i>
+          Print Payments
+        </button>
+
+        <!-- Print Modal -->
+        <div class="modal fade" id="printModal" tabindex="-1" aria-labelledby="printModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="printModalLabel">Print Payments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form method="POST">
+                  {% csrf_token %}
+
+                  <!-- USER -->
+                  <div class="mb-3">
+                    <label for="reader" class="form-label">Reader</label>
+                    <select name="reader" class="form-control">
+                      <option value="">All</option>
+                      {% for user in transaction_users %}
+                      <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <!-- BOOK -->
+                  <div class="mb-3">
+                    <label for="book" class="form-label">Book</label>
+                    <select name="book" class="form-control">
+                      <option value="">All</option>
+                      {% for book in transaction_books %}
+                      <option value="{{ book.id }}">{{ book.title }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+
+                  <!-- PAYMENT TYPE -->
+                  <div class="mb-3">
+                    <label for="type_payment" class="form-label">Payment Type</label>
+                    <select name="type_payment" class="form-control">
+                      <option value="">All</option>
+                      <option value="Card">Card</option>
+                      <option value="Cash">Cash</option>
+                    </select>
+                  </div>
+
+                  <!-- DATE -->
+                  <div class="mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" />
+                  </div>
+                  <div class="mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" />
+                  </div>
+
+              </div>
+              <div class="modal-footer">
+                <input type="hidden" name="action" value="print_payments">
+                <button type="submit" class="btn btn-green" name="format" value="pdf">Export to PDF </button>
+                <button type="submit" class="btn btn-green" name="format" value="csv">Export to Excel</button>
+                <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Horizontal Search Bar -->
     <form method="GET" class="bg-white shadow-sm rounded-20 p-4 mb-4">
       <div class="row g-3 align-items-end">
@@ -48,7 +123,7 @@
           <thead class="bg-brown-second">
             <tr>
               <th>Transaction ID</th>
-              <th>User</th>
+              <th>Reader</th>
               <th>Book</th>
               <th>Amount</th>
               <th>Type</th>
@@ -62,8 +137,7 @@
             <tr>
               <td>{{ payment.transaction_Id }}</td>
               <td>
-                {{ payment.person.first_name }} {{ payment.person.last_name }}
-              </td>
+                {{ payment.borrow.borrower }}</td>
               <td>{{ payment.borrow.book.title }}</td>
               <td>{{ payment.amount }} MAD</td>
               <td>{{ payment.type_payment }}</td>
@@ -72,7 +146,8 @@
               </td>
               <td>{{ payment.transaction_date|date:"Y-m-d H:i" }}</td>
               <td>
-                <a href="{% url 'generate_invoice' payment.id %}" class="btn btn-outline-brown"><i class="bi bi-printer"></i></a>
+                <a href="{% url 'generate_invoice' payment.id %}" class="btn btn-outline-brown"><i
+                    class="bi bi-printer"></i></a>
               </td>
             </tr>
             {% empty %}
@@ -87,5 +162,5 @@
       </div>
     </div>
   </div>
-</div>
+
 {% endblock %}

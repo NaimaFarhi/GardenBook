@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from weasyprint import HTML
-from .utils import generate_csv_books, generate_csv_orders, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
+from .utils import generate_csv_books, generate_csv_orders, generate_csv_payments, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
 from .models import Availability, Borrow, EventType, Genre, Order, Payment, Person, Book, ReadingHistory, Reservation, Review, RoleName, Wishlist, Event
 from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, EventCreateForm, EventEditForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
 from django.db.models import Q,Sum,Min, Max
@@ -850,18 +850,20 @@ def payment_page(request, pk, current_page):
 #________________________________________________________________
 #for the staff payments page
 def payment_staff(request):
-  payments = Payment.objects.select_related('person', 'borrow', 'borrow__book')
+  payments = Payment.objects.select_related('borrow__borrower', 'borrow', 'borrow__book')
   query = request.GET.get("q", "")
   type_payment = request.GET.get("type_payment", "")
   date_filter = request.GET.get("date", "")
 
+  # Filter by search___________________
   # Search by person or transaction ID
   if query:
     payments = payments.filter(
-      Q(person__first_name__icontains=query) |
-      Q(person__last_name__icontains=query) |
-      Q(person__email__icontains=query) |
-      Q(person__cin__icontains=query) |
+      Q(borrow__borrower__first_name__icontains=query) |
+      Q(borrow__borrower__last_name__icontains=query) |
+      Q(borrow__borrower__email__icontains=query) |
+      Q(borrow__borrower__cin__icontains=query) |
+      Q(borrow__book__title__icontains=query) |
       Q(transaction_Id__icontains=query)
     )
 
@@ -877,8 +879,49 @@ def payment_staff(request):
     except ValueError:
       pass  # Ignore invalid date
 
+  #__Print a list of payments (generate PDF/CSV for multiple payments)
+  if request.method == 'POST':
+    action = request.POST.get('action')
+
+    if action == 'print_payments':
+      start_date = request.POST.get('start_date')
+      end_date = request.POST.get('end_date')
+      type_payment = request.POST.getlist('type_payment')
+
+      # Start with all payments
+      selected_payments = payments
+
+      # Filter by date range if valid
+      if start_date and end_date:
+        try:
+          parsed_start = datetime.strptime(start_date, "%Y-%m-%d").date()
+          parsed_end = datetime.strptime(end_date, "%Y-%m-%d").date()
+          selected_payments = selected_payments.filter(transaction_date__range=[parsed_start, parsed_end])
+        except ValueError:
+          pass  # Skip filtering if dates are invalid
+
+      # Filter by payment type if any
+      if any(type_payment):
+        selected_payments = selected_payments.filter(type_payment__in=type_payment)
+
+      # Generate report
+      if request.POST.get('format') == 'pdf':
+        return generate_payment_report(request, selected_payments)
+      elif request.POST.get('format') == 'csv':
+        return generate_csv_payments(selected_payments)
+
+    return redirect('manage-payment')
+      
+
+  # Get unique payment types for filter dropdown
+  transaction_users = Person.objects.filter(id__in=Payment.objects.values_list('borrow__borrower', flat=True).distinct())
+  transaction_books = Book.objects.filter(id__in=Payment.objects.values_list('borrow__book', flat=True).distinct())
+
+
   context = {
     "payments": payments.order_by("-transaction_date"),
+    "transaction_users": transaction_users,
+    "transaction_books": transaction_books,
   }
 
   return render(request, "manage_payment.html", context)
@@ -1020,7 +1063,7 @@ def generate_payment_report(request, payments=None):
     payments = Payment.objects.select_related("person", "borrow").all()
 
   # Define table columns
-  columns = ["Transaction ID", "Person", "Borrow ID", "Payment Type", "Amount", "Card Info", "Transaction Date"]
+  columns = ["Transaction ID", "Reader", "Borrow", "Payment Type", "Card Info", "Transaction Date", "Amount"]
 
   # Build rows
   rows = []
@@ -1028,12 +1071,12 @@ def generate_payment_report(request, payments=None):
     rows.append({
       "values": [
         payment.transaction_Id,
-        payment.person.full_name,  # assumes Person model has a `full_name` field or method
-        payment.borrow.id,
+        payment.borrow.borrower,
+        payment.borrow.book,
         payment.type_payment,
-        f"{payment.amount:.2f} MAD",
         payment.card_info,
         payment.transaction_date.strftime("%Y-%m-%d %H:%M"),
+        f"{payment.amount:.2f} MAD",
       ]
     })
 

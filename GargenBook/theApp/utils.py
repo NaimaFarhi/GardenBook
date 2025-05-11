@@ -106,6 +106,33 @@ def generate_csv_users(users):
 
     return response
 
+#________________________________________________________________
+# For generating CVS for Payments
+def generate_csv_payments(payments):
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="payments_report.csv"'
+
+    writer = csv.writer(response)
+
+    # Write the header
+    writer.writerow(['Payment Report'])
+
+    writer.writerow(['Transaction ID', 'Reader', 'Book', 'Payment Type', 'Amount', 'Date'])
+
+    for payment in payments:
+        writer.writerow([
+            payment.transaction_Id,
+            f"{payment.person}",
+            payment.borrow,
+            payment.type_payment,
+            payment.amount,
+            payment.transaction_date.strftime("%Y-%m-%d") if payment.transaction_date else ''
+        ])
+
+    return response
+
+
+#________________________________________________________________
 def generate_pdf_users(users):
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)

@@ -90,6 +90,7 @@
                   <th>Book</th>
                   <th>Due Date</th>
                   <th>Return Date</th>
+                  <th>Type of Payment</th>
                   <th>Fine Amount</th>
                 </tr>
               </thead>
@@ -104,6 +105,8 @@
                   </td>
                   <td>{{ payment.borrow.due_date }}</td>
                   <td>{{ payment.borrow.return_date }}</td>
+                  <td>{{ payment.type_payment }}</td>
+                  </td>
                   <td>{{ payment.borrow.fine }} MAD</td>
                 </tr>
                 <tr>
@@ -117,7 +120,7 @@
               </tbody>
             </table>
           </div>
-          
+
         </div>
 
       </div>

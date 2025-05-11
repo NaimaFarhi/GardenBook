@@ -13,94 +13,82 @@
   <title>{% block title %}Librarian Base page{% endblock %}</title>
 </head>
 
-<body class="row">
+<body>
 
-  <header class="col-md-2 p-4">
+  <div class="row" style="height: 100vh;">
 
-    <!-- LOGO -->
-    <a href="{% url 'dashboard' %}" class="d-flex align-items-center mb-2 mb-lg-0 text-brown text-decoration-none">
-      <img src="{% static 'assets/brand/_logo-nobg.png' %}" class="bi me-2" width="60" height="60" role="img"
-        aria-label="GardenBook">
-    </a>
+    <header class="col-md-2 shadow-sm" style="font-size: larger;">
+      <aside class="d-flex flex-column justify-content-between vh-100 p-3 mx-2">
+    
+        <!-- Logo -->
+        <div class="mb-4">
+          <a href="{% url 'dashboard' %}" class="d-flex align-items-center mb-2 text-brown text-decoration-none">
+            <img src="{% static 'assets/brand/_logo-nobg.png' %}" class="me-2" width="80" height="80" role="img"
+              aria-label="GardenBook">
+          </a>
+        </div>
+    
+        <!-- Navigation Links (higher up) -->
+        <div class="d-flex flex-column" style="margin-bottom: auto;">
+          <a href="{% url 'dashboard' %}" class="mb-4">
+            <i class="bi bi-clipboard2-data"></i> Dashboard
+          </a>
+          <a href="{% url 'manage-users' %}" class="mb-4">
+            <i class="bi bi-people"></i> Manage Users
+          </a>
+          <a href="{% url 'borrows-returns' %}" class="mb-4">
+            <i class="bi bi-ui-checks"></i> Borrows & Returns
+          </a>
+          <a href="{% url 'stock' %}" class="mb-4">
+            <i class="bi bi-archive"></i> Stock
+          </a>
+          <a href="{% url 'orders' %}" class="mb-4">
+            <i class="bi bi-bag-dash"></i> Orders
+          </a>
+          <a href="{% url 'manage-event' %}" class="mb-4">
+            <i class="bi bi-calendar2-event"></i> Events
+          </a>
+          <a href="{% url 'manage-payment' %}" class="mb-4">
+            <i class="bi bi-wallet2"></i> Payments
+          </a>
+        </div>
+    
+        <!-- Logout at Bottom -->
+        <div class="text-end mt-auto">
+          <a href="{% url 'logout' %}" style="font-weight: bolder;">
+            <i class="bi bi-box-arrow-left"></i> Logout
+          </a>
+        </div>
+    
+      </aside>
+    </header>
+    
 
-    <!-- LIKNS -->
-    <div>
-      <ul>
-        <li>
+    <main class="col px-0">
+
+      <div class="row py-3 mx-1 shadow-sm">
+        <div class="col-6">
+          <h2>{% block page%} Current page name {% endblock page %}</h2>
+        </div>
+
+        <div class="col-6 d-flex justify-content-end">
           <a href="{% url 'dashboard' %}">
-            <i class="bi bi-clipboard2-data"></i>
-            Dashboard
+            <img src="{{ request.user.profile_pic.url }}" alt="Profile" class="rounded-circle"
+              style="height: 30px; width: 30px;">
           </a>
-        </li>
-        <li>
-          <a href="{% url 'manage-users' %}">
-            <i class="bi bi-people"></i>
-            Manage Users
-          </a>
-        </li>
-        <li>
-          <a href="{% url 'borrows-returns' %}">
-            <i class="bi bi-ui-checks"></i>
-            Borrows & returns
-          </a>
-        </li>
-        <li>
-          <a href="{% url 'stock' %}">
-            <i class="bi bi-archive"></i>
-            Stock
-          </a>
-        </li>
-        <li>
-          <a href="{% url 'orders' %}">
-            <i class="bi bi-bag-dash"></i>
-            Orders
-          </a>
-        </li>
-        <li>
-          <a href="{% url 'manage-event' %}">
-            <i class="bi bi-calendar2-event"></i>
-            Events
-          </a>
-        </li>
-        <li>
-          <a href="{% url 'manage-payment' %}">
-            <i class="bi bi-wallet2"></i>
-            Payments
-          </a>
-        </li>
-      </ul>
-    </div>
-
-    <div class="text-end">
-      <a href="{% url 'logout' %}" class=""><i class="bi bi-box-arrow-left"></i>Logout</a>
-    </div>
-
-  </header>
-
-  <main class="col">
-
-    <div class="p-2 row">
-      <div class="col-6">
-        <h3>{% block page%} Current page name {% endblock page %}</h3>
+        </div>
       </div>
 
-      <div class="col-6 d-flex justify-content-end">
-        <a href="{% url 'dashboard' %}">
-          <img src="{{ request.user.profile_pic.url }}" alt="Profile" class="rounded-circle" style="height: 30px; width: 30px;">
-        </a>
+      <div class="py-5 bg-green-soft" style="height: 100vh;">
+        {% block content %}
+
+        {% endblock content %}
       </div>
-    </div>
 
-    <div>
-      {% block content %}
+    </main>
 
-      {% endblock content %}
-    </div>
-
-  </main>
-
-  <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
-
+    <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
+  </div>
 </body>
 
 </html>
