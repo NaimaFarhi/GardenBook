@@ -38,7 +38,7 @@
           </div>
         </div>
       </div>
-
+      
     </div>
 
     <!-- Horizontal Search Bar -->
@@ -123,8 +123,7 @@
                   <div class="modal-dialog">
                     <div class="modal-content">
                       <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="reservationListTitle{{ event.id }}">Reservation List of #{{
-                          event.id }} {{ event.title }}</h1>
+                        <h1 class="modal-title fs-5" id="reservationListTitle{{ event.id }}">Reservation List of #{{ event.id }} {{ event.title }}</h1>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
@@ -194,20 +193,27 @@
                                   class="img-fluid rounded-start" alt="event poster"></small>
                             </p>
                             <p class="card-text">Event ID: <small class="text-body-secondary">{{ event.id }}</small></p>
-                            <p class="card-text">Description: <small class="text-body-secondary">{{ event.description
-                                }}</small></p>
-                            <p class="card-text">Starts: <small class="text-body-secondary">{{ event.start_datetime
-                                }}</small></p>
-                            <p class="card-text">Ends: <small class="text-body-secondary">{{ event.end_datetime
-                                }}</small></p>
-                            <p class="card-text">Location: <small class="text-body-secondary">{{ event.location
-                                }}</small></p>
-                            <p class="card-text">Event Type: <small class="text-body-secondary">{{ event.event_type
-                                }}</small></p>
-                            <p class="card-text">Event Host: <small class="text-body-secondary">{{ event.event_host
-                                }}</small></p>
-                            <p class="card-text">Event Price: <small class="text-body-secondary">{{ event.event_price
-                                }}</small></p>
+                            <p class="card-text">Description: 
+                              <small class="text-body-secondary">{{ event.description }}</small>
+                            </p>
+                            <p class="card-text">Starts: 
+                              <small class="text-body-secondary">{{ event.start_datetime }}</small>
+                            </p>
+                            <p class="card-text">Ends: 
+                              <small class="text-body-secondary">{{ event.end_datetime }}</small>
+                            </p>
+                            <p class="card-text">Location: 
+                              <small class="text-body-secondary">{{ event.location }}</small>
+                            </p>
+                            <p class="card-text">Event Type: 
+                              <small class="text-body-secondary">{{ event.event_type }}</small>
+                            </p>
+                            <p class="card-text">Event Host: 
+                              <small class="text-body-secondary">{{ event.host|default:"N/A" }}</small>
+                            </p>
+                            <p class="card-text">Event Price: 
+                              <small class="text-body-secondary">{{ event.event_price }}</small>
+                            </p>
                             <p class="card-text">Event Status: <small class="text-body-secondary">
                                 {% if event.is_canceled %}
                                 <span class="text-danger">Canceled</span>
@@ -215,17 +221,22 @@
                                 <span class="text-success">Active</span>
                                 {% endif %}
                               </small></p>
-                            <p class="card-text">Reservations: <small class="text-body-secondary">
+                            <p class="card-text">Reservations: 
+                              <small class="text-body-secondary">
                                 {{ event.nbr_reservations }} / {{ event.current_reservations }}
                               </small></p>
-                            <p class="card-text">Created At: <small class="text-body-secondary">{{ event.created_at
-                                }}</small></p>
-                            <p class="card-text">Updated At: <small class="text-body-secondary">{{ event.updated_at
-                                }}</small></p>
-                            <p class="card-text">Created By: <small class="text-body-secondary">{{ event.created_by
-                                }}</small></p>
-                            <p class="card-text">Updated By: <small class="text-body-secondary">{{ event.updated_by
-                                }}</small></p>
+                            <p class="card-text">Created At: 
+                              <small class="text-body-secondary">{{ event.created_at }}</small>
+                            </p>
+                            <p class="card-text">Updated At: 
+                              <small class="text-body-secondary">{{ event.updated_at }}</small>
+                                </p>
+                            <p class="card-text">Created By: 
+                              <small class="text-body-secondary">{{ event.created_by }}</small>
+                                </p>
+                            <p class="card-text">Updated By: 
+                              <small class="text-body-secondary">{{ event.updated_by }}</small>
+                                </p>
                           </div>
                         </div>
                       </div>

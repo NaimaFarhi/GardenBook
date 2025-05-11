@@ -190,9 +190,9 @@ class Order(models.Model):
     order_date = models.DateField(auto_now_add=True)
     created_by = models.ForeignKey(Person, null=True, blank=True, on_delete=models.SET_NULL, related_name='orders_created')
     expected_delivery_date = models.DateField()
-    delivery_date = models.DateField(auto_now=True, blank=True, null=True)
+    delivery_date = models.DateField(blank=True, null=True)
     updated_by = models.ForeignKey(Person, null=True, blank=True, on_delete=models.SET_NULL, related_name='orders_updated')
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"Order {self.id} - {self.book.title} ({self.status})"
@@ -254,10 +254,20 @@ class Payment(models.Model):
     # else will be filled with '######PAID CASH######'
     card_info = models.CharField(max_length=150, default="")
     transaction_date = models.DateTimeField(auto_now_add=True)
+    transaction_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.transaction_Id
 
 
+class Alert(models.Model):
+    user = models.ForeignKey(Person, on_delete=models.CASCADE)
+    message = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_read = models.DateTimeField(null=True, blank=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Alert for {self.user.username} - {self.message[:20]}..."
 
 

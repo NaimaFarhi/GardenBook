@@ -214,70 +214,124 @@ def create_book(request):
 @login_required(login_url='login')
 #for orders page
 def orders(request):
-    orders = Order.objects.all()
-    
-    if request.method == 'POST':
-        print(request.POST)
-        action = request.POST.get('action')
+  orders = Order.objects.all()
+  formSupplier = SupplierForm()
+  formOrder = CustomOrderCreationForm()
 
-        # Update the status of an order
-        if action == 'update_status':
-            order_id = request.POST.get('order_id')
-            order = Order.objects.get(id=order_id)
-            status = request.POST.get('status')
+  q = request.GET.get('q')
+  status = request.GET.get('status')
+  order_date = request.GET.get('order_date')
 
-            if order.status.lower() == "pending":  # the order can only be updated if it's pending
-                order.status = status
-                if status == "Delivered":
-                   order.delivery_date = date.today()
-                order.save()
-                return redirect('orders')
+  if q:
+    orders = orders.filter(
+      Q(id__icontains=q) |
+      Q(supplier__name__icontains=q) |
+      Q(book__title__icontains=q)
+    )
 
-        # Print one order (generate PDF/CSV for a single order)
-        elif action == 'print_order':
-            order_id = request.POST.get('order_id')
-            order = Order.objects.get(id=order_id)
+  if status:
+      orders = orders.filter(status=status)
+
+  if order_date:
+      orders = orders.filter(order_date=order_date)
+
+  # Get unique status values from existing orders
+  status_choices = Order.objects.values_list('status', flat=True).distinct()
+  
+  if request.method == 'POST':
+    print(request.POST)
+    action = request.POST.get('action')
+
+    # Update the status of an order
+    if action == 'update_status':
+      order_id = request.POST.get('order_id')
+      order = Order.objects.get(id=order_id)
+      status = request.POST.get('status')
+
+      if order.status.lower() == "pending":  # the order can only be updated if it's pending
+        order.status = status
+        if status == "Delivered":
+          order.delivery_date = date.today()
+        order.updated_by = request.user
+        order.updated_at = date.today()
+        order.save()
+        return redirect('orders')
+
+    # Print one order (generate PDF/CSV for a single order)
+    elif action == 'print_order':
+      order_id = request.POST.get('order_id')
+      order = Order.objects.get(id=order_id)
+      
+      if request.POST.get('format') == 'pdf':
+        return generate_pdf_orders([order])  # Pass a list of orders, even if it's just one
+      elif request.POST.get('format') == 'csv':
+        return generate_csv_orders([order])  # samething here
+
+    # Print a list of orders (generate PDF/CSV for multiple orders)
+    elif action == 'print_multiple_orders':
+      start_date = request.POST.get('from_date')
+      end_date = request.POST.get('to_date')
+      status_filter = request.POST.getlist('status')
+
+      # Start with all orders
+      selected_orders = orders
+
+      # Filter by date range if valid
+      if start_date and end_date:
+        try:
+          parsed_start = datetime.strptime(start_date, "%Y-%m-%d").date()
+          parsed_end = datetime.strptime(end_date, "%Y-%m-%d").date()
+          selected_orders = selected_orders.filter(order_date__range=[parsed_start, parsed_end])
+        except ValueError:
+          pass  # Skip filtering if dates are invalid
+
+      # Filter by status if any
+      if status_filter:
+        selected_orders = selected_orders.filter(status__in=status_filter)
+
+      # Generate report
+      if request.POST.get('format') == 'pdf':
+        return generate_order_report(request, selected_orders)
+      elif request.POST.get('format') == 'csv':
+        return generate_csv_orders(selected_orders)
+
             
-            if request.POST.get('format') == 'pdf':
-                return generate_pdf_orders([order])  # Pass a list of orders, even if it's just one
-            elif request.POST.get('format') == 'csv':
-                return generate_csv_orders([order])  # samething here
+    elif action == 'add_supplier':
+      formSupplier = SupplierForm(request.POST)
+      if formSupplier.is_valid():
+        formSupplier.save()
+        return redirect('orders')
+      
+    elif action == 'add_order':
+      formOrder = CustomOrderCreationForm(request.POST)
+      if formOrder.is_valid():
+        order = formOrder.save(commit=False)
+        order.created_by = request.user
+        order.save()
+        return redirect('orders')
+  
+  
+  context = {
+    'orders': orders,
+    'formSupplier': formSupplier,
+    'formOrder': formOrder,
+    'status_choices': status_choices,
+  }
 
-        # Print a list of orders (generate PDF/CSV for multiple orders)
-        elif action == 'print_multiple_orders':
-            start_date = request.POST.get('from_date')
-            end_date = request.POST.get('to_date')
-            status_filter = request.POST.getlist('status')  # Use getlist to handle multiple checkboxes
-            
-            # Filter orders based on date range and status
-            selected_orders = Order.objects.filter(
-                order_date__range=[start_date, end_date]
-            )
-            if status_filter:
-                selected_orders = selected_orders.filter(status__in=status_filter)
+  return render(request, 'orders.html', context)
 
-            # Generate PDF or CSV for the filtered orders
-            if request.POST.get('format') == 'pdf':
-                return generate_pdf_orders(selected_orders)  # Generate PDF for multiple orders
-            elif request.POST.get('format') == 'csv':
-                return generate_csv_orders(selected_orders)  # Generate CSV for multiple orders
-            
-        elif action == 'add_supplier':
-          formSupplier = SupplierForm(request.POST)
-          if formSupplier.is_valid():
-              formSupplier.save()
-              return redirect('orders')
-          
-        elif action == 'add_order':
-           formOrder = CustomOrderCreationForm(request.POST)
-           if formOrder.is_valid():
-              formOrder.save()
-              return redirect('orders')
-    
-    formSupplier = SupplierForm()
-    formOrder = CustomOrderCreationForm()
-    context = {'orders': orders, 'formSupplier': formSupplier, 'formOrder': formOrder}
-    return render(request, 'orders.html', context)
+#_______________________________________________________________
+#for updating the status of an order
+def update_order_status(request, pk, new_status):
+  order = Order.objects.get(id=pk)
+  if order.status.lower() == "pending":  # the order can only be updated if it's pending
+    order.status = new_status
+    if new_status == "Delivered":
+      order.delivery_date = date.today()
+    order.updated_by = request.user
+    order.updated_at = date.today()
+    order.save()
+  return redirect('orders')
 
 #_______________________________________________________________
 # for the dashboard page where the admin can see the statistics of the library
@@ -571,7 +625,7 @@ def users(request):
 
       # Export
       if request.POST.get('format') == 'pdf':
-          return generate_pdf_users(selected_users)
+          return generate_person_report(request, selected_users)
       elif request.POST.get('format') == 'csv':
           return generate_csv_users(selected_users)
 
@@ -879,7 +933,9 @@ def create_event(request):
   if request.method == 'POST':
     form = EventCreateForm(request.POST, request.FILES)
     if form.is_valid():
-      form.save()
+      event = form.save(commit=False)
+      event.created_by = request.user
+      event.save()
       return redirect('manage_events')
 
 #_______________________________________________________________
@@ -887,6 +943,8 @@ def create_event(request):
 def cancel_event(request, pk):
   event = Event.objects.get(id=pk)
   event.is_canceled = True
+  event.updated_by = request.user
+  event.updated_at = date.today()
   event.save()
   return redirect('manage_events')
 
@@ -907,50 +965,227 @@ def generate_invoice(request, pk):
 #________________________________________________________________
 #for generating the stock report
 def generate_stock_report(request, books=None):
-    if books is None:
-        from .models import Book
-        books = Book.objects.all()
+  if books is None:
+    books = Book.objects.all()
 
-    # Define table columns
-    columns = ["Title", "Author", "Language", "Availability", "Number of Borrows"]
+  # Define table columns
+  columns = ["ISBN", "Title", "Author", "Edition", "Publication Year", "Audience", "Language"]
 
-    # Build rows
-    rows = []
-    for book in books:
-        rows.append({
-            "values": [
-                book.title,
-                book.author,
-                book.lang,
-                book.availability,
-                book.nb_borrows
-            ]
-        })
+  # Build rows
+  rows = []
+  for book in books:
+    rows.append({
+      "values": [
+        book.ISBN,
+        book.title,
+        book.author,
+        book.edition,
+        book.publication_year,
+        book.audience,
+        book.lang,
+      ]
+    })
 
-    total_borrows = sum(book.nb_borrows for book in books)
+  cols = len(columns) - 1
+  total_books = len(rows)
 
-    context = {
-        "report": {
-            "title": "Library Stock Report",
-            "col": columns,
-            "rows": rows,
-            "total": f"{total_borrows} Borrows",
-        },
-        "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "request": request,
-    }
+  context = {
+    "report": {
+      "title": "Library Stock Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{total_books} Books",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": cols,
+    "request": request,
+  }
 
-    html_string = render_to_string("listT emplate.html", context)
+  html_string = render_to_string("listTemplate.html", context)
 
-    # Use in-memory buffer
-    pdf_file = BytesIO()
-    HTML(string=html_string).write_pdf(target=pdf_file)
+  # Use in-memory buffer
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
 
-    # Build response
-    pdf_file.seek(0)
-    response = HttpResponse(pdf_file.read(), content_type="application/pdf")
-    response["Content-Disposition"] = "inline; filename=stock_report.pdf"
+  # Build response
+  pdf_file.seek(0)
+  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+  response["Content-Disposition"] = "inline; filename=stock_report.pdf"
 
-    return response
+  return response
+
+#______________________________________________________________________
+def generate_payment_report(request, payments=None):
+  if payments is None:
+    payments = Payment.objects.select_related("person", "borrow").all()
+
+  # Define table columns
+  columns = ["Transaction ID", "Person", "Borrow ID", "Payment Type", "Amount", "Card Info", "Transaction Date"]
+
+  # Build rows
+  rows = []
+  for payment in payments:
+    rows.append({
+      "values": [
+        payment.transaction_Id,
+        payment.person.full_name,  # assumes Person model has a `full_name` field or method
+        payment.borrow.id,
+        payment.type_payment,
+        f"{payment.amount:.2f} MAD",
+        payment.card_info,
+        payment.transaction_date.strftime("%Y-%m-%d %H:%M"),
+      ]
+    })
+
+  total_amount = sum(payment.amount for payment in payments)
+  cols = len(columns) - 1
+
+  context = {
+    "report": {
+      "title": "Payment Transactions Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{total_amount:.2f} MAD",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": cols,
+    "request": request,
+  }
+
+  html_string = render_to_string("listTemplate.html", context)
+
+  # Use in-memory buffer for PDF
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+
+  # HTTP Response
+  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+  response["Content-Disposition"] = "inline; filename=payment_report.pdf"
+
+  return response
+
+#_______________________________________________________________________
+def generate_person_report(request, people=None):
+  if people is None:
+    people = Person.objects.all()
+
+  columns = ["Username", "CIN", "Full Name", "Role", "Date of Birth", "Phone", "Status", "City", "Country"]
+  rows = []
+  for person in people:
+    rows.append({
+      "values": [
+        person.username,
+        person.cin,
+        f"{person.first_name} {person.last_name}",
+        person.role,
+        person.dob.strftime("%Y-%m-%d") if person.dob else "N/A",
+        person.phone or "N/A",
+        person.status,
+        person.city or "N/A",
+        person.country or "N/A",
+      ]
+    })
+
+  context = {
+    "report": {
+      "title": "Library Members Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{len(rows)} Members",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": len(columns) - 1,
+    "request": request,
+  }
+
+  html_string = render_to_string("listTemplate.html", context)
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=person_report.pdf"})
+
+#_________________________________________________________________________________
+def generate_order_report(request, orders=None):
+  if orders is None:
+    orders = Order.objects.select_related("book", "supplier", "created_by", "updated_by").all()
+
+  columns = ["Order ID", "Book Title", "Supplier", "Status", "Order Date", "Expected Delivery", "Delivery Date", "Created By", "Updated By"]
+  rows = []
+  for order in orders:
+    rows.append({
+      "values": [
+        order.id,
+        order.book.title,
+        order.supplier.name,
+        order.status,
+        order.order_date.strftime("%Y-%m-%d"),
+        order.expected_delivery_date.strftime("%Y-%m-%d"),
+        order.delivery_date.strftime("%Y-%m-%d") if order.delivery_date else "N/A",
+        str(order.created_by) if order.created_by else "N/A",
+        str(order.updated_by) if order.updated_by else "N/A",
+      ]
+    })
+
+  context = {
+    "report": {
+      "title": "Order Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{len(rows)} Orders",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": len(columns) - 1,
+    "request": request,
+  }
+
+  html_string = render_to_string("listTemplate.html", context)
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=order_report.pdf"})
+
+#____________________________________________________________________________
+def generate_event_report(request, events=None):
+  if events is None:
+    events = Event.objects.all()
+
+  columns = ["Title", "Host", "Price", "Audience", "Type", "Location", "Start", "End", "Guests", "Status"]
+  rows = []
+  for event in events:
+    status = "Canceled" if event.is_canceled else ("Public" if event.is_public else "Private")
+    rows.append({
+      "values": [
+        event.title,
+        event.host or "N/A",
+        f"{event.event_price:.2f} MAD",
+        event.audience,
+        event.event_type,
+        event.location,
+        event.start_datetime.strftime("%Y-%m-%d %H:%M"),
+        event.end_datetime.strftime("%Y-%m-%d %H:%M"),
+        f"{event.current_reservations}/{event.nbr_reservations}",
+        status,
+      ]
+    })
+
+  context = {
+    "report": {
+      "title": "Event Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{len(rows)} Events",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": len(columns) - 1,
+    "request": request,
+  }
+
+  html_string = render_to_string("listTemplate.html", context)
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=event_report.pdf"})
+
 
 

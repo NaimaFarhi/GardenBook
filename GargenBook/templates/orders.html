@@ -50,10 +50,10 @@
               <p class="text-secondary">Choose the dates: </p>
 
               <label for="modal-fromdate" class="form-label">From:</label>
-              <input type="date" class="form-control" id="modal-fromdate" name="from_date" required>
+              <input type="date" class="form-control" id="modal-fromdate" name="from_date">
 
               <label for="modal-todate" class="form-label">To:</label>
-              <input type="date" class="form-control" id="modal-todate" name="to_date" required>
+              <input type="date" class="form-control" id="modal-todate" name="to_date">
 
               <fieldset class="form-group">
                 <legend class="form-label">Status:</legend>
@@ -139,42 +139,40 @@
     <!-- END ADD NEW SUPPLIER MODAL -->
     <!-- ________________________________________________________________________ -->
 
+    <!-- START SEARCH SECTION -->
+    <form method="get" class="bg-white shadow-sm p-3 rounded-20 mb-4">
+      <div class="row g-3 align-items-end">
+        <!-- General Search Input -->
+        <div class="col-md-4">
+          <label for="query" class="form-label">Search</label>
+          <input type="text" class="form-control" name="q" id="query" placeholder="Order ID, Supplier, or Book">
+        </div>
 
-    <!-- START SEARCH SIDEBAR -->
-    <div class="col-md-3 bg-white shadow-sm p-4 rounded-20">
-      <h2>Search Orders</h2>
+        <!-- Order status -->
+        <div class="col-md-3">
+          <label for="statusSearch" class="form-label">Status</label>
+          <select class="form-select" name="status" id="statusSearch">
+            <option value="">All</option>
+            {% for s in status_choices %}
+            <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-      <!-- Order ID -->
-      <div class="mb-3">
-        <label for="orderIdSearch" class="form-label">Order ID</label>
-        <input type="text" class="form-control" id="orderIdSearch" placeholder="Enter Order ID">
+        <!-- Order Date -->
+        <div class="col-md-3">
+          <label for="orderDateSearch" class="form-label">Order Date</label>
+          <input type="date" class="form-control" name="order_date" id="orderDateSearch">
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-md-auto">
+          <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
       </div>
+    </form>
+    <!-- END SEARCH SECTION -->
 
-      <!-- Supplier -->
-      <div class="mb-3">
-        <label for="supplierSearch" class="form-label">Supplier</label>
-        <input type="text" class="form-control" id="supplierSearch" placeholder="Enter Supplier Name">
-      </div>
-
-      <!-- Book Title -->
-      <div class="mb-3">
-        <label for="bookSearch" class="form-label">Book Title</label>
-        <input type="text" class="form-control" id="bookSearch" placeholder="Enter Book Title">
-      </div>
-
-      <!-- Status -->
-      <div class="mb-3">
-        <label for="statusSearch" class="form-label">Status</label>
-        <input type="text" class="form-control" id="statusSearch" placeholder="Pending, Received...">
-      </div>
-
-      <!-- Order Date -->
-      <div class="mb-3">
-        <label for="orderDateSearch" class="form-label">Order Date</label>
-        <input type="date" class="form-control" id="orderDateSearch">
-      </div>
-    </div>
-    <!-- END SEARCH SIDEBAR -->
     <!-- ________________________________________________________________________ -->
 
     <!-- START TABLE -->
@@ -249,15 +247,11 @@
 
               </td>
               <td>
-                <form method="POST">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="update_status">
-                  <input type="hidden" name="order_id" value="{{order.id}}">
-                  <button type="submit" class="btn btn-outline-darkgreen" name="status" value="Delivered"><i
-                      class="bi bi-check-circle"></i></button>
-                  <button type="submit" class="btn btn-outline-darkgreen" name="status" value="Cancelled"><i
-                      class="bi bi-x-circle"></i></button>
-                </form>
+                <a href="{% url 'update_order_status' order.id 'Delivered' %}" class="btn btn-outline-darkgreen"><i
+                      class="bi bi-check-circle"></i></a>
+                <a href="{% url 'update_order_status' order.id 'Cancelled' %}" class="btn btn-outline-darkgreen"><i
+                    class="bi bi-x-circle"></i></a>
+                
               </td>
             </tr>
             {% endfor %}
