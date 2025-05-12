@@ -12,7 +12,7 @@
 
   <!-- BUTTONS -->
   <div class="row d-flex justify-content-end align-items-center mb-4">
-    <!-- Trigger -->
+    <!-- BUTTON -->
     <div class="col-auto">
       <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#createEventModal">
         + New Event
@@ -24,12 +24,10 @@
           <div class="modal-content">
             <div class="modal-header">
               <h1 class="modal-title fs-5">Create New Event</h1>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              <button type="reset" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
               <form method="POST" enctype="multipart/form-data" action="{% url 'create-event' %}">
-                {% csrf_token %}
-                {% crispy create_form %}
                 {% csrf_token %}
                 {% crispy create_form %}
               </form>
@@ -155,8 +153,8 @@
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <a href="#" class="btn btn-primary">Print (PDF)</a>
-                      <a href="#" class="btn btn-primary">Print (cvs)</a>
+                      <a href="{% url 'generate_list' event.id 'pdf' %}" class="btn btn-outline-brown">Export to PDF</a>
+                      <a href="{% url 'generate_list' event.id 'csv' %}" class="btn btn-outline-brown">Export to CSV</a>
                     </div>
                   </div>
                 </div>
@@ -246,7 +244,7 @@
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <a href="" class="btn btn-primary">Print PDF</a>
+                      <a href="{% url 'print_event' event.id %}" class="btn btn-primary">Print PDF</a>
                     </div>
                   </div>
                 </div>

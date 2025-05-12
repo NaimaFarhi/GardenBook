@@ -2,61 +2,184 @@
 
 {% block title %}Dashboard | GardenBook{% endblock %}
 
+{% block page %} Dashboard Overview {% endblock %}
+
+
 {% block content %}
-<div class="py-5 bg-light-brown">
-  <div class="container mt-4">
+<div class="container-fluid mt-4">
 
-    <h1 class="text-center text-brown mb-5">Dashboard Overview</h1>
+  <div class="row my-2 p-4">
+    <h1 class="text-brown">Welcome back, <em> {{ request.user.username }} </em> !!!</h1>
+  </div>
 
-    <!-- Dashboard Cards -->
-    <div class="row g-4">
 
-      <!-- Total Books -->
-      <div class="col-md-4">
-        <div class="card bg-brown-second shadow-sm text-center py-4">
-          <div class="card-body">
+  <!-- Dashboard Cards -->
+  <div class="row g-4 dashboard-cards">
+
+    <!-- Total Books -->
+    <div class="col-md-3">
+      <div class="card shadow-sm py-4 rounded-20">
+        <div class="card-body">
+
+          <h5 class="card-title mt-3">
             <i class="bi bi-book-half display-4 text-brown"></i>
-            <h5 class="card-title mt-3">Total Books</h5>
-            <p class="card-text fs-4">{{ total_books }}</p>
-          </div>
+            Total Books
+          </h5>
+          <p class="card-text fs-4">{{ total_books }}</p>
+        </div>
+        <div class="card-footer d-flex justify-content-between bg-white align-items-center">
+          <p><span>+ {{ new_monthly_stock }}</span> added</p>
+          <p><a href="{% url 'stock' %}" class=" text-underline">View All Books</a></p>
+
         </div>
       </div>
+    </div>
 
-      <!-- Total Users -->
-      <div class="col-md-4">
-        <div class="card bg-brown-second shadow-sm text-center py-4">
-          <div class="card-body">
+    <!-- Total borrowed Books -->
+    <div class="col-md-3">
+      <div class="card shadow-sm py-4 rounded-20">
+        <div class="card-body">
+
+          <h5 class="card-title mt-3">
+            <i class="bi bi-book display-4 text-brown"></i>
+            Total Borrows
+          </h5>
+          <p class="card-text fs-4">{{ total_books }}</p>
+        </div>
+        <div class="card-footer d-flex justify-content-end bg-white align-items-center">
+          <p><a href="{% url 'borrows-returns' %}" class=" text-underline">View All Borrows</a></p>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Users -->
+    <div class="col-md-3">
+      <div class="card shadow-sm py-4 rounded-20">
+        <div class="card-body">
+
+          <h5 class="card-title mt-3">
             <i class="bi bi-people-fill display-4 text-brown"></i>
-            <h5 class="card-title mt-3">Total Users</h5>
-            <p class="card-text fs-4">{{ total_users }}</p>
-          </div>
+            Total Users
+          </h5>
+          <p class="card-text fs-4">{{ total_users }}</p>
+        </div>
+        <div class="card-footer d-flex justify-content-between bg-white align-items-center">
+          <p><span>+ {{ new_monthly_stock }}</span> added</p>
+          <p><a href="{% url 'manage-users' %}" class=" text-underline">View All Users</a></p>
+
         </div>
       </div>
+    </div>
 
-      <!-- Active Orders -->
-      <div class="col-md-4">
-        <div class="card bg-brown-second shadow-sm text-center py-4">
-          <div class="card-body">
+    <!-- Active Orders -->
+    <div class="col-md-3">
+      <div class="card shadow-sm py-4 rounded-20">
+        <div class="card-body">
+
+          <h5 class="card-title mt-3">
             <i class="bi bi-clipboard2-data display-4 text-brown"></i>
-            <h5 class="card-title mt-3">Active Orders</h5>
-            <p class="card-text fs-4">{{ active_orders }}</p>
-          </div>
+            Active Orders
+          </h5>
+          <p class="card-text fs-4">{{ active_orders }}</p>
+        </div>
+        <div class="card-footer d-flex justify-content-end bg-white align-items-center">
+          <p><a href="{% url 'orders' %}" class=" text-underline">View All Orders</a></p>
+
         </div>
       </div>
-
     </div>
-
-    <!-- Quick Actions -->
-    <div class="row mt-5">
-      <div class="col text-center">
-        <a href="{% url 'create-book' %}" class="btn btn-outline-brown mx-2 ">Add New Book</a>
-        <a href="{% url 'create-user' %}" class="btn btn-outline-brown mx-2">Add New User</a>
-        <a href="{% url 'orders' %}" class="btn btn-outline-brown mx-2">Manage Orders</a>
-      </div>
-    </div>
-
-    
 
   </div>
+
+  <!-- START LAST ALERTS SENT -->
+  <div class="row mt-5">
+    <div class="col-md-12">
+      <h2 class="text-brown">Last Alerts Sent</h2>
+    </div>
+    <div class="overflow-hidden shadow-sm p-0 rounded-20">
+      <table class="table table-hover align-middle m-0">
+        <thead class="bg-brown text-white">
+          <tr>
+            <th>Reader</th>
+            <th>Message</th>
+            <th>Date Created</th>
+            <th>Date Read</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          {% for alert in alerts %}
+          <tr>
+            <td>
+                {{ alert.user.username }}
+            </td>
+            <td>{{ alert.message }}</td>
+            <td>{{ alert.date_created }}</td>
+            <td>
+              {% if alert.is_read %}
+              {{ alert.date_read }}
+
+              {% else %}
+              <span class="text-danger">Not Read</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    </div>
+
+
+
+  </div>
+  <!-- END LAST ALERTS SENT -->
+
+  <!-- START LAST BORROWS -->
+  <div class="row mt-5">
+    <div class="col-md-12">
+      <h2 class="text-brown">Last Borrows</h2>
+    </div>
+    <div class="overflow-hidden shadow-sm p-0 rounded-20">
+      <table class="table table-hover align-middle m-0">
+        <thead class="bg-brown text-white">
+          <tr>
+            <th>Reader</th>
+            <th>Book</th>
+            <th>Date Borrowed</th>
+            <th>Date Returned</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          {% for borrow in borrows %}
+          <tr>
+            <td>
+                {{ borrow.borrower.username }}
+            </td>
+            <td>
+              {{  borrow.book.title }}
+            </td>
+            <td>
+              {{ borrow.borrow_date }}
+            </td>
+            <td>
+              {% if borrow.returned %}
+              {{ borrow.return_date }}
+              {% else %}
+              <span class="text-danger">Not Returned</span>
+              {% endif %}
+            </td>
+            
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- END LAST ALERTS SENT -->
+
+
+
 </div>
 {% endblock %}

@@ -11,15 +11,15 @@
 
 
 {% block content %}
-
+<div class="container-fluid row m-2">
 
   <!-- START BUTTONS -->
-  <div class="row">
-    <div class="col">
+  <div class="row d-flex justify-content-end">
+    <div class="col-auto">
       <a href="{% url 'create-user' %}" class="btn btn-outline-brown">+New User</a>
 
     </div>
-    <div class="col">
+    <div class="col-auto">
       <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-users-modal">Print List Of
         users</button>
       <!-- ________________________________________________________________________ -->
@@ -108,70 +108,61 @@
   <div class="container-fluid row m-2">
 
     <!-- START SEARCH BAR SECTION -->
-    <div class="col-md-3 p-4 bg-white shadow-sm rounded-20">
-      <h2>Search Users</h2>
+    <!-- START SEARCH / FILTER SECTION -->
+    <div class="container bg-white shadow-sm rounded-20 m-2 p-4 mb-4">
+      <h2 class="mb-3">Search & Filter Users</h2>
+      <form method="GET" action="{% url 'manage-users' %}">
+        <div class="row gx-3 gy-2 align-items-end">
 
-      <!-- START MATRICULE SEARCH -->
-      <div class="row my-2">
-        <p class="fs-5">Matricule</p>
-        <input type="search" class="form-control form-control-dark" placeholder="Enter Matricule" aria-label="Search">
-      </div>
-      <!-- END MATRICULE SEARCH -->
+          <div class="col-md-3">
+            <label for="searchUser" class="form-label">Search Users</label>
+            <input type="search" name="q" id="searchUser" class="form-control"
+              placeholder="ID, CIN, First name, Last name">
+          </div>
 
-      <!-- START CIN SEARCH -->
-      <div class="row my-2">
-        <p class="fs-5">CIN</p>
-        <input type="search" class="form-control form-control-dark" placeholder="Enter CIN" aria-label="Search">
-      </div>
-      <!-- END CIN SEARCH -->
+          <!-- Role -->
+          <div class="col-md-2">
+            <label class="form-label">Role</label>
+            <select class="form-select" name="role">
+              <option value="">Select Role</option>
+              <option value="librarian">Librarian</option>
+              <option value="reader">Reader</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
 
-      <!-- START NAME SEARCH -->
-      <div class="row my-2">
-        <p class="fs-5">Name</p>
-        <input type="search" class="form-control form-control-dark" placeholder="First or Last Name"
-          aria-label="Search">
-      </div>
-      <!-- END NAME SEARCH -->
+          <!-- Date of Birth -->
+          <div class="col-md-2">
+            <label class="form-label">Date of Birth</label>
+            <input type="date" name="dob" class="form-control">
+          </div>
 
-      <!-- START ROLE FILTER -->
-      <div class="row my-2">
-        <p class="fs-5">Role</p>
-        <select class="form-control" name="role" id="role">
-          <option value="">Select a Role</option>
-          <option value="librarian">Librarian</option>
-          <option value="reader">Reader</option>
-          <option value="admin">Admin</option>
-        </select>
-      </div>
-      <!-- END ROLE FILTER -->
+          <!-- Membership Status -->
+          <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="membershipStatus">
+              <option value="">Select Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
 
-      <!-- START DATE OF BIRTH FILTER -->
-      <div class="row my-2">
-        <p class="fs-5">Date of Birth</p>
-        <input type="date" class="form-control form-control-dark" name="dob" id="dob">
-      </div>
-      <!-- END DATE OF BIRTH FILTER -->
+          <!-- Search Button -->
+          <div class="col-md-1 d-grid">
+            <button type="submit" class="btn btn-green">Search</button>
+          </div>
 
-      <!-- START MEMBERSHIP STATUS FILTER -->
-      <div class="row my-2">
-        <p class="fs-5">Membership Status</p>
-        <select class="form-control" name="membershipStatus" id="membershipStatus">
-          <option value="">Select Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-          <option value="suspended">Suspended</option>
-        </select>
-      </div>
-      <!-- END MEMBERSHIP STATUS FILTER -->
+          <!-- Reset Button -->
+          <div class="col-md-1 d-grid">
+            <a href="{% url 'manage-users' %}" class="btn btn-green">Reset</a>
+          </div>
 
-      <!-- RESET FILTER BUTTON -->
-      <div class="row my-3">
-        <button id="resetFilters" class="btn btn-green text-brown w-100">Reset Filters</button>
-      </div>
-
-
-
+        </div>
+      </form>
     </div>
+    <!-- END SEARCH / FILTER SECTION -->
+
     <!-- END SEARCH BAR SECTION -->
 
     <!-- START MESSAGE -->
@@ -199,13 +190,13 @@
               <th>Role</th>
               <th>DOB</th>
               <th>Fines</th>
+              <th>Send Alert</th>
               <th>Membership Status</th>
               {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
               <th>Suspend Account</th>
               <th>Ban Account</th>
               <th>Edit</th>
               {% endif %}
-              <th>Print</th>
             </tr>
           </thead>
           <tbody class="bg-white">
@@ -227,6 +218,11 @@
               <td>{{user.dob}}</td>
               <td>
                 {{ user_fines|get_item:user.id }}
+              </td>
+              <td>
+                <a href="{% url 'send_fine_alert' user.id %}" class="btn btn-outline-brown">
+                  <i class="bi bi-send"></i>
+                </a>
               </td>
               <td>{{user.status}}</td>
               {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
@@ -294,9 +290,7 @@
                     alt="#" class="border-light" width="25"></a>
               </td>
               {% endif %}
-              <td>
-                <a href="{% url 'print-user-details' user.id %}" class="btn btn-outline-brown">Print</a>
-              </td>
+              
             </tr>
             {% endfor %}
           </tbody>
@@ -310,7 +304,7 @@
 
   </div>
   <!-- END DISPLAY USERS -->
-
+</div>
 
 <script>
 
@@ -324,68 +318,6 @@
   });
 
 
-  document.addEventListener("DOMContentLoaded", function () {
-    const matriculeInput = document.querySelector('input[placeholder="Enter Matricule"]');
-    const cinInput = document.querySelector('input[placeholder="Enter CIN"]');
-    const nameInput = document.querySelector('input[placeholder="First or Last Name"]');
-    const roleSelect = document.getElementById("role");
-    const dobInput = document.getElementById("dob");
-    const membershipStatusSelect = document.getElementById("membershipStatus");
-    const resetButton = document.getElementById("resetFilters");
-
-    const tableRows = document.querySelectorAll("tbody tr");
-
-    function filterUsers() {
-      const matriculeValue = matriculeInput.value.toLowerCase();
-      const cinValue = cinInput.value.toLowerCase();
-      const nameValue = nameInput.value.toLowerCase();
-      const roleValue = roleSelect.value.toLowerCase();
-      const dobValue = dobInput.value;
-      const membershipStatusValue = membershipStatusSelect.value.toLowerCase();
-
-      tableRows.forEach(row => {
-        const matricule = row.cells[0].textContent.toLowerCase();
-        const cin = row.cells[2].textContent.toLowerCase();
-        const firstName = row.cells[3].textContent.toLowerCase();
-        const lastName = row.cells[4].textContent.toLowerCase();
-        const role = row.cells[6].textContent.toLowerCase();
-        const dob = row.cells[7].textContent.trim();
-        const status = row.cells[8].textContent.toLowerCase();
-
-        const matchMatricule = matricule.includes(matriculeValue);
-        const matchCIN = cin.includes(cinValue);
-        const matchName = firstName.includes(nameValue) || lastName.includes(nameValue);
-        const matchRole = roleValue === "" || role.includes(roleValue);
-        const matchDOB = dobValue === "" || dob === dobValue;
-        const matchStatus = membershipStatusValue === "" || status === membershipStatusValue;
-
-        if (matchMatricule && matchCIN && matchName && matchRole && matchDOB && matchStatus) {
-          row.style.display = "";
-        } else {
-          row.style.display = "none";
-        }
-      });
-    }
-
-    // Event listeners
-    matriculeInput.addEventListener("input", filterUsers);
-    cinInput.addEventListener("input", filterUsers);
-    nameInput.addEventListener("input", filterUsers);
-    roleSelect.addEventListener("change", filterUsers);
-    dobInput.addEventListener("input", filterUsers);
-    membershipStatusSelect.addEventListener("change", filterUsers);
-
-    // Reset Filters
-    resetButton.addEventListener("click", () => {
-      matriculeInput.value = "";
-      cinInput.value = "";
-      nameInput.value = "";
-      roleSelect.value = "";
-      dobInput.value = "";
-      membershipStatusSelect.value = "";
-      filterUsers();
-    });
-  });
 </script>
 
 {% endblock %}

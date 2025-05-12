@@ -198,32 +198,9 @@
 
                 {% else %}
                 <!-- Button trigger modal -->
-                <a href="{% url 'payment-page' borrow.borrower.id 'profile' %}" class="btn btn-primary">
+                <a href="{% url 'payment-page' person.id 'profile' %}" class="btn btn-primary">
                   Pay
                 </a>
-
-                <!-- Modal -->
-                <div class="modal fade" id="payBorrow{{borrow.id}}" tabindex="-1"
-                  aria-labelledby="payBorrow{{borrow.id}}" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="payBorrow{{borrow.id}}">Pay Fine #{{borrow.id}}</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <form method="POST">
-                        <div class="modal-body">
-
-                        </div>
-                        <div class="modal-footer">
-                          <input type="hidden" name="action" value="pay_fine">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                          <button type="button" class="btn btn-primary">Save changes</button>
-                        </div>
-                      </form>
-                    </div>
-                  </div>
-                </div>
 
                 {% endif %}
               </td>
@@ -379,21 +356,37 @@
       <div class="row">
         <h2>NOTIFICATIONS</h2>
       </div>
-
+      {% if alerts %}
+      {% for alert in alerts %}
       <div class="row">
-
         <div class="card border-success mb-3" style="min-width: 18rem;">
-          <div class="card-header bg-transparent border-success">SENDER</div>
+          <div class="card-header bg-transparent border-success">Alert</div>
           <div class="card-body text-success">
-            <h5 class="card-title">Success card title</h5>
-            <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's
-              content.
+            <h5 class="card-title">{{ alert.title }}</h5>
+            <p class="card-text">
+              {{ alert.message }}
             </p>
           </div>
-          <div class="card-footer bg-transparent border-success">time</div>
+          <div class="card-footer bg-transparent border-success d-flex justify-content-between">
+            <small class="text-muted">{{ alert.date_created }}</small>
+            {% if alert.is_read %}
+            <span class="badge bg-success">Read</span>
+            {% else %}
+            <a href="{% url 'mark-alert-read' alert.id %}" class="btn btn-outline-brown"><i
+                class="bi bi-check2-all"></i></a>
+            {% endif %}
+          </div>
         </div>
 
       </div>
+      {% endfor %}
+      {% else %}
+      <div class="row">
+        <div class="alert alert-info" role="alert">
+          No Alerts.
+        </div>
+      </div>
+      {% endif %}
     </div>
 
 

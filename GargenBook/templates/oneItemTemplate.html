@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Invoice PDF - Single Item</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 20px;
+      font-size: 14px;
+    }
+
+    .top-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 20px;
+    }
+
+    .title {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .item-details {
+      margin-bottom: 30px;
+    }
+
+    .item-details p {
+      margin: 5px 0;
+    }
+
+
+    .label {
+      font-weight: bold;
+      font-size: medium;
+      margin: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header with date, username, and website -->
+  <div class="top-info">
+    <span>{{ current_date_time }}</span>
+    <span>Username: {{ request.user.username }}</span>
+    <span>GardenBook.com</span>
+  </div>
+
+  <!-- Title -->
+  <h1 class="title">{{ report.title }}</h1>
+
+  <!-- Single item details as a list -->
+  <div class="item-details">
+    {% for key, value in report.details.items %}
+    <p><span class="label"> {{ key }} :</span> {{ value }}</p>
+    {% endfor %}
+  </div>
+
+</body>
+
+</html>

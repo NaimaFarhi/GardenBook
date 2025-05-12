@@ -59,6 +59,7 @@ class Person(AbstractUser):
     postal_code = models.CharField(max_length=20, null=True, blank=True)
     country = models.CharField(max_length=100, null=True, blank=True)
     bio = models.CharField(max_length=300, null=True, blank=True)
+    unread_alerts = models.IntegerField(default=0)
     
     def __str__(self):
         return self.first_name + " " + self.last_name
@@ -95,7 +96,8 @@ class Book(models.Model):
             MaxValueValidator(10) 
         ])
     nb_borrows = models.IntegerField(default=0)
-    date_creation = models.DateField(default=timezone.now)
+    date_creation = models.DateField(auto_now_add=True)
+    date_modification = models.DateField(auto_now=True)
     is_reserved = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
@@ -263,6 +265,7 @@ class Payment(models.Model):
 
 class Alert(models.Model):
     user = models.ForeignKey(Person, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default="")
     message = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True)
     date_read = models.DateTimeField(null=True, blank=True)

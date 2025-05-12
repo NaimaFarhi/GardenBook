@@ -1,83 +1,39 @@
 {% extends 'base.html' %}
 {% block title %}Home | GardenBook{% endblock %}
 
-
-
 {% block content %}
-
 <div class="py-4">
   <!-- START NEW ARRIVALS SECTION -->
   <div id="myCarouselNewArrivals" class="carousel slide" data-bs-ride="carousel">
-    <h1 class="d-flex align-items-center justify-content-center text-brown" style="font-size: 3.5em;">!!! New Arrivals !!!
-    </h1>
+    <h1 class="d-flex align-items-center justify-content-center text-brown" style="font-size: 3.5em;">!!! New Arrivals
+      !!!</h1>
     <div class="carousel-indicators">
-      <button type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide-to="0" class="active"
-        aria-current="true" aria-label="Slide 1"></button>
-      <button type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide-to="1" aria-label="Slide 2"></button>
-      <button type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide-to="2" aria-label="Slide 3"></button>
+      {% for book in new_arrivals %}
+      <button type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide-to="{{ forloop.counter0 }}"
+        class="{% if forloop.first %}active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+      {% endfor %}
     </div>
     <div class="carousel-inner">
-
-      <div class="carousel-item active">
+      {% for book in new_arrivals %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
         <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
           preserveAspectRatio="xMidYMid slice" focusable="false">
           <rect width="100%" height="100%" fill="#e8f3e8" />
         </svg>
-
         <div class="container">
-
           <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
             <div class="col-4 d-flex align-items-center justify-content-center shadow-lg"
-              style="background: #777 url('exempleA.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #8a998288; border-radius: 10px;">
+              style="background: url('{{ book.cover.url }}') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #8a998288; border-radius: 10px;">
             </div>
             <div>
-              <h1>Book Title 1.</h1>
-              <p>Some representative placeholder content for the first slide of the carousel.</p>
-              <p><a class="btn btn-lg btn-outline-brown" href="#">See Details</a></p>
+              <h1>{{ book.title }}</h1>
+              <p>{{ book.description|truncatewords:20 }}</p>
+              <p><a class="btn btn-lg btn-outline-brown" href="{% url 'book-detail' book.id %}">See Details</a></p>
             </div>
           </div>
         </div>
       </div>
-      <div class="carousel-item">
-        <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-          preserveAspectRatio="xMidYMid slice" focusable="false">
-          <rect width="100%" height="100%" fill="#e8f3e8" />
-        </svg>
-
-        <div class="container">
-
-          <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
-            <div class="col-4 d-flex align-items-center justify-content-center shadow-lg"
-              style="background: #777 url('exempleB.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #8a998288; border-radius: 10px;">
-            </div>
-            <div>
-              <h1>Book Title 2.</h1>
-              <p>Some representative placeholder content for the first slide of the carousel.</p>
-              <p><a class="btn btn-lg btn-outline-brown" href="#">See Details</a></p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-          preserveAspectRatio="xMidYMid slice" focusable="false">
-          <rect width="100%" height="100%" fill="#e8f3e8" />
-        </svg>
-
-        <div class="container">
-
-          <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
-            <div class="col-4 d-flex align-items-center justify-content-center  shadow-lg"
-              style="background: #777 url('exempleD.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #8a998288; border-radius: 10px;">
-            </div>
-            <div>
-              <h1>Book Title 3.</h1>
-              <p>Some representative placeholder content for the first slide of the carousel.</p>
-              <p><a class="btn btn-lg btn-outline-brown" href="#">See Details</a></p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
     </div>
     <button class="carousel-control-prev" type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide="prev">
       <span class="carousel-control-prev-icon" aria-hidden="true"></span>
@@ -94,76 +50,35 @@
 
   <!-- START RECOMMENDATIONS SECTION -->
   <div id="myCarouselRecommendations" class="carousel slide" data-bs-ride="carousel">
-    <h1 class="d-flex align-items-center justify-content-center my-2 text-brown" style="font-size: 3.5em;">Recommendations</h1>
+    <h1 class="d-flex align-items-center justify-content-center my-2 text-brown" style="font-size: 3.5em;">
+      Recommendations</h1>
     <div class="carousel-indicators">
-      <button type="button" data-bs-target="#myCarouselRecommendations" data-bs-slide-to="0" class="active"
-        aria-current="true" aria-label="Slide 1"></button>
-      <button type="button" data-bs-target="#myCarouselRecommendations" data-bs-slide-to="1"
-        aria-label="Slide 2"></button>
-      <button type="button" data-bs-target="#myCarouselRecommendations" data-bs-slide-to="2"
-        aria-label="Slide 3"></button>
+      {% for book in recommended_books %}
+      <button type="button" data-bs-target="#myCarouselRecommendations" data-bs-slide-to="{{ forloop.counter0 }}"
+        class="{% if forloop.first %}active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
+      {% endfor %}
     </div>
     <div class="carousel-inner">
-      <div class="carousel-item active">
+      {% for book in recommended_books %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
         <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
           preserveAspectRatio="xMidYMid slice" focusable="false">
           <rect width="100%" height="100%" fill="#5c4033" />
         </svg>
-
         <div class="container">
-
           <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
             <div class="col-4 d-flex align-items-center justify-content-center shadow-lg"
-              style="background: #777 url('exempleA.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #402e2188; border-radius: 10px;">
+              style="background: url('{{ book.cover.url }}') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #402e2188; border-radius: 10px;">
             </div>
             <div>
-              <h1>Book Title 1.</h1>
-              <p>Some representative placeholder content for the first slide of the carousel.</p>
-              <p><a class="btn btn-lg btn-outline-green" href="#">See Details</a></p>
+              <h1>{{ book.title }}</h1>
+              <p>{{ book.description|truncatewords:20 }}</p>
+              <p><a class="btn btn-lg btn-outline-green" href="{% url 'book-detail' book.id %}">See Details</a></p>
             </div>
           </div>
         </div>
       </div>
-      <div class="carousel-item">
-        <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-          preserveAspectRatio="xMidYMid slice" focusable="false">
-          <rect width="100%" height="100%" fill="#5c4033" />
-        </svg>
-
-        <div class="container">
-
-          <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
-            <div class="col-4 d-flex align-items-center justify-content-center shadow-lg"
-              style="background: #777 url('exempleB.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #402e2188; border-radius: 10px;">
-            </div>
-            <div>
-              <h1>Book Title 2.</h1>
-              <p>Some representative placeholder content for the first slide of the carousel.</p>
-              <p><a class="btn btn-lg btn-outline-green" href="#">See Details</a></p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="carousel-item">
-        <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-          preserveAspectRatio="xMidYMid slice" focusable="false">
-          <rect width="100%" height="100%" fill="#5c4033" />
-        </svg>
-
-        <div class="container">
-
-          <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
-            <div class="col-4 d-flex align-items-center justify-content-center shadow-lg"
-              style="background: #777 url('exempleD.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #402e2188; border-radius: 10px;">
-            </div>
-            <div>
-              <h1>Book Title 3.</h1>
-              <p>Some representative placeholder content for the first slide of the carousel.</p>
-              <p><a class="btn btn-lg btn-outline-green" href="#">See Details</a></p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
     </div>
     <button class="carousel-control-prev" type="button" data-bs-target="#myCarouselRecommendations"
       data-bs-slide="prev">
@@ -185,32 +100,31 @@
     <!-- START BOOK OF THE WEEK SECTION -->
     <div class="row featurette d-flex justify-content-center align-items-center gap-5 bg-light-brown p-5">
       <div class="col-md-7">
-        <h2 class="featurette-heading">BOOK OF THE WEEK. <br> <span class="text-muted">Book title here - author</span>
-        </h2>
-        <p class="lead">&lt;&lt;<i>Top comment here</i>&gt;&gt;</p>
+        <h2 class="featurette-heading">BOOK OF THE WEEK. <br>
+         <span class="text-muted">{{ book_of_week.title }} - {{ book_of_week.author }}</span></h2>
+        <p class="lead">&lt;&lt;<i>{{ book_of_week.reviews.first.comment|truncatewords:5 }}</i>&gt;&gt;</p>
       </div>
       <div class="col-md-5 d-flex align-items-center justify-content-center shadow-lg"
-        style="background: #777 url('exempleB.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #5d432f88; border-radius: 10px;">
+        style="background: url('{{ book_of_week.cover.url }}') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #5d432f88; border-radius: 10px;">
       </div>
     </div>
-
     <!-- END BOOK OF THE WEEK SECTION -->
 
     <hr class="m-5">
 
     <!-- START BOOK OF THE MONTH SECTION -->
-    <div class="row featurette d-flex justify-content-center align-items-center gap-5 bg-green p-5">
-      <div class="col-md-7 order-md-2">
-        <h2 class="featurette-heading">BOOK OF THE MONTH. <br> <span class="text-muted">Book title here -
-            author</span></h2>
-        <p class="lead">&lt;&lt;<i>Top comment here</i>&gt;&gt;</p>
+    <div class="row featurette d-flex justify-content-center align-items-center gap-5 bg-light-brown p-5">
+      <div class="col-md-7">
+        <h2 class="featurette-heading">BOOK OF THE MONTH. <br> 
+          <span class="text-muted">{{ book_of_month.title }} - {{ book_of_month.author }}</span>
+        </h2>
+        <p class="lead">&lt;&lt;<i>{{ book_of_month.reviews.first.comment|truncatewords:5 }}</i>&gt;&gt;</p>
       </div>
-      <div class="col-md-5 order-md-1 d-flex align-items-center justify-content-center shadow-lg"
-        style="background: #777 url('exempleA.jpeg') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #5d432f88; border-radius: 10px;">
+      <div class="col-md-5 d-flex align-items-center justify-content-center shadow-lg"
+        style="background: url(' {{ book_of_month.cover.url }} ') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #5d432f88; border-radius: 10px;">
       </div>
     </div>
     <!-- END BOOK OF THE MONTH SECTION -->
   </div>
-  <!-- END MOST LIKED BOOKS PER WEEK/MONTH -->
 </div>
 {% endblock %}

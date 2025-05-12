@@ -14,7 +14,6 @@ urlpatterns = [
   path('profile/<str:pk>/', views.profile, name='profile'),
   path('edit-user/<str:pk>/', views.edit_user, name='edit-user'),
   path('change-account-status/<str:pk>/<str:new_status>', views.change_account_status, name='change-account-status'),
-  path('print-user-details/<str:pk>', views.print_user_details, name='print-user-details'),
  
   path('catalog', views.catalog, name='catalog'),
   path('book-detail/<str:pk>/', views.book_detail, name='book-detail'),
@@ -22,7 +21,6 @@ urlpatterns = [
   path('stock', views.stock, name='stock'),
   path('edit-book/<str:pk>/', views.edit_book, name='edit-book'),
   path('change-availability/<str:pk>/<str:new_status>', views.change_availability, name='change-availability'),
-  path('print-book-details/<str:pk>/', views.print_book_details, name='print-book-details'),
   
   path('orders', views.orders, name='orders'),
   path('update_order_status/<str:pk>/<str:new_status>', views.update_order_status, name='update_order_status'),
@@ -33,12 +31,16 @@ urlpatterns = [
   path('reader_borrow/<str:book_id>', views.reader_borrow, name='reader-borrow'),
   path('reserve/<str:book_id>', views.reserve, name='reserve'),
  
-  path('payment/<int:pk>//<str:current_page>', views.payment_page, name='payment-page'),
+  path('payment-page/<str:pk>/<str:current_page>', views.payment_page, name='payment-page'),
   path('generate_invoice/<int:pk>/', views.generate_invoice, name='generate_invoice'),
   path('manage-payment', views.payment_staff, name='manage-payment'),
   path('manage-event', views.event_staff, name='manage-event'),
   path('cancel-event/<str:pk>/', views.cancel_event, name='cancel-event'),
   path('create-event', views.create_event, name='create-event'),
+  path('generate_list/<str:pk>/<str:format>', views.generate_list, name='generate_list'),
+  path('print_event/<str:pk>/', views.print_event, name='print_event'),
+  path('send_fine_alert/<str:pk>/', views.send_fine_alert, name='send_fine_alert'),
+  path('mark-alert-read/<str:pk>/', views.mark_alert_read, name='mark-alert-read'),
 
 
 ]

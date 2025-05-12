@@ -276,7 +276,7 @@ class SupplierForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'POST'
         self.helper.add_input(Hidden('action', 'add_supplier')) 
-        self.helper.add_input(Submit('submit', 'Add Supplier', css_class="btn btn-outline-green"))   
+        self.helper.add_input(Submit('submit', 'Add Supplier', css_class="btn-green text-brown border-0 hover-shadow my-2"))   
 
 #___________________________________________________________
 #for adding a new borrow to the database

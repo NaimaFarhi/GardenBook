@@ -1,7 +1,5 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
-from io import BytesIO
-import tempfile
 from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import render, redirect
@@ -9,13 +7,16 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from weasyprint import HTML
-from .utils import generate_csv_books, generate_csv_orders, generate_csv_payments, generate_csv_users, generate_pdf_book_detail, generate_pdf_books, generate_pdf_orders, generate_pdf_user_detail, generate_pdf_users
-from .models import Availability, Borrow, EventType, Genre, Order, Payment, Person, Book, ReadingHistory, Reservation, Review, RoleName, Wishlist, Event
+from .utils import generate_csv_books, generate_csv_guestsList, generate_csv_orders, generate_csv_payments, generate_csv_users, generate_event_pdf, generate_guest_list, generate_order_report, generate_payment_report, generate_person_report, generate_stock_report
+from .models import Alert, Availability, Borrow, Genre, Order, Payment, Person, Book, ReadingHistory, Reservation, Review, RoleName, Wishlist, Event
 from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, EventCreateForm, EventEditForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
-from django.db.models import Q,Sum,Min, Max
+from django.db.models import Q,Sum,Min, Max,Avg
 from django.core.paginator import Paginator
 import uuid
 from django.template.loader import render_to_string
+from .decorators import role_required, owner_only, prevent_duplicate_borrow, prevent_duplicate_reservation
+
+
 
 #_____________________________________________________________
 
@@ -71,11 +72,41 @@ def logoutUser(request):
 #_______________________________________________________________
 #for the home page
 def home(request):
-  # Display new arrivals
-  # Display recommendations
-  # Display book of the week
-  # Display book of the month
-  return render(request, 'home.html')
+  # Get new arrivals (e.g., last 3 books added)
+  new_arrivals = Book.objects.order_by('-date_creation')[:3]
+
+  # Get recommended books (e.g., most borrowed)
+  recommended_books = Book.objects.order_by('-nb_borrows')[:3]
+
+  # Book of the week (most liked or most reviewed this week)
+  one_week_ago = timezone.now().date() - timedelta(days=7)
+  book_of_week = (
+    Book.objects
+    .filter(reviews__created_at__gte=one_week_ago)
+    .annotate(avg_rating=Avg('reviews__rating'))
+    .order_by('-avg_rating')
+    .first()
+  )
+
+  # Book of the month
+  one_month_ago = timezone.now().date() - timedelta(days=30)
+  book_of_month = (
+    Book.objects
+    .filter(reviews__created_at__gte=one_month_ago)
+    .annotate(avg_rating=Avg('reviews__rating'))
+    .order_by('-avg_rating')
+    .first()
+  )
+
+  context = {
+    'new_arrivals': new_arrivals,
+    'recommended_books': recommended_books,
+    'book_of_week': book_of_week,
+    'book_of_month': book_of_month,
+  }
+
+  return render(request, 'home.html', context)
+
 
 #_______________________________________________________________
 # for the catalog page where all the books are displayed
@@ -188,12 +219,6 @@ def book_detail(request, pk):
       'form': form
   })
 
-#_____________________________________________________________
-#for printing one books detrails
-def print_book_details(request, pk):
-  book = Book.objects.get(id=pk)
-  return generate_pdf_book_detail(book)
-
 #_______________________________________________________________
 
 @login_required(login_url='login')
@@ -263,7 +288,7 @@ def orders(request):
       order = Order.objects.get(id=order_id)
       
       if request.POST.get('format') == 'pdf':
-        return generate_pdf_orders([order])  # Pass a list of orders, even if it's just one
+        return generate_order_report(request, [order])  # Pass a list of orders, even if it's just one
       elif request.POST.get('format') == 'csv':
         return generate_csv_orders([order])  # samething here
 
@@ -336,15 +361,30 @@ def update_order_status(request, pk, new_status):
 #_______________________________________________________________
 # for the dashboard page where the admin can see the statistics of the library
 @login_required(login_url='login')
-#for the dashboard
+@role_required(['Administrator', 'Librarian'])  # Optional, use only if role-based access is needed
 def dashboard(request):
+    now = timezone.now()
+    start_of_month = now.replace(day=1)
+
     total_books = Book.objects.count()
+    new_monthly_stock = Book.objects.filter(date_creation__gte=start_of_month).count()
+
     total_users = Person.objects.count()
     active_orders = Order.objects.filter(status='Pending').count()
+
+    # Recent alerts (you can limit to 5 or 10)
+    alerts = Alert.objects.select_related('user').order_by('-date_created')[:5]
+
+    # Recent borrows
+    borrows = Borrow.objects.select_related('borrower', 'book').order_by('-borrow_date')[:5]
+
     context = {
         'total_books': total_books,
+        'new_monthly_stock': new_monthly_stock,
         'total_users': total_users,
         'active_orders': active_orders,
+        'alerts': alerts,
+        'borrows': borrows,
     }
 
     return render(request, 'dashboard.html', context)
@@ -431,9 +471,13 @@ def stock(request):
 
       format = request.POST.get('format')
       if format == 'pdf':
+        print("Generating PDF")
         return generate_stock_report(request, filtered_books)
       elif format == 'csv':
-        return generate_csv_books( filtered_books)
+        print("Generating CSV")
+        return generate_csv_books(filtered_books)
+      
+      return redirect('stock')
       
   genres = Genre.objects.all()
   langs = Book.objects.values_list('lang', flat=True).distinct()
@@ -465,8 +509,6 @@ def stock(request):
     }
   return render(request, 'stock.html', context)
 
-
-
 #_______________________________________________________________
 @login_required(login_url='login')
 # for editing the information of a book 
@@ -486,6 +528,7 @@ def edit_book(request, pk):
 #_______________________________________________________________
 #for adding a new borrow made by user
 @login_required(login_url='login')
+@prevent_duplicate_borrow()
 def reader_borrow(request, book_id):
   book = Book.objects.get(id=book_id)
 
@@ -501,6 +544,7 @@ def reader_borrow(request, book_id):
 
 #______________________________________________________________
 @login_required(login_url='login')
+@prevent_duplicate_reservation()
 def reserve(request, book_id):
   book = Book.objects.get(id=book_id)
 
@@ -518,13 +562,13 @@ def reserve(request, book_id):
   return redirect('book-detail', pk=book.pk)
 
 #_______________________________________________________________
-@login_required(login_url='login')
 #for deleting a book (the book doesnt actually get deleted, 
 # it is just not shown anymore in stock except for the admin)
-def change_availability(request, book_id, new_status):
-  book = Book.objects.get(Book, id=book_id)
+@login_required(login_url='login')
+def change_availability(request, pk, new_status):
+  book = Book.objects.get(id=pk)
     # Check if new_status is a valid option in Availability
-  if new_status in Book.Availability.values:
+  if new_status in Availability.values:
     book.availability = new_status
     book.save()
     return redirect('stock')  # redirect back to the page you want
@@ -534,14 +578,24 @@ def change_availability(request, book_id, new_status):
 # for the profile page. It will have this users info, borrowed books,
 # the history of returned books, and reserved books
 @login_required(login_url='login')
+@owner_only(Person)
 def profile(request, pk): 
   person = Person.objects.get(id = pk)
   borrowed_books = Borrow.objects.filter(borrower__id=pk)
   reserved_books = Reservation.objects.filter(person__id=pk)
   read_books =ReadingHistory.objects.filter(person__id=pk)
   wishlist = Wishlist.objects.filter(person=pk)
+  alerts = Alert.objects.filter(user=person)
+    
 
-  context = {'person': person, 'borrowed_books': borrowed_books, 'reserved_books': reserved_books, 'read_books': read_books, 'wishlist': wishlist}
+  context = {
+    'person': person, 
+    'borrowed_books': borrowed_books, 
+    'reserved_books': reserved_books, 
+    'read_books': read_books, 
+    'wishlist': wishlist,
+    'alerts': alerts,
+    }
   return render(request, 'profile.html', context)
 
 #_________________________________________________________
@@ -584,54 +638,52 @@ def users(request):
   users = Person.objects.filter(is_superuser=False)
   user_fines = {}
 
+  # Single search input for ID, CIN, and Name
+  q = request.GET.get('q')
+  filters = Q()
+  if q:
+    filters &= (
+      Q(id__icontains=q) |
+      Q(cin__icontains=q) |
+      Q(first_name__icontains=q) |
+      Q(last_name__icontains=q)
+    )
+
+  # Other filters
+  role = request.GET.get('role')
+  dob = request.GET.get('dob')
+  status = request.GET.get('membershipStatus')
+
+  if role:
+    filters &= Q(role__iexact=role)
+  if dob:
+    filters &= Q(dob=dob)
+  if status:
+    filters &= Q(status__iexact=status)
+
+  users = users.filter(filters)
+
+  # Calculate fines and update status
   for user in users:
     total_fine = Borrow.objects.filter(borrower=user, is_fine_paid=False).aggregate(total=Sum('fine'))['total'] or 0
     user_fines[user.id] = total_fine
-
-    #update the status to 'Suspended if the fines aren't paid
     if total_fine > 0 and user.status != 'Suspended':
       user.status = 'Suspended'
       user.save(update_fields=['status'])
 
   if request.method == 'POST':
     action = request.POST.get('action')
-
     if action == 'print_users':
-      dob_from = request.POST.get('dob_from')
-      dob_to = request.POST.get('dob_to')
-      role = request.POST.get('role')
-      status = request.POST.get('status')
-      city = request.POST.get('city')
-      country = request.POST.get('country')
-      from_date_joined = request.POST.get('from_date_joined')
-      to_date_joined = request.POST.get('to_date_joined')
-
-      filters = Q()
-
-      if dob_from and dob_to:
-        filters &= Q(dob__range=[dob_from, dob_to])
-      if role:
-        filters &= Q(role=role)
-      if status:
-        filters &= Q(status=status)
-      if city:
-        filters &= Q(city__icontains=city)
-      if country:
-        filters &= Q(country__icontains=country)
-      if from_date_joined and to_date_joined:
-        filters &= Q(date_joined__date__range=[from_date_joined, to_date_joined])
-
-      selected_users = Person.objects.filter(is_superuser=False).filter(filters)
-
-      # Export
-      if request.POST.get('format') == 'pdf':
-          return generate_person_report(request, selected_users)
-      elif request.POST.get('format') == 'csv':
-          return generate_csv_users(selected_users)
+      format = request.POST.get('format')
+      if format == 'pdf':
+        return generate_person_report(request, users)
+      elif format == 'csv':
+        return generate_csv_users(users)
+    
+    return redirect('manage-users')
 
   context = {'users': users, 'user_fines': user_fines}
   return render(request, 'manageUsers.html', context)
-
 #________________________________________________________________
 #for suspending/banning an account
 def change_account_status(request, pk, new_status):
@@ -648,13 +700,6 @@ def change_account_status(request, pk, new_status):
     user.status = 'Banned'
     user.save()
     return redirect('manage-users')
-
-#______________________________________________________________
-#for print a users informations
-def print_user_details(request, pk):
-  user = Person.objects.get(id=pk)
-  return generate_pdf_user_detail(user)
-
 
 #_______________________________________________________________
 # for adding a new staff member
@@ -807,7 +852,7 @@ def payment_page(request, pk, current_page):
   print(total_fine)
 
   if request.method == 'POST' and total_fine > 0:
-    if current_page == 'pro':
+    if current_page == 'profile':
       # Get card info from form
       card_name = request.POST.get('card_name')
       card_number = request.POST.get('card_number')
@@ -845,7 +890,10 @@ def payment_page(request, pk, current_page):
       'fines': unpaid_fines,
       'total_fine': total_fine,
   }
-  return render(request, 'pay.html', context)
+  if current_page == 'profile':
+    return render(request, 'readerPay.html', context)
+  else:
+    return render(request, 'pay.html', context)
 
 #________________________________________________________________
 #for the staff payments page
@@ -926,6 +974,19 @@ def payment_staff(request):
 
   return render(request, "manage_payment.html", context)
 
+#_______________________________________________________________
+def generate_invoice(request, pk):
+  payment = Payment.objects.get(id=pk)
+  html_string = render_to_string('invoice.html', {'payment': payment})
+  html = HTML(string=html_string, base_url=request.build_absolute_uri())
+
+  pdf_file = html.write_pdf()
+
+  response = HttpResponse(content_type='application/pdf')
+  response['Content-Disposition'] = f'inline; filename="event_{payment.id}.pdf"'
+  response.write(pdf_file)
+  return response
+
 
 #________________________________________________________________
 def event_staff(request):
@@ -961,6 +1022,8 @@ def event_staff(request):
 
   types = Event.objects.values_list("event_type", flat=True).distinct()
 
+  
+
   context = {
       "events": events.order_by("-start_datetime"),
       "types": types,
@@ -992,243 +1055,60 @@ def cancel_event(request, pk):
   return redirect('manage_events')
 
 #_______________________________________________________________
-def generate_invoice(request, pk):
-  payment = Payment.objects.get(id=pk)
-  html_string = render_to_string('invoice.html', {'payment': payment})
-  html = HTML(string=html_string, base_url=request.build_absolute_uri())
+#for generating a list of event guests
+def generate_list(request, pk, format):
+  event = Event.objects.get(id=pk)
 
-  pdf_file = html.write_pdf()
+  if format == 'pdf':
+    return generate_guest_list(request, event)
+  elif format == 'csv':
+    return generate_csv_guestsList(event)
+  
+  return redirect('manage-event')
 
-  response = HttpResponse(content_type='application/pdf')
-  response['Content-Disposition'] = f'inline; filename="event_{payment.id}.pdf"'
-  response.write(pdf_file)
-  return response
+#_______________________________________________________________
+#for printing an event
+def print_event(request, pk):
+  event = Event.objects.get(id=pk)
+  return generate_event_pdf(request, event)
 
+#_______________________________________________________________
+#for sending a fine alert
+def send_fine_alert(request, pk):
+  user = Person.objects.get(id=pk)
+  unreturned = Borrow.objects.filter(borrower=user)
+  print(unreturned)
 
-#________________________________________________________________
-#for generating the stock report
-def generate_stock_report(request, books=None):
-  if books is None:
-    books = Book.objects.all()
+  alert_sent = False
 
-  # Define table columns
-  columns = ["ISBN", "Title", "Author", "Edition", "Publication Year", "Audience", "Language"]
+  for borrow in unreturned:
+    if borrow.fine and borrow.fine > 0:
+      Alert.objects.create(
+        user=user,
+        title="Fine Alert",
+        message=f"Your fine for the book '{borrow.book.title}' is {borrow.fine} MAD.",
+      )
+      user.unread_alerts += 1
+      alert_sent = True
 
-  # Build rows
-  rows = []
-  for book in books:
-    rows.append({
-      "values": [
-        book.ISBN,
-        book.title,
-        book.author,
-        book.edition,
-        book.publication_year,
-        book.audience,
-        book.lang,
-      ]
-    })
+  if alert_sent:
+    user.save()
+    messages.success(request, f"Fine alert sent to {user.first_name} {user.last_name}.")
+  else:
+    messages.info(request, f"No unpaid fines for {user.first_name} {user.last_name}.")
 
-  cols = len(columns) - 1
-  total_books = len(rows)
-
-  context = {
-    "report": {
-      "title": "Library Stock Report",
-      "col": columns,
-      "rows": rows,
-      "total": f"{total_books} Books",
-    },
-    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-    "nbr_cols": cols,
-    "request": request,
-  }
-
-  html_string = render_to_string("listTemplate.html", context)
-
-  # Use in-memory buffer
-  pdf_file = BytesIO()
-  HTML(string=html_string).write_pdf(target=pdf_file)
-
-  # Build response
-  pdf_file.seek(0)
-  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
-  response["Content-Disposition"] = "inline; filename=stock_report.pdf"
-
-  return response
-
-#______________________________________________________________________
-def generate_payment_report(request, payments=None):
-  if payments is None:
-    payments = Payment.objects.select_related("person", "borrow").all()
-
-  # Define table columns
-  columns = ["Transaction ID", "Reader", "Borrow", "Payment Type", "Card Info", "Transaction Date", "Amount"]
-
-  # Build rows
-  rows = []
-  for payment in payments:
-    rows.append({
-      "values": [
-        payment.transaction_Id,
-        payment.borrow.borrower,
-        payment.borrow.book,
-        payment.type_payment,
-        payment.card_info,
-        payment.transaction_date.strftime("%Y-%m-%d %H:%M"),
-        f"{payment.amount:.2f} MAD",
-      ]
-    })
-
-  total_amount = sum(payment.amount for payment in payments)
-  cols = len(columns) - 1
-
-  context = {
-    "report": {
-      "title": "Payment Transactions Report",
-      "col": columns,
-      "rows": rows,
-      "total": f"{total_amount:.2f} MAD",
-    },
-    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-    "nbr_cols": cols,
-    "request": request,
-  }
-
-  html_string = render_to_string("listTemplate.html", context)
-
-  # Use in-memory buffer for PDF
-  pdf_file = BytesIO()
-  HTML(string=html_string).write_pdf(target=pdf_file)
-  pdf_file.seek(0)
-
-  # HTTP Response
-  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
-  response["Content-Disposition"] = "inline; filename=payment_report.pdf"
-
-  return response
-
-#_______________________________________________________________________
-def generate_person_report(request, people=None):
-  if people is None:
-    people = Person.objects.all()
-
-  columns = ["Username", "CIN", "Full Name", "Role", "Date of Birth", "Phone", "Status", "City", "Country"]
-  rows = []
-  for person in people:
-    rows.append({
-      "values": [
-        person.username,
-        person.cin,
-        f"{person.first_name} {person.last_name}",
-        person.role,
-        person.dob.strftime("%Y-%m-%d") if person.dob else "N/A",
-        person.phone or "N/A",
-        person.status,
-        person.city or "N/A",
-        person.country or "N/A",
-      ]
-    })
-
-  context = {
-    "report": {
-      "title": "Library Members Report",
-      "col": columns,
-      "rows": rows,
-      "total": f"{len(rows)} Members",
-    },
-    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-    "nbr_cols": len(columns) - 1,
-    "request": request,
-  }
-
-  html_string = render_to_string("listTemplate.html", context)
-  pdf_file = BytesIO()
-  HTML(string=html_string).write_pdf(target=pdf_file)
-  pdf_file.seek(0)
-  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=person_report.pdf"})
-
-#_________________________________________________________________________________
-def generate_order_report(request, orders=None):
-  if orders is None:
-    orders = Order.objects.select_related("book", "supplier", "created_by", "updated_by").all()
-
-  columns = ["Order ID", "Book Title", "Supplier", "Status", "Order Date", "Expected Delivery", "Delivery Date", "Created By", "Updated By"]
-  rows = []
-  for order in orders:
-    rows.append({
-      "values": [
-        order.id,
-        order.book.title,
-        order.supplier.name,
-        order.status,
-        order.order_date.strftime("%Y-%m-%d"),
-        order.expected_delivery_date.strftime("%Y-%m-%d"),
-        order.delivery_date.strftime("%Y-%m-%d") if order.delivery_date else "N/A",
-        str(order.created_by) if order.created_by else "N/A",
-        str(order.updated_by) if order.updated_by else "N/A",
-      ]
-    })
-
-  context = {
-    "report": {
-      "title": "Order Report",
-      "col": columns,
-      "rows": rows,
-      "total": f"{len(rows)} Orders",
-    },
-    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-    "nbr_cols": len(columns) - 1,
-    "request": request,
-  }
-
-  html_string = render_to_string("listTemplate.html", context)
-  pdf_file = BytesIO()
-  HTML(string=html_string).write_pdf(target=pdf_file)
-  pdf_file.seek(0)
-  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=order_report.pdf"})
-
-#____________________________________________________________________________
-def generate_event_report(request, events=None):
-  if events is None:
-    events = Event.objects.all()
-
-  columns = ["Title", "Host", "Price", "Audience", "Type", "Location", "Start", "End", "Guests", "Status"]
-  rows = []
-  for event in events:
-    status = "Canceled" if event.is_canceled else ("Public" if event.is_public else "Private")
-    rows.append({
-      "values": [
-        event.title,
-        event.host or "N/A",
-        f"{event.event_price:.2f} MAD",
-        event.audience,
-        event.event_type,
-        event.location,
-        event.start_datetime.strftime("%Y-%m-%d %H:%M"),
-        event.end_datetime.strftime("%Y-%m-%d %H:%M"),
-        f"{event.current_reservations}/{event.nbr_reservations}",
-        status,
-      ]
-    })
-
-  context = {
-    "report": {
-      "title": "Event Report",
-      "col": columns,
-      "rows": rows,
-      "total": f"{len(rows)} Events",
-    },
-    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-    "nbr_cols": len(columns) - 1,
-    "request": request,
-  }
-
-  html_string = render_to_string("listTemplate.html", context)
-  pdf_file = BytesIO()
-  HTML(string=html_string).write_pdf(target=pdf_file)
-  pdf_file.seek(0)
-  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=event_report.pdf"})
+  return redirect('manage-users')
 
 
+#_______________________________________________________________
+#for marking an alert as read
+def mark_alert_read(request, pk):
+  alert = Alert.objects.get(id=pk)
+  user = Person.objects.get(id=alert.user.id)
+
+  user.unread_alerts -= 1
+  user.save()
+  alert.is_read = True
+  alert.save()
+  return redirect('profile', pk=alert.user.id)
 

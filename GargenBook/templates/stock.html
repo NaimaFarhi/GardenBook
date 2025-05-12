@@ -4,15 +4,21 @@
 
 {% block title %}Users | GardenBook{% endblock %}
 
+{% block page %} Stock {% endblock %}
+
+
 
 {% block content %}
-<div class="py-5 bg-light-brown">
-  <div class="container-fluid row m-2">
-    <!-- START BUTTONS -->
-    <div>
+<div class="container-fluid row m-2">
+  <!-- START BUTTONS -->
+  <div class="row mb-3 d-flex justify-content-end">
+    <div class="col-auto">
       <a href="{% url 'create-book' %}" class="btn btn-outline-brown">+New Book</a>
+    </div>
 
-      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-stock-modal">Print</button>
+    <div class="col-auto">
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-stock-modal">Export
+        Stock</button>
       <!-- ________________________________________________________________________ -->
       <!-- START PRINT MULTIPLE USERS MODAL -->
       <div class="modal fade" id="print-stock-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
@@ -20,13 +26,14 @@
         <div class="modal-dialog">
 
           <div class="modal-content">
-
-            <div class="modal-header bg-brown">
-              <h5 class="modal-title text-light" id="modal-title">Print Stock</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-
             <form method="POST">
+
+              <div class="modal-header bg-brown">
+                <h5 class="modal-title text-light" id="modal-title">Print Stock</h5>
+                <button type="reset" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+
+
               {% csrf_token %}
               <div class="modal-body">
                 <p class="text-secondary">Filter books:</p>
@@ -71,154 +78,152 @@
           </div>
         </div>
       </div>
-
-      <!-- END PRINT MODAL -->
     </div>
-    <!-- END BUTTONS -->
-
-    <!-- START SEARCH / FILTER SECTION -->
-    <div class="container-fluid bg-white shadow-sm rounded-20 p-4 mb-4">
-      <h2 class="mb-3">Search & Filter</h2>
-      <form method="GET" action="{% url 'stock' %}">
-        <div class="row gx-3 gy-2 align-items-end">
-
-          <!-- Search Bar -->
-          <div class="col-md-4">
-            <label for="searchBar" class="form-label">Search</label>
-            <input type="search" name="q" class="form-control" id="searchBar"
-              placeholder="ISBN, Title, Author, Edition, Keywords...">
-          </div>
-
-          <!-- Publication Year From -->
-          <div class="col-md-1">
-            <label for="publicationYearFrom" class="form-label">Year From</label>
-            <input type="number" name="publicationYearFrom" id="publicationYearFrom" value="{{pub_year_min}}"
-              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control">
-          </div>
-
-          <!-- Publication Year To -->
-          <div class="col-md-1">
-            <label for="publicationYearTo" class="form-label">Year To</label>
-            <input type="number" name="publicationYearTo" id="publicationYearTo" value="{{pub_year_max}}"
-              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control">
-          </div>
-
-          <!-- Language -->
-          <div class="col-md-2">
-            <label for="language" class="form-label">Language</label>
-            <select class="form-select" name="language" id="language">
-              <option value="">Select a language</option>
-              {% for lang in langs %}
-              <option value="{{lang}}">{{lang}}</option>
-              {% endfor %}
-            </select>
-          </div>
-
-          <!-- Audience -->
-          <div class="col-md-2">
-            <label for="audience" class="form-label">Audience</label>
-            <select class="form-select" name="audience" id="audience">
-              <option value="">Select an audience</option>
-              {% for aud in auds %}
-              <option value="{{aud}}">{{aud}}</option>
-              {% endfor %}
-            </select>
-          </div>
-          
-          <!-- Review -->
-          <div class="col-md-1">
-            <label for="review" class="form-label">Min Review</label>
-            <input type="number" name="review" id="review" min="0" max="10" class="form-control">
-          </div>
-
-          <!-- Genre -->
-          <div class="col-md-2">
-            <label class="form-label">Genre</label>
-            <div class="border rounded p-2" style="max-height: 120px; overflow-y: auto;">
-              {% if genres %}
-              {% for genre in genres %}
-              <div class="form-check small">
-                <input class="form-check-input" type="checkbox" name="genre" value="{{ genre }}" id="genre{{ genre }}">
-                <label class="form-check-label text-muted" for="genre{{ genre }}">{{ genre }}</label>
-              </div>
-              {% endfor %}
-              {% else %}
-              <small class="text-muted">No genres available</small>
-              {% endif %}
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="col-md-2 d-grid">
-            <button type="submit" class="btn btn-green">Search</button>
-          </div>
-
-          <div class="col-md-2 d-grid">
-            <a href="{% url 'stock' %}" class="btn btn-outline-secondary">Reset</a>
-          </div>
-
-        </div>
-      </form>
-    </div>
-    <!-- END SEARCH / FILTER SECTION -->
 
 
-    <!-- START TABLE -->
-    <div class="col mx-3">
-      <div class="overflow-hidden shadow-sm p-0 rounded-20">
-        <table class="table align-middle m-0">
-          <thead class="bg-brown-second">
-            <tr>
-              <th>ISBN</th>
-              <th>Book Cover</th>
-              <th>Book Title</th>
-              <th>Author</th>
-              <th>Edition</th>
-              <th>Publication Year</th>
-              <th>Date Added</th>
-              <th>Availability</th>
-              <th>Remove Book</th>
-              <th>Edit</th>
-              <th>Print</th>
-            </tr>
-          </thead>
-          <tbody id="stockTable" class="bg-white">
-            {% for book in stock %}
-            <tr class="clickable-row" data-href="{% url 'book-detail' book.id %}">
-              <td>{{book.ISBN}}</td>
-              <td>
-                {% if book.cover %}
-                <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail" width="50">
-                {% else %}
-                <img src="{% static 'missingbook.webp' %}" alt="Unavailable book cover" class="img-thumbnail"
-                  width="50">
-                {% endif %}
-              </td>
-              <td>{{book.title}}</td>
-              <td>{{book.author}}</td>
-              <td>{{book.edition}}</td>
-              <td>{{book.publication_year}}</td>
-              <td>{{book.date_creation}}</td>
-              <td>{{book.availability}}</td>
-              <td>
-                <a href="{% url 'change-availability' book.id 'Remove' %}" class="btn btn-outline-brown">Remove</a>
-              </td>
-              <td>
-                <a href="{% url 'edit-book' book.id %}" class="btn bg-white"><img src="{% static 'edit_icon.png' %}"
-                    alt="#" class="border-light" width="25"></a>
-              </td>
-              <td>
-                <a href="{% url 'print-book-details' book.id %}" class="btn btn-outline-brown">Print</a>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <!-- END TABLE -->
+
+    <!-- END PRINT MODAL -->
   </div>
+  <!-- END BUTTONS -->
+
+  <!-- START SEARCH / FILTER SECTION -->
+  <div class=" row container bg-white shadow-sm rounded-20 m-2 p-4 mb-4">
+    <h2 class="mb-3">Search & Filter</h2>
+    <form method="GET" action="{% url 'stock' %}">
+      <div class="row gx-3 gy-2 align-items-end">
+
+        <!-- Search Bar -->
+        <div class="col-md-4">
+          <label for="searchBar" class="form-label">Search</label>
+          <input type="search" name="q" class="form-control" id="searchBar"
+            placeholder="ISBN, Title, Author, Edition, Keywords...">
+        </div>
+
+        <!-- Publication Year From -->
+        <div class="col-md-1">
+          <label for="publicationYearFrom" class="form-label">Year From</label>
+          <input type="number" name="publicationYearFrom" id="publicationYearFrom" value="{{pub_year_min}}"
+            min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control">
+        </div>
+
+        <!-- Publication Year To -->
+        <div class="col-md-1">
+          <label for="publicationYearTo" class="form-label">Year To</label>
+          <input type="number" name="publicationYearTo" id="publicationYearTo" value="{{pub_year_max}}"
+            min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control">
+        </div>
+
+        <!-- Language -->
+        <div class="col-md-2">
+          <label for="language" class="form-label">Language</label>
+          <select class="form-select" name="language" id="language">
+            <option value="">Select a language</option>
+            {% for lang in langs %}
+            <option value="{{lang}}">{{lang}}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Audience -->
+        <div class="col-md-2">
+          <label for="audience" class="form-label">Audience</label>
+          <select class="form-select" name="audience" id="audience">
+            <option value="">Select an audience</option>
+            {% for aud in auds %}
+            <option value="{{aud}}">{{aud}}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Review -->
+        <div class="col-md-1">
+          <label for="review" class="form-label">Min Review</label>
+          <input type="number" name="review" id="review" min="0" max="10" class="form-control">
+        </div>
+
+        <!-- Genre -->
+        <div class="col-md-2">
+          <label class="form-label">Genre</label>
+          <div class="border rounded p-2" style="max-height: 60px; overflow-y: auto;">
+            {% if genres %}
+            {% for genre in genres %}
+            <div class="form-check small">
+              <input class="form-check-input" type="checkbox" name="genre" value="{{ genre }}" id="genre{{ genre }}">
+              <label class="form-check-label text-muted" for="genre{{ genre }}">{{ genre }}</label>
+            </div>
+            {% endfor %}
+            {% else %}
+            <small class="text-muted">No genres available</small>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-green">Search</button>
+        </div>
+
+        <div class="col-md-2 d-grid">
+          <a href="{% url 'stock' %}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+
+      </div>
+    </form>
+  </div>
+  <!-- END SEARCH / FILTER SECTION -->
+
+
+  <!-- START TABLE --> 
+  <div class="col">
+    <div class="overflow-hidden shadow-sm p-0 rounded-20">
+      <table class="table align-middle m-0">
+        <thead class="bg-brown-second">
+          <tr>
+            <th>ISBN</th>
+            <th>Book Cover</th>
+            <th>Book Title</th>
+            <th>Author</th>
+            <th>Edition</th>
+            <th>Publication Year</th>
+            <th>Date Added</th>
+            <th>Availability</th>
+            <th>Remove Book</th>
+            <th>Edit</th>
+          </tr>
+        </thead>
+        <tbody id="stockTable" class="bg-white">
+          {% for book in stock %}
+          <tr class="clickable-row" data-href="{% url 'book-detail' book.id %}">
+            <td>{{book.ISBN}}</td>
+            <td>
+              {% if book.cover %}
+              <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail" width="50">
+              {% else %}
+              <img src="{% static 'missingbook.webp' %}" alt="Unavailable book cover" class="img-thumbnail" width="50">
+              {% endif %}
+            </td>
+            <td>{{book.title}}</td>
+            <td>{{book.author}}</td>
+            <td>{{book.edition}}</td>
+            <td>{{book.publication_year}}</td>
+            <td>{{book.date_creation}}</td>
+            <td>{{book.availability}}</td>
+            <td>
+              <a href="{% url 'change-availability' book.id 'Remove' %}" class="btn btn-outline-brown">Remove</a>
+            </td>
+            <td>
+              <a href="{% url 'edit-book' book.id %}" class="btn bg-white"><img src="{% static 'edit_icon.png' %}"
+                  alt="#" class="border-light" width="25"></a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <!-- END TABLE -->
 </div>
+
 
 <script>
 
@@ -228,52 +233,7 @@
     });
   });
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const tableRows = document.querySelectorAll("#stockTable tr");
 
-    const filters = {
-      isbn: document.getElementById("isbnSearch"),
-      title: document.getElementById("titleSearch"),
-      author: document.getElementById("authorSearch"),
-      edition: document.getElementById("editionSearch"),
-      year: document.getElementById("yearSearch"),
-      stock: document.getElementById("stockSearch")
-    };
-
-    const filterStock = () => {
-      const isbn = filters.isbn.value.toLowerCase();
-      const title = filters.title.value.toLowerCase();
-      const author = filters.author.value.toLowerCase();
-      const edition = filters.edition.value.toLowerCase();
-      const year = filters.year.value.trim();
-      const minStock = filters.stock.value.trim(); // not used for now, unless you have stock quantity
-
-      tableRows.forEach(row => {
-        const cells = row.querySelectorAll("td");
-        if (cells.length === 0) return; // Skip empty rows
-
-        const isbnText = cells[0]?.textContent.trim().toLowerCase();
-        const titleText = cells[2]?.textContent.trim().toLowerCase();
-        const authorText = cells[3]?.textContent.trim().toLowerCase();
-        const editionText = cells[4]?.textContent.trim().toLowerCase();
-        const yearText = cells[5]?.textContent.trim();
-
-        const matches =
-          isbnText.includes(isbn) &&
-          titleText.includes(title) &&
-          authorText.includes(author) &&
-          editionText.includes(edition) &&
-          (year === "" || yearText === year);
-
-        row.style.display = matches ? "" : "none";
-      });
-    };
-
-    // Listen to all filters
-    Object.values(filters).forEach(input => {
-      input.addEventListener("input", filterStock);
-    });
-  });
 </script>
 
 {% endblock %}

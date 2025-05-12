@@ -8,37 +8,37 @@
 
 
 {% block content %}
-<div class="py-5 bg-light-brown">
+<div class="container-fluid row m-2">
 
   <!-- START BUTTONS -->
-  <div class="d-flex justify-content-end m-2 gap-3">
+  <div class=" row d-flex justify-content-end mb-3 gap-3">
+    <div class="col-auto">
+      <!-- ADD A NEW BORROW -->
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#borrow-modal">+New Borrow</button>
+      <!-- ADD A NEW BORROW MODAL -->
+      <div class="modal fade" id="borrow-modal" tabindex="-1" aria-labelledby="borrowModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="borrowModalLabel">Add a New Borrow</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form method="POST">
 
-    <!-- ADD A NEW BORROW -->
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#borrow-modal">+New Borrow</button>
-    <!-- ADD A NEW BORROW MODAL -->
-    <div class="modal fade" id="borrow-modal" tabindex="-1" aria-labelledby="borrowModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="borrowModalLabel">Add a New Borrow</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <form method="POST" >
+                {% csrf_token %}
+                {% crispy form %}
 
-              {% csrf_token %}
-              {% crispy form %}
-
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
           </div>
         </div>
       </div>
+      <!-- END ADD A NEW BORROW MODAL -->
     </div>
-    <!-- END ADD A NEW BORROW MODAL -->
-
   </div>
   <!-- END BUTTONS -->
 
@@ -49,35 +49,35 @@
     <!-- Horizontal Search Bar -->
     <form method="GET" class="bg-white shadow-sm rounded-20 p-4 mb-4">
       <div class="row g-3 align-items-end">
-    
+
         <div class="col-md-4">
           <label for="q" class="form-label">Book Title</label>
           <input type="search" name="q" id="q" class="form-control" placeholder="Enter Book Title">
         </div>
-    
+
         <div class="col-md-2">
           <label for="borrowed_on" class="form-label">Borrowed On</label>
           <input type="date" name="borrowed_on" id="borrowed_on" class="form-control">
         </div>
-    
+
         <div class="col-md-2">
           <label for="due_date" class="form-label">Due Date</label>
           <input type="date" name="due_date" id="due_date" class="form-control">
         </div>
-    
+
         <div class="col-md-2">
           <label for="returned_on" class="form-label">Returned On</label>
           <input type="date" name="returned_on" id="returned_on" class="form-control">
         </div>
-    
+
         <div class="col-md-1">
           <button class="btn btn-green w-100" type="submit">Search</button>
         </div>
-    
+
         <div class="col-md-1">
           <a href="{% url 'borrows-returns' %}" class="btn btn-green w-100">Reset</a>
         </div>
-    
+
       </div>
       <small>Press Enter <i class="bi bi-arrow-return-left"></i></small>
     </form>
@@ -124,7 +124,7 @@
                 {% csrf_token %}
                 <input type="hidden" name="action" value="return_book">
                 <input type="hidden" name="borrow_id" value="{{ borrow.id }}">
-                <button type="submit" class="btn btn-primary">Return</button>
+                <button type="submit" class="btn btn-outline-brown">Return</button>
               </form>
               {% endif %}
 
@@ -152,49 +152,10 @@
 
 
     <!-- END TABLE SECTION -->
+
+    <!-- END DISPLAY BOOK BORROWINGS -->
+
   </div>
   <!-- END DISPLAY BOOK BORROWINGS -->
-
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const titleInput = document.getElementById("searchTitle");
-      const borrowedOnInput = document.getElementById("searchBorrowedOn");
-      const dueDateInput = document.getElementById("searchDueDate");
-      const returnedOnInput = document.getElementById("searchReturnedOn");
-
-      const tableRows = document.querySelectorAll("tbody tr");
-
-      function filterBorrowings() {
-        const titleValue = titleInput.value.toLowerCase();
-        const borrowedValue = borrowedOnInput.value;
-        const dueValue = dueDateInput.value;
-        const returnedValue = returnedOnInput.value;
-
-        tableRows.forEach(row => {
-          const title = row.cells[0].textContent.toLowerCase();
-          const borrowedOn = row.cells[1].textContent;
-          const dueDate = row.cells[2].textContent;
-          const returnedOn = row.cells[3].textContent;
-
-          const matchTitle = title.includes(titleValue);
-          const matchBorrowed = borrowedValue === "" || borrowedOn === borrowedValue;
-          const matchDue = dueValue === "" || dueDate === dueValue;
-          const matchReturned = returnedValue === "" || returnedOn === returnedValue;
-
-          if (matchTitle && matchBorrowed && matchDue && matchReturned) {
-            row.style.display = "";
-          } else {
-            row.style.display = "none";
-          }
-        });
-      }
-
-      titleInput.addEventListener("input", filterBorrowings);
-      borrowedOnInput.addEventListener("input", filterBorrowings);
-      dueDateInput.addEventListener("input", filterBorrowings);
-      returnedOnInput.addEventListener("input", filterBorrowings);
-    });
-  </script>
-
-  {% endblock content %}
+</div>
+{% endblock content %}

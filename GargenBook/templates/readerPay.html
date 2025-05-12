@@ -1,4 +1,4 @@
-{% extends 'baseLibrarian.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Pay Fine | GardenBook{% endblock %}
 
@@ -72,7 +72,7 @@
         <label for="cardNumber" class="form-label">Card Number</label>
         <input type="text" class="form-control" id="cardNumber" name="card_number" maxlength="16" required>
       </div>
-      
+
       <div class="col-md-3 mb-3">
         <label for="expiryDate" class="form-label">Expiry Date</label>
         <input type="text" class="form-control" id="expiryDate" name="expiry_date" placeholder="MM/YY" required>
@@ -91,6 +91,3 @@
   {% endif %}
 </div>
 {% endblock %}
-
-
-

@@ -1,11 +1,11 @@
 import csv
-from django.http import HttpResponse,FileResponse
+from datetime import datetime
+from django.http import HttpResponse
 from io import BytesIO
-# downloaded reportLab to generate a pdf "pip install reportlab"
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-from reportlab.lib.units import inch
-from reportlab.pdfgen import canvas
+from django.template.loader import render_to_string
+from weasyprint import HTML
+
+from .models import Order, Payment, Person, Book, Event
 
 
 
@@ -25,63 +25,6 @@ def generate_csv_orders(orders):
         writer.writerow([order.id, order.supplier.name, order.book.title, order.status, order.order_date, order.expected_delivery_date, order.delivery_date])
 
     return response
-
-
-def generate_pdf_orders(orders):
-    # Create a file-like buffer to receive PDF data
-    buffer = BytesIO()
-
-    # Create a PDF document object using the buffer
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-
-    # Prepare the table data (header + order rows)
-    table_data = [
-        ['Order ID', 'Supplier', 'Book Title', 'Status', 'Order Date', 'Expected Delivery Date', 'Delivered On']
-    ]
-
-    # Add rows for each order
-    for order in orders:
-        table_data.append([
-            order.id,
-            order.supplier.name,
-            order.book.title,
-            order.status,
-            order.order_date,
-            order.expected_delivery_date,
-            order.delivery_date or 'N/A',  # Handle missing delivery date
-            order.updated_by or 'N/A',
-            order.updated_at or 'N/A'
-        ])
-
-    # Create the table object
-    table = Table(table_data)
-
-    # Set table style (optional, to customize appearance)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), '#D3D3D3'),  # Header row background
-        ('TEXTCOLOR', (0, 0), (-1, 0), '#000000'),  # Header text color
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),  # Center-align all cells
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),  # Header font style
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),  # Regular font style for data rows
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),  # Padding for header
-        ('TOPPADDING', (0, 1), (-1, -1), 10),  # Padding for data rows
-        ('GRID', (0, 0), (-1, -1), 1, '#000000'),  # Add gridlines
-    ]))
-
-    # Build the document with the table
-    elements = [table]
-    doc.build(elements)
-
-    # Get PDF file data from the buffer
-    pdf = buffer.getvalue()
-    buffer.close()
-
-    # Create a response to serve the PDF file
-    response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="orders_report.pdf"'
-
-    return response
-
 
 #________________________________________________________________
 def generate_csv_users(users):
@@ -131,175 +74,374 @@ def generate_csv_payments(payments):
 
     return response
 
-
 #________________________________________________________________
-def generate_pdf_users(users):
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-
-    table_data = [
-        ['ID', 'Full Name', 'Role', 'Status', 'City', 'Country', 'DOB', 'Date Joined']
-    ]
-
-    for user in users:
-        table_data.append([
-            user.id,
-            f"{user.first_name} {user.last_name}",
-            user.role,
-            user.status,
-            user.city or '',
-            user.country or '',
-            str(user.dob) if user.dob else '',
-            user.date_joined.date() if user.date_joined else ''
-        ])
-
-    table = Table(table_data)
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), '#D3D3D3'),
-        ('TEXTCOLOR', (0, 0), (-1, 0), '#000000'),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('TOPPADDING', (0, 1), (-1, -1), 10),
-        ('GRID', (0, 0), (-1, -1), 1, '#000000'),
-    ]))
-
-    doc.build([table])
-    pdf = buffer.getvalue()
-    buffer.close()
-
-    response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = 'attachment; filename="users_report.pdf"'
-
-    return response
-
-
-#______________________________________________________________
-def generate_pdf_books(books):
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
-    y = height - 50
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(200, y, "Book Stock Report")
-    y -= 40
-
-    p.setFont("Helvetica", 10)
-    for book in books:
-        if y < 100:
-            p.showPage()
-            y = height - 50
-
-        line = f"{book.title} | {book.author} | {book.availability} | {book.lang} | Reserved: {book.is_reserved}"
-        p.drawString(50, y, line)
-        y -= 20
-
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename="books_report.pdf")
-
 def generate_csv_books(books):
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="books_report.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['Title', 'Author', 'Availability', 'Language', 'Reserved'])
+    writer.writerow(['ISBN', 'Title', 'Author', 'Availability', 'Language', 'Edition', 'Publication Year', 'Audience'])
 
     for book in books:
         writer.writerow([book.title, book.author, book.availability, book.lang, 'Yes' if book.is_reserved else 'No'])
 
     return response
 
-#_______________________________________________________________________________
-def generate_pdf_user_detail(user):
+#________________________________________________________________
+def generate_csv_guestsList(event):
+    guests = []
 
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+    if event.guests.exists():
+        guests = event.guests.all()
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="reservations_report.csv"'
 
-    y = height - inch
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(200, y, "User Details Report")
-    y -= 40
+    writer = csv.writer(response)
+    # Write the header  
+    writer.writerow(['Guest List'])
+    writer.writerow(['Event Title', event.title])
+    writer.writerow(["Guest ID", "Username", "First Name", "Last Name", "email", "Phone"])
 
-    p.setFont("Helvetica", 12)
+    for guest in guests:
+        writer.writerow([guest.id,
+            guest.username,
+            guest.first_name,
+            guest.last_name,
+            guest.email,
+            guest.phone,])
 
-    details = [
-        ("CIN", user.cin),
-        ("Full Name", f"{user.first_name} {user.last_name}"),
-        ("Role", user.role),
-        ("Date of Birth", user.dob.strftime("%Y-%m-%d") if user.dob else "N/A"),
-        ("Phone", user.phone or "N/A"),
-        ("Status", user.status),
-        ("Address", user.address or "N/A"),
-        ("City", user.city or "N/A"),
-        ("Postal Code", user.postal_code or "N/A"),
-        ("Country", user.country or "N/A"),
-        ("Bio", user.bio or "N/A"),
-    ]
+    return response
 
-    for label, value in details:
-        p.drawString(80, y, f"{label}: {value}")
-        y -= 20
-        if y < 100:
-            p.showPage()
-            y = height - inch
+#________________________________________________________________
 
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename=f"user_{user.id}_details.pdf")
+
+
+
+
+
+#___________________________PDF___________________________
+
+# for generating the list of reservations
+def generate_guest_list(request, event=None):
+    if event is None:
+        guests = []
+
+    if event.guests.exists():
+        guests = event.guests.all()
+    
+    # Define table columns
+    columns = ["Guest ID", "Username", "First Name", "Last Name", "email", "Phone"]
+    
+    # Build rows
+    rows = []
+    for guest in guests:
+        rows.append({
+        "values": [
+            guest.id,
+            guest.username,
+            guest.first_name,
+            guest.last_name,
+            guest.email,
+            guest.phone,
+        ]
+        })
+    
+    total_guests = len(rows)
+    cols = len(columns) - 1
+    
+    context = {
+        "report": {
+            "title": f"Guest List for {event.title}",
+            "col": columns,
+            "rows": rows,
+            "total": f"{total_guests} Guests",
+        },
+        "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "nbr_cols": cols,
+        "request": request,
+    }
+    
+    html_string = render_to_string("listTemplate.html", context)
+    
+    # Use in-memory buffer
+    pdf_file = BytesIO()
+    HTML(string=html_string).write_pdf(target=pdf_file)
+    
+    # Build response
+    pdf_file.seek(0)
+    response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="reservations_report.pdf"'
+    
+    return response
+
+
+#________________________________________________________________
+#for generating the stock report
+def generate_stock_report(request, books=None):
+  if books is None:
+    books = Book.objects.all()
+
+  # Define table columns
+  columns = ["ISBN", "Title", "Author", "Edition", "Publication Year", "Audience", "Language"]
+
+  # Build rows
+  rows = []
+  for book in books:
+    rows.append({
+      "values": [
+        book.ISBN,
+        book.title,
+        book.author,
+        book.edition,
+        book.publication_year,
+        book.audience,
+        book.lang,
+      ]
+    })
+
+  cols = len(columns) - 1
+  total_books = len(rows)
+
+  context = {
+    "report": {
+      "title": "Library Stock Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{total_books} Books",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": cols,
+    "request": request,
+  }
+
+  html_string = render_to_string("listTemplate.html", context)
+
+  # Use in-memory buffer
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+
+  # Build response
+  pdf_file.seek(0)
+  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+  response["Content-Disposition"] = "inline; filename=stock_report.pdf"
+
+  return response
+
+#______________________________________________________________________
+def generate_payment_report(request, payments=None):
+  if payments is None:
+    payments = Payment.objects.select_related("person", "borrow").all()
+
+  # Define table columns
+  columns = ["Transaction ID", "Reader", "Borrow", "Payment Type", "Card Info", "Transaction Date", "Amount"]
+
+  # Build rows
+  rows = []
+  for payment in payments:
+    rows.append({
+      "values": [
+        payment.transaction_Id,
+        payment.borrow.borrower,
+        payment.borrow.book,
+        payment.type_payment,
+        payment.card_info,
+        payment.transaction_date.strftime("%Y-%m-%d %H:%M"),
+        f"{payment.amount:.2f} MAD",
+      ]
+    })
+
+  total_amount = sum(payment.amount for payment in payments)
+  cols = len(columns) - 1
+
+  context = {
+    "report": {
+      "title": "Payment Transactions Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{total_amount:.2f} MAD",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": cols,
+    "request": request,
+  }
+
+  html_string = render_to_string("listTemplate.html", context)
+
+  # Use in-memory buffer for PDF
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+
+  # HTTP Response
+  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+  response["Content-Disposition"] = "inline; filename=payment_report.pdf"
+
+  return response
 
 #_______________________________________________________________________
-def generate_pdf_book_detail(book):
-    buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+def generate_person_report(request, people=None):
+  if people is None:
+    people = Person.objects.all()
 
-    y = height - inch
-    p.setFont("Helvetica-Bold", 16)
-    p.drawString(200, y, "Book Details Report")
-    y -= 40
+  columns = ["Username", "CIN", "Full Name", "Role", "Date of Birth", "Phone", "Status", "City", "Country"]
+  rows = []
+  for person in people:
+    rows.append({
+      "values": [
+        person.username,
+        person.cin,
+        f"{person.first_name} {person.last_name}",
+        person.role,
+        person.dob.strftime("%Y-%m-%d") if person.dob else "N/A",
+        person.phone or "N/A",
+        person.status,
+        person.city or "N/A",
+        person.country or "N/A",
+      ]
+    })
 
-    p.setFont("Helvetica", 12)
+  context = {
+    "report": {
+      "title": "Library Members Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{len(rows)} Members",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": len(columns) - 1,
+    "request": request,
+  }
 
-    details = [
-        ("ISBN", book.ISBN),
-        ("Title", book.title),
-        ("Author", book.author),
-        ("Edition", book.edition),
-        ("Availability", book.availability),
-        ("Publication Year", book.publication_year.strftime("%Y-%m-%d") if book.publication_year else "N/A"),
-        ("Pages", book.nbPage),
-        ("Language", book.lang),
-        ("Keywords", book.keywords),
-        ("Description", book.description),
-        ("Audience", book.audience),
-        ("Review Score", book.review),
-        ("Number of Borrows", book.nb_borrows),
-        ("Creation Date", book.date_creation.strftime("%Y-%m-%d")),
-        ("Reserved", "Yes" if book.is_reserved else "No")
-    ]
+  html_string = render_to_string("listTemplate.html", context)
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=person_report.pdf"})
 
-    for label, value in details:
-        p.drawString(80, y, f"{label}: {value}")
-        y -= 20
-        if y < 100:
-            p.showPage()
-            y = height - inch
+#_________________________________________________________________________________
+def generate_order_report(request, orders=None):
+  if orders is None:
+    orders = Order.objects.select_related("book", "supplier", "created_by", "updated_by").all()
 
-    # Handle ManyToMany Field: Genres
-    genre_list = ", ".join([genre.name for genre in book.genres.all()])
-    p.drawString(80, y, f"Genres: {genre_list}")
-    y -= 20
+  columns = ["Order ID", "Book Title", "Supplier", "Status", "Order Date", "Expected Delivery", "Delivery Date", "Created By", "Updated By"]
+  rows = []
+  for order in orders:
+    rows.append({
+      "values": [
+        order.id,
+        order.book.title,
+        order.supplier.name,
+        order.status,
+        order.order_date.strftime("%Y-%m-%d"),
+        order.expected_delivery_date.strftime("%Y-%m-%d"),
+        order.delivery_date.strftime("%Y-%m-%d") if order.delivery_date else "N/A",
+        str(order.created_by) if order.created_by else "N/A",
+        str(order.updated_by) if order.updated_by else "N/A",
+      ]
+    })
 
-    p.showPage()
-    p.save()
-    buffer.seek(0)
-    return FileResponse(buffer, as_attachment=True, filename=f"book_{book.id}_details.pdf")
+  context = {
+    "report": {
+      "title": "Order Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{len(rows)} Orders",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": len(columns) - 1,
+    "request": request,
+  }
 
+  html_string = render_to_string("listTemplate.html", context)
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=order_report.pdf"})
 
+#____________________________________________________________________________
+def generate_event_report(request, events=None):
+  if events is None:
+    events = Event.objects.all()
+
+  columns = ["Title", "Host", "Price", "Audience", "Type", "Location", "Start", "End", "Guests", "Status"]
+  rows = []
+  for event in events:
+    status = "Canceled" if event.is_canceled else ("Public" if event.is_public else "Private")
+    rows.append({
+      "values": [
+        event.title,
+        event.host or "N/A",
+        f"{event.event_price:.2f} MAD",
+        event.audience,
+        event.event_type,
+        event.location,
+        event.start_datetime.strftime("%Y-%m-%d %H:%M"),
+        event.end_datetime.strftime("%Y-%m-%d %H:%M"),
+        f"{event.current_reservations}/{event.nbr_reservations}",
+        status,
+      ]
+    })
+
+  context = {
+    "report": {
+      "title": "Event Report",
+      "col": columns,
+      "rows": rows,
+      "total": f"{len(rows)} Events",
+    },
+    "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    "nbr_cols": len(columns) - 1,
+    "request": request,
+  }
+
+  html_string = render_to_string("listTemplate.html", context)
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+  pdf_file.seek(0)
+  return HttpResponse(pdf_file.read(), content_type="application/pdf", headers={"Content-Disposition": "inline; filename=event_report.pdf"})
+
+#____________________________________________________________________________
+#for print the infos of one event
+def generate_event_pdf(request, event=None):
+    if event is None:
+        event = Event.objects.first()  # or handle the case where no event is provided
+
+        # key value pairs for the event
+    event_details = {
+        "Title": event.title,
+        "Description": event.description,
+        "Host": event.host,
+        "Price": f"{event.event_price:.2f} MAD",
+        "Audience": event.audience,
+        "Type": event.event_type,
+        "Location": event.location,
+        "Start": event.start_datetime.strftime("%Y-%m-%d %H:%M"),
+        "End": event.end_datetime.strftime("%Y-%m-%d %H:%M"),
+        "Guests": f"{event.current_reservations}/{event.nbr_reservations}",
+        "Status": "Canceled" if event.is_canceled else ("Public" if event.is_public else "Private"),
+    }
+
+    context = {
+       "report": {
+            "title": "Event Details",
+            "details": event_details,
+        },
+        "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "request": request,
+    }
+
+    html_string = render_to_string("oneItemTemplate.html", context)
+
+    # Use in-memory buffer
+    pdf_file = BytesIO()
+    HTML(string=html_string).write_pdf(target=pdf_file)
+
+    # Build response
+    pdf_file.seek(0)
+    response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+    response["Content-Disposition"] = 'inline; filename="event_details.pdf"'
+
+    return response
+   
+   
 
