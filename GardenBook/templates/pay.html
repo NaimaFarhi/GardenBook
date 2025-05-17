@@ -6,7 +6,7 @@
 
 
 {% block content %}
-<div class="container bg-light rounded-3 shadow-sm p-4 mt-4 mb-5">
+<div class="container bg-white rounded-20 shadow-sm p-4 mt-4 mb-5">
 
   <h3 class="mb-4 text-center">Payment for Fines</h3>
 
@@ -46,7 +46,7 @@
       </tbody>
       <tfoot>
         <tr class="table-light">
-          <td colspan="3" class="text-end"><strong>Total Due:</strong></td>
+          <td colspan="4" class="text-end"><strong>Total Due:</strong></td>
           <td><strong>{{ total_fine }} MAD</strong></td>
         </tr>
       </tfoot>
@@ -57,40 +57,13 @@
   </div>
 
   <!-- Payment Form -->
-  {% if total_fine > 0 %}
+
   <form method="POST">
     {% csrf_token %}
-    <h5 class="mb-3">Payment Details</h5>
-
-    <div class="mb-3">
-      <label for="cardName" class="form-label">Cardholder Name</label>
-      <input type="text" class="form-control" id="cardName" name="card_name" required>
+    <div class="text-center">
+      <button type="submit" class="btn btn-green">Process Payment</button>
     </div>
 
-    <div class="row">
-      <div class="col-md-6 mb-3">
-        <label for="cardNumber" class="form-label">Card Number</label>
-        <input type="text" class="form-control" id="cardNumber" name="card_number" maxlength="16" required>
-      </div>
-      
-      <div class="col-md-3 mb-3">
-        <label for="expiryDate" class="form-label">Expiry Date</label>
-        <input type="text" class="form-control" id="expiryDate" name="expiry_date" placeholder="MM/YY" required>
-      </div>
-
-      <div class="col-md-3 mb-3">
-        <label for="cvv" class="form-label">CVV</label>
-        <input type="password" class="form-control" id="cvv" name="cvv" maxlength="3" required>
-      </div>
-    </div>
-
-    <div class="text-center mt-4">
-      <button type="submit" class="btn btn-success px-5">Pay {{ total_fine }} MAD</button>
-    </div>
   </form>
-  {% endif %}
 </div>
 {% endblock %}
-
-
-

@@ -72,11 +72,11 @@
                 <p class="card-text">{{ event.description }}</p>
               </div>
               <div class="card-footer bg-white">
-                <p class="card-text">Starts: <small class="text-body-secondary">{{ event.start_datetime}}</small></p>
-                <p class="card-text">Ends: <small class="text-body-secondary">{{ event.end_datetime}}</small></p>
-                <p class="card-text">Location: <small class="text-body-secondary">{{ event.location}}</small></p>
+                <p class="card-text"><strong>Starts:</strong> <small class="text-body-secondary">{{ event.start_datetime}}</small></p>
+                <p class="card-text"><strong>Ends:</strong> <small class="text-body-secondary">{{ event.end_datetime}}</small></p>
+                <p class="card-text"><strong>Location:</strong> <small class="text-body-secondary">{{ event.location}}</small></p>
                 <!-- Button to open event details -->
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                <button type="button" class="btn btn-outline-brown" data-bs-toggle="modal"
                   data-bs-target="#eventDetails{{ event.id }}">
                   Details
                 </button>
@@ -97,34 +97,39 @@
                             <img src="{{ event.poster.url }}" class="img-fluid rounded-start" alt="event poster">
                           </div>
                           <div class="col-md-8">
-                            <h5 class="card-title">{{ event.title }}</h5>
                             <p class="card-text">{{ event.description }}</p>
-                            <p class="card-text">Starts: 
+                            <p class="card-text"><strong>Starts:</strong>
                               <small class="text-body-secondary">{{ event.start_datetime }}</small>
                             </p>
-                            <p class="card-text">Ends: 
+                            <p class="card-text"><strong>Ends:</strong>
                               <small class="text-body-secondary">{{ event.end_datetime }}</small>
                             </p>
-                            <p class="card-text">Location: 
+                            <p class="card-text"><strong>Location: </strong>
                               <small class="text-body-secondary">{{ event.location }}</small>
                             </p>
-                            <p class="card-text">Event Type: 
+                            <p class="card-text"><strong>Event Type:</strong>
                               <small class="text-body-secondary">{{ event.event_type }}</small>
                             </p>
-                            <p class="card-text">Event Host: 
+                            <p class="card-text"><strong>Event Host:</strong>
                               <small class="text-body-secondary">{{ event.event_host }}</small>
                             </p>
-                            <p class="card-text">Event Price: 
+                            <p class="card-text"><strong>Event Price:</strong>
                               <small class="text-body-secondary">{{ event.event_price }}</small>
                             </p>
                           </div>
                         </div>
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-outline-green" data-bs-dismiss="modal">Close</button>
                         <!-- Open register modal and close current -->
-                        <button class="btn btn-primary" data-bs-target="#registerEvent{{ event.id }}"
+                         {% if event.nbr_reservations == 0 %} 
+                        <button class="btn btn-outline-brown">Free Entrance</button>
+                         {% elif event.nbr_reservations == current_reservations %}
+                         <button class="btn btn-outline-brown">Guests List Full</button>
+                         {% else %}
+                        <button class="btn btn-outline-brown" data-bs-target="#registerEvent{{ event.id }}"
                           data-bs-toggle="modal" data-bs-dismiss="modal">Register</button>
+                          {% endif %}
                       </div>
                     </div>
                   </div>
@@ -136,12 +141,15 @@
                   aria-hidden="true">
                   <div class="modal-dialog">
                     <div class="modal-content">
-                      <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="registerEventLabel{{ event.id }}">Register for {{ event.title }}</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <form method="POST">
+                      <form method="POST">
+                        <div class="modal-header">
+                          <h1 class="modal-title fs-5" id="registerEventLabel{{ event.id }}">
+                            Register for "<em>{{ event.title }}</em>"
+                          </h1>
+                          <button type="reset" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+
                           {% csrf_token %}
                           <div class="mb-3">
                             <label for="username{{ event.id }}" class="form-label">Username</label>
@@ -152,9 +160,12 @@
                             <label for="email{{ event.id }}" class="form-label">Email</label>
                             <input type="email" class="form-control" id="email{{ event.id }}" name="email" required>
                           </div>
-                          <button type="submit" class="btn btn-primary">Register</button>
-                        </form>
-                      </div>
+                        </div>
+                        <div class="modal-footer">
+                          <input type="hidden" name="event_id" value="{{ event.id }}">
+                          <button type="submit" class="btn btn-outline-brown">Register</button>
+                        </div>
+                      </form>
                     </div>
                   </div>
                 </div>

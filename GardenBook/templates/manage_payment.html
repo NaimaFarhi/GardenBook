@@ -7,160 +7,161 @@
 {% block page %}Manage Payments{% endblock %} {% block content%}
 
 
-  <div class="container-fluid row m-2">
-    <div class="row d-flex justify-content-end align-items-center mb-4">
-      <div class="col-auto">
-        <button type="button" class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#printModal">
-          <i class="bi bi-printer"></i>
-          Print Payments
-        </button>
+<div class="container-fluid row m-2">
 
-        <!-- Print Modal -->
-        <div class="modal fade" id="printModal" tabindex="-1" aria-labelledby="printModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="printModalLabel">Print Payments</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <form method="POST">
-                  {% csrf_token %}
+  <div class="row d-flex justify-content-end align-items-center mb-4">
+    <div class="col-auto">
+      <button type="button" class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#printModal">
+        <i class="bi bi-printer"></i>
+        Print Payments
+      </button>
 
-                  <!-- USER -->
-                  <div class="mb-3">
-                    <label for="reader" class="form-label">Reader</label>
-                    <select name="reader" class="form-control">
-                      <option value="">All</option>
-                      {% for user in transaction_users %}
-                      <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} </option>
-                      {% endfor %}
-                    </select>
-                  </div>
-
-                  <!-- BOOK -->
-                  <div class="mb-3">
-                    <label for="book" class="form-label">Book</label>
-                    <select name="book" class="form-control">
-                      <option value="">All</option>
-                      {% for book in transaction_books %}
-                      <option value="{{ book.id }}">{{ book.title }}</option>
-                      {% endfor %}
-                    </select>
-                  </div>
-
-                  <!-- PAYMENT TYPE -->
-                  <div class="mb-3">
-                    <label for="type_payment" class="form-label">Payment Type</label>
-                    <select name="type_payment" class="form-control">
-                      <option value="">All</option>
-                      <option value="Card">Card</option>
-                      <option value="Cash">Cash</option>
-                    </select>
-                  </div>
-
-                  <!-- DATE -->
-                  <div class="mb-3">
-                    <label for="start_date" class="form-label">Start Date</label>
-                    <input type="date" name="start_date" class="form-control" />
-                  </div>
-                  <div class="mb-3">
-                    <label for="end_date" class="form-label">End Date</label>
-                    <input type="date" name="end_date" class="form-control" />
-                  </div>
-
-              </div>
-              <div class="modal-footer">
-                <input type="hidden" name="action" value="print_payments">
-                <button type="submit" class="btn btn-green" name="format" value="pdf">Export to PDF </button>
-                <button type="submit" class="btn btn-green" name="format" value="csv">Export to Excel</button>
-                <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-              </div>
-              </form>
+      <!-- Print Modal -->
+      <div class="modal fade" id="printModal" tabindex="-1" aria-labelledby="printModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="printModalLabel">Print Payments</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+            <div class="modal-body">
+              <form method="POST">
+                {% csrf_token %}
+
+                <!-- USER -->
+                <div class="mb-3">
+                  <label for="reader" class="form-label">Reader</label>
+                  <select name="reader" class="form-control">
+                    <option value="">All</option>
+                    {% for user in transaction_users %}
+                    <option value="{{ user.id }}">{{ user.first_name }} {{ user.last_name }} </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- BOOK -->
+                <div class="mb-3">
+                  <label for="book" class="form-label">Book</label>
+                  <select name="book" class="form-control">
+                    <option value="">All</option>
+                    {% for book in transaction_books %}
+                    <option value="{{ book.id }}">{{ book.title }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- PAYMENT TYPE -->
+                <div class="mb-3">
+                  <label for="type_payment" class="form-label">Payment Type</label>
+                  <select name="type_payment" class="form-control">
+                    <option value="">All</option>
+                    <option value="Card">Card</option>
+                    <option value="Cash">Cash</option>
+                  </select>
+                </div>
+
+                <!-- DATE -->
+                <div class="mb-3">
+                  <label for="start_date" class="form-label">Start Date</label>
+                  <input type="date" name="start_date" class="form-control" />
+                </div>
+                <div class="mb-3">
+                  <label for="end_date" class="form-label">End Date</label>
+                  <input type="date" name="end_date" class="form-control" />
+                </div>
+
+            </div>
+            <div class="modal-footer">
+              <input type="hidden" name="action" value="print_payments">
+              <button type="submit" class="btn btn-green" name="format" value="pdf">Export to PDF </button>
+              <button type="submit" class="btn btn-green" name="format" value="csv">Export to Excel</button>
+              <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+            </form>
           </div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Horizontal Search Bar -->
-    <form method="GET" class="bg-white shadow-sm rounded-20 p-4 mb-4">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label for="q" class="form-label">Search by User / Transaction</label>
-          <input type="search" name="q" class="form-control" placeholder="Name, CIN, Email, Transaction ID..." />
-        </div>
-
-        <div class="col-md-2">
-          <label for="type_payment" class="form-label">Payment Type</label>
-          <select name="type_payment" id="type_payment" class="form-control">
-            <option value="">All</option>
-            <option value="Card">Card</option>
-            <option value="Cash">Cash</option>
-          </select>
-        </div>
-
-        <div class="col-md-2">
-          <label for="date" class="form-label">Date</label>
-          <input type="date" name="date" id="date" class="form-control" />
-        </div>
-
-        <div class="col-md-2">
-          <button class="btn btn-green w-100" type="submit">Search</button>
-        </div>
-        <div class="col-md-2">
-          <a href="{% url 'manage-payment' %}" class="btn btn-green w-100">Reset</a>
-        </div>
-
+  <!-- Horizontal Search Bar -->
+  <form method="GET" class="bg-white shadow-sm rounded-20 p-4 mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-4">
+        <label for="q" class="form-label">Search by User / Transaction</label>
+        <input type="search" name="q" class="form-control" placeholder="Name, CIN, Email, Transaction ID..." />
       </div>
-      <small>Press Enter <i class="bi bi-arrow-return-left"></i></small>
-    </form>
 
-    <!-- Payments Table -->
-    <div class="col">
-      <div class="overflow-hidden shadow-sm p-0 rounded-20">
-        <table class="table table-bordered table-hover align-middle m-0">
-          <thead class="bg-brown-second">
-            <tr>
-              <th>Transaction ID</th>
-              <th>Reader</th>
-              <th>Book</th>
-              <th>Amount</th>
-              <th>Type</th>
-              <th>Card Info</th>
-              <th>Date</th>
-              <th>Print Invoice</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white">
-            {% for payment in payments %}
-            <tr>
-              <td>{{ payment.transaction_Id }}</td>
-              <td>
-                {{ payment.borrow.borrower }}</td>
-              <td>{{ payment.borrow.book.title }}</td>
-              <td>{{ payment.amount }} MAD</td>
-              <td>{{ payment.type_payment }}</td>
-              <td class="text-truncate" style="max-width: 150px">
-                {{ payment.card_info }}
-              </td>
-              <td>{{ payment.transaction_date|date:"Y-m-d H:i" }}</td>
-              <td>
-                <a href="{% url 'generate_invoice' payment.id %}" class="btn btn-outline-brown"><i
-                    class="bi bi-printer"></i></a>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="8" class="text-center text-muted">
-                No payments found.
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <div class="col-md-2">
+        <label for="type_payment" class="form-label">Payment Type</label>
+        <select name="type_payment" id="type_payment" class="form-control">
+          <option value="">All</option>
+          <option value="Card">Card</option>
+          <option value="Cash">Cash</option>
+        </select>
       </div>
+
+      <div class="col-md-2">
+        <label for="date" class="form-label">Date</label>
+        <input type="date" name="date" id="date" class="form-control" />
+      </div>
+
+      <div class="col-md-2">
+        <button class="btn btn-green w-100" type="submit">Search</button>
+      </div>
+      <div class="col-md-2">
+        <a href="{% url 'manage-payment' %}" class="btn btn-green w-100">Reset</a>
+      </div>
+
+    </div>
+    <small>Press Enter <i class="bi bi-arrow-return-left"></i></small>
+  </form>
+
+  <!-- Payments Table -->
+  <div class="row">
+    <div class="overflow-hidden shadow-sm p-0 rounded-20">
+      <table class="table table-bordered table-hover align-middle m-0">
+        <thead class="bg-brown-second">
+          <tr>
+            <th>Transaction ID</th>
+            <th>Reader</th>
+            <th>Book</th>
+            <th>Amount</th>
+            <th>Type</th>
+            <th>Card Info</th>
+            <th>Date</th>
+            <th>Print Invoice</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white">
+          {% for payment in payments %}
+          <tr>
+            <td>{{ payment.transaction_Id }}</td>
+            <td>
+              {{ payment.borrow.borrower }}</td>
+            <td>{{ payment.borrow.book.title }}</td>
+            <td>{{ payment.amount }} MAD</td>
+            <td>{{ payment.type_payment }}</td>
+            <td class="text-truncate" style="max-width: 150px">
+              {{ payment.card_info }}
+            </td>
+            <td>{{ payment.transaction_date|date:"Y-m-d H:i" }}</td>
+            <td>
+              <a href="{% url 'generate_invoice' payment.id %}" class="btn btn-outline-brown"><i
+                  class="bi bi-printer"></i></a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="8" class="text-center text-muted">
+              No payments found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   </div>
+</div>
 
 {% endblock %}

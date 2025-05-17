@@ -377,9 +377,11 @@ def dashboard(request):
 
     # Recent borrows
     borrows = Borrow.objects.select_related('borrower', 'book').order_by('-borrow_date')[:5]
+    total_borrows = borrows.count()
 
     context = {
         'total_books': total_books,
+        'total_borrows': total_borrows,
         'new_monthly_stock': new_monthly_stock,
         'total_users': total_users,
         'active_orders': active_orders,
@@ -719,7 +721,7 @@ def registerStaff(request):
 @login_required(login_url='login')
 #for events
 def events(request):
-  events = Event.objects.all()
+  events = Event.objects.filter(is_canceled=False)
   query = request.GET.get("q", "")
   event_type = request.GET.get("event_type", "")
   date_filter = request.GET.get("date_filter", "")
@@ -752,6 +754,28 @@ def events(request):
 
   # Unique event types for filter dropdown
   types = Event.objects.values_list("event_type", flat=True).distinct()
+
+  if request.method == 'POST':
+    username = request.POST.get('username')
+    email = request.POST.get('email')
+
+
+    if username and email:
+      #checks if the infos of the user are correct
+      if request.user.username == username and request.user.email == email:
+        #adds the user to the events guest list if he is not already in it
+        if not Event.objects.filter(guests__username=username).exists():
+          event = Event.objects.get(id=request.POST.get('event_id'))
+          event.guests.add(request.user)
+          messages.success(request, "You have been added to the guest list.")
+        else:
+          messages.info(request, "You are already on the guest list.")
+      else:
+        messages.error(request, "Username or email is incorrect.")
+    else:
+      messages.error(request, "Please fill in all fields.")
+
+
 
   context = {
     "events": page_obj,
@@ -847,9 +871,8 @@ def payment_page(request, pk, current_page):
 
   # Get all unpaid fines
   unpaid_fines = Borrow.objects.filter(borrower=payer, returned=True , fine__gt=0, is_fine_paid=False)
-  print(unpaid_fines)
+  
   total_fine = sum((fine.fine or Decimal("0.00")) for fine in unpaid_fines)
-  print(total_fine)
 
   if request.method == 'POST' and total_fine > 0:
     if current_page == 'profile':
@@ -872,7 +895,6 @@ def payment_page(request, pk, current_page):
 
       Payment.objects.create(
         transaction_Id=str(uuid.uuid4()),
-        person=payer,
         borrow=borrow,
         type_payment=type_payment,
         amount=borrow.fine,

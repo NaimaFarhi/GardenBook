@@ -6,7 +6,7 @@
 
 
 {% block content %}
-<div class="container-fluid mt-4">
+<div class="container-fluid">
 
   <div class="row my-2 p-4">
     <h1 class="text-brown">Welcome back, <em> {{ request.user.username }} </em> !!!</h1>
@@ -18,7 +18,7 @@
 
     <!-- Total Books -->
     <div class="col-md-3">
-      <div class="card shadow-sm py-4 rounded-20">
+      <div class="card shadow-sm rounded-20">
         <div class="card-body">
 
           <h5 class="card-title mt-3">
@@ -29,7 +29,7 @@
         </div>
         <div class="card-footer d-flex justify-content-between bg-white align-items-center">
           <p><span>+ {{ new_monthly_stock }}</span> added</p>
-          <p><a href="{% url 'stock' %}" class=" text-underline">View All Books</a></p>
+          <p><a href="{% url 'stock' %}" class=" text-underline">See More</a></p>
 
         </div>
       </div>
@@ -37,17 +37,17 @@
 
     <!-- Total borrowed Books -->
     <div class="col-md-3">
-      <div class="card shadow-sm py-4 rounded-20">
+      <div class="card shadow-sm pb-1 rounded-20">
         <div class="card-body">
 
           <h5 class="card-title mt-3">
             <i class="bi bi-book display-4 text-brown"></i>
             Total Borrows
           </h5>
-          <p class="card-text fs-4">{{ total_books }}</p>
+          <p class="card-text fs-4">{{ total_borrows }}</p>
         </div>
-        <div class="card-footer d-flex justify-content-end bg-white align-items-center">
-          <p><a href="{% url 'borrows-returns' %}" class=" text-underline">View All Borrows</a></p>
+        <div class="card-footer rounded-20 d-flex justify-content-end bg-white align-items-center">
+          <p><a href="{% url 'borrows-returns' %}" class=" text-underline">See More</a></p>
 
         </div>
       </div>
@@ -55,7 +55,7 @@
 
     <!-- Total Users -->
     <div class="col-md-3">
-      <div class="card shadow-sm py-4 rounded-20">
+      <div class="card shadow-sm rounded-20">
         <div class="card-body">
 
           <h5 class="card-title mt-3">
@@ -64,9 +64,9 @@
           </h5>
           <p class="card-text fs-4">{{ total_users }}</p>
         </div>
-        <div class="card-footer d-flex justify-content-between bg-white align-items-center">
+        <div class="card-footer rounded-20 d-flex justify-content-between bg-white align-items-center">
           <p><span>+ {{ new_monthly_stock }}</span> added</p>
-          <p><a href="{% url 'manage-users' %}" class=" text-underline">View All Users</a></p>
+          <p><a href="{% url 'manage-users' %}" class=" text-underline">See More</a></p>
 
         </div>
       </div>
@@ -74,7 +74,7 @@
 
     <!-- Active Orders -->
     <div class="col-md-3">
-      <div class="card shadow-sm py-4 rounded-20">
+      <div class="card shadow-sm rounded-20">
         <div class="card-body">
 
           <h5 class="card-title mt-3">
@@ -84,7 +84,7 @@
           <p class="card-text fs-4">{{ active_orders }}</p>
         </div>
         <div class="card-footer d-flex justify-content-end bg-white align-items-center">
-          <p><a href="{% url 'orders' %}" class=" text-underline">View All Orders</a></p>
+          <p><a href="{% url 'orders' %}" class=" text-underline">See More</a></p>
 
         </div>
       </div>
@@ -177,7 +177,7 @@
     </div>
   </div>
 
-  <!-- END LAST ALERTS SENT -->
+  <!-- END LAST BORROWS -->
 
 
 
