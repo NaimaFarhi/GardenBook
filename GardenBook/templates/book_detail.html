@@ -1,151 +1,203 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% load crispy_forms_tags %}
 
 {% block title %}{{ book.title }} | GardenBook{% endblock %}
 
 {% block content %}
-
 <div class="py-5 bg-light-brown">
+  <div class="container">
+    <!-- Back Link -->
+    <div class="mb-4">
+      <a href="{% url 'catalog' %}" class="text-decoration-none text-brown">
+        <i class="bi bi-arrow-left me-2"></i>Back to Catalog
+      </a>
+    </div>
 
-  <div class="container py-2">
-    <a href="{% url 'catalog' %}" class="text-decoration-none text-dark">
-      <i class="bi bi-arrow-left me-1"></i> Back to Catalog
-    </a>
-  </div>
+    <!-- Book Details -->
+    <div class="book-detail mb-5">
+      <div class="row">
+        <!-- Book Cover -->
+        <div class="col-md-4 mb-4 mb-md-0">
+          <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="book-detail-img img-fluid">
+        </div>
 
-  <div class="container my-5">
+        <!-- Book Info -->
+        <div class="col-md-8">
+          <h1 class="book-detail-title">{{ book.title }}</h1>
+          <p class="book-detail-author">by {{ book.author }}</p>
 
-    <div class="row bg-white g-4 rounded-20">
-      <!-- Cover -->
-      <div class="col-md-4 text-center m-2 p-0" style="height: fit-content; width: 25rem;">
+          <!-- Rating -->
+          <div class="book-detail-rating d-flex align-items-center mb-3">
+            <div class="text-warning me-2">
+              {% for i in "12345" %}
+              {% if book.review|floatformat:1 >= i %}
+              <i class="bi bi-star-fill"></i>
+              {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
+              <i class="bi bi-star-half"></i>
+              {% else %}
+              <i class="bi bi-star"></i>
+              {% endif %}
+              {% endfor %}
+            </div>
+            <span class="text-muted">{{ book.review }}/10</span>
 
-        <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-fluid rounded-20 shadow"
-          style="max-height: 38rem; width: 100%; object-fit: contain;">
-
-      </div>
-
-      <!-- Book Details -->
-      <div class="col-md-8">
-        <h1 class="text-dark">{{ book.title }}</h1>
-        <p class="text-muted">by {{ book.author }}</p>
-        <div class="d-flex align-items-center mb-3">
-          <div class="text-warning me-2">
-            {% for i in "12345" %}
-            {% if book.review|floatformat:1 >= i %}
-            <i class="bi bi-star-fill"></i>
-            {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
-            <i class="bi bi-star-half"></i>
-            {% else %}
-            <i class="bi bi-star"></i>
+            <!-- Genre Badge -->
+            {% with book.genres.first as first_genre %}
+            {% if first_genre %}
+            <span class="ms-3 badge bg-light-green text-brown">{{ first_genre.name }}</span>
             {% endif %}
-            {% endfor %}
+            {% endwith %}
           </div>
-          <span class="text-muted">{{ book.review }}/10</span>
-          {% with book.genres.first as first_genre %}
-          {% if first_genre %}
-          <span class="ms-3 badge genre-badge">{{ first_genre.name }}</span>
-          {% endif %}
-          {% endwith %}
-        </div>
 
-        <h5 class="text-dark">Description</h5>
-        <p class="text-muted">{{ book.description }}</p>
-
-        <div class="row mb-4">
-          <div class="col-md-8">
-            <h5>Details</h5>
-            <ul class="list-unstyled">
-              <li><strong>ISBN:</strong> {{ book.ISBN }}</li>
-              <li><strong>Publisher:</strong> {{ book.edition }}</li>
-              <li><strong>Published Date:</strong> {{ book.publication_year|date:"Y" }}</li>
-              <li><strong>Pages:</strong> {{ book.nbPage }}</li>
-              <li><strong>Language:</strong> {{ book.lang }}</li>
-              <li><strong>Keywords:</strong> {{ book.keywords }}</li>
-            </ul>
+          <!-- Description -->
+          <div class="book-detail-description">
+            <h5>Description</h5>
+            <p>{{ book.description }}</p>
           </div>
-          <div class="col-md-4">
-            <h6>Availability</h6>
-            <ul class="list-unstyled">
-              <li><strong>Status:</strong>
-                <span class="{% if book.availability == 'Available' %}text-success{% else %}text-danger{% endif %}">
-                  {{ book.availability }}
-                </span>
-              </li>
-              <li><strong>Borrowed:</strong> {{ book.nb_borrows }} <strong>times</strong></li>
-            </ul>
+
+          <!-- Book Details -->
+          <div class="row book-detail-info">
+            <div class="col-md-6">
+              <h5>Details</h5>
+              <ul>
+                <li><strong>ISBN:</strong> {{ book.ISBN }}</li>
+                <li><strong>Publisher:</strong> {{ book.edition }}</li>
+                <li><strong>Published:</strong> {{ book.publication_year|date:"Y" }}</li>
+                <li><strong>Pages:</strong> {{ book.nbPage }}</li>
+                <li><strong>Language:</strong> {{ book.lang }}</li>
+                <li><strong>Keywords:</strong> {{ book.keywords }}</li>
+              </ul>
+            </div>
+            <div class="col-md-6">
+              <h5>Availability</h5>
+              <ul>
+                <li>
+                  <strong>Status:</strong>
+                  <span class="{% if book.availability == 'Available' %}text-success{% else %}text-danger{% endif %}">
+                    {{ book.availability }}
+                  </span>
+                </li>
+                <li><strong>Borrowed:</strong> {{ book.nb_borrows }} times</li>
+              </ul>
+            </div>
           </div>
-        </div>
 
-        <div class="d-flex flex-wrap gap-2 mb-3">
-          <!-- For borrowing -->
-          {% if book.availability == 'Available' and not book.is_reserved %}
-          <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown"><i
-              class="bi bi-book me-2"></i>Borrow Book</a>
-          {% else %}
-          <a href="{% url 'reader-borrow' book.id %}" class="btn btn-outline-brown disabled"><i
-              class="bi bi-book me-2"></i>Borrow
-            Book</a>
-          {% endif %}
-          <!-- For reserving -->
-          {% if book.availability != 'Available' and not book.is_reserved %}
-          <a href="{% url 'reserve' book.id %}" class="btn btn-outline-brown"><img src="{% static 'reserve_icon.png' %}" alt="Reserve icon"
-              width="25">Reserve Book</a>
-          {% else %}
-          <a href="{% url 'reserve' book.id %}" class="btn btn-outline-brown disabled"><img src="{% static 'reserve_icon.png' %}"
-              alt="Reserve icon" width="25">Reserve Book</a>
-          {% endif %}
+          <!-- Action Buttons -->
+          <div class="book-detail-actions">
+            <div class="d-flex flex-wrap gap-2">
+              <!-- Borrow Button -->
+              {% if book.availability == 'Available' and not book.is_reserved %}
+              <a href="{% url 'reader-borrow' book.id %}" class="btn btn-brown">
+                <i class="bi bi-book me-2"></i>Borrow Book
+              </a>
+              {% else %}
+              <button class="btn btn-brown" disabled>
+                <i class="bi bi-book me-2"></i>Borrow Book
+              </button>
+              {% endif %}
 
-          <!-- For wishlist -->
-          <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="btn btn-outline-brown"><img
-              src="{% static 'wishlist_icon.png' %}" alt="Wishlist icon" width="30">Add to Wishlist</a>
+              <!-- Reserve Button -->
+              {% if book.availability != 'Available' and not book.is_reserved %}
+              <a href="{% url 'reserve' book.id %}" class="btn btn-outline-brown">
+                <i class="bi bi-bookmark me-2"></i>Reserve Book
+              </a>
+              {% else %}
+              <button class="btn btn-outline-brown" disabled>
+                <i class="bi bi-bookmark me-2"></i>Reserve Book
+              </button>
+              {% endif %}
 
-
+              <!-- Wishlist Button -->
+              <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="btn btn-outline-brown">
+                <i class="bi bi-heart me-2"></i>Add to Wishlist
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="mt-5">
-      <h4 class="text-dark">Categories</h4>
-      <div class="d-flex gap-2">
+    <!-- Categories -->
+    <div class="mb-5">
+      <h4 class="text-brown mb-3">Categories</h4>
+      <div class="d-flex flex-wrap gap-2">
         {% for genre in book.genres.all %}
-        <span class="badge category-badge bg-green text-brown">{{ genre.name }}</span>
+        <a href="{% url 'catalog' %}?genre={{ genre.name }}"
+          class="badge bg-light-green text-brown text-decoration-none p-2">{{ genre.name }}</a>
         {% endfor %}
       </div>
     </div>
 
-    <div class="mt-5">
-      <h4 class="text-dark">Reader Reviews</h4>
-      <div class="bg-white p-4 rounded shadow-sm mt-3">
-        <h3>Leave a Review</h3>
+    <!-- Review Form -->
+    <div class="card rounded-20 shadow-sm mb-5">
+      <div class="card-body">
+        <h4 class="text-brown mb-3">Leave a Review</h4>
         <form method="post">
           {% csrf_token %}
-
           {% crispy form %}
-
         </form>
-
       </div>
     </div>
 
-    <div class="mt-5">
-      <h2>Average Rating</h2>
-      <p>{{ average_rating }} / 5</p>
+    <!-- Reviews -->
+    <div class="card rounded-20 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="text-brown mb-0">Reader Reviews</h4>
+          <div class="d-flex align-items-center">
+            <span class="me-2">Average Rating:</span>
+            <div class="text-warning me-2">
+              {% for i in "12345" %}
+              {% if average_rating >= i %}
+              <i class="bi bi-star-fill"></i>
+              {% elif average_rating >= i|add:"-0.5" %}
+              <i class="bi bi-star-half"></i>
+              {% else %}
+              <i class="bi bi-star"></i>
+              {% endif %}
+              {% endfor %}
+            </div>
+            <span class="text-muted">{{ average_rating|floatformat:1 }}/5</span>
+          </div>
+        </div>
 
-      <h2>All Reviews</h2>
-      {% for review in reviews %}
-      <div style="border-bottom: 1px solid #ccc; margin-bottom: 10px;">
-        <strong>{{ review.user.username }}</strong> — Rated it {{ review.rating }} stars<br />
-        <p>{{ review.comment }}</p>
-        <small>{{ review.created_at|date:"M d, Y" }}</small>
+        <!-- Review List -->
+        {% if reviews %}
+        <div class="reviews-list">
+          {% for review in reviews %}
+          <div class="review-item border-bottom pb-3 mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div class="d-flex align-items-center">
+                <div
+                  class="avatar-sm bg-light-green text-brown rounded-circle me-2 d-flex align-items-center justify-content-center"
+                  style="width: 40px; height: 40px;">
+                  <span>{{ review.user.username|slice:":1" }}</span>
+                </div>
+                <span class="fw-bold">{{ review.user.username }}</span>
+              </div>
+              <div class="text-warning">
+                {% for i in "12345" %}
+                {% if review.rating >= i %}
+                <i class="bi bi-star-fill"></i>
+                {% else %}
+                <i class="bi bi-star"></i>
+                {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+            <p class="mb-1">{{ review.comment }}</p>
+            <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <p class="text-muted">No reviews yet. Be the first to review this book!</p>
+        </div>
+        {% endif %}
       </div>
-      {% empty %}
-      <p>No reviews yet.</p>
-      {% endfor %}
-
     </div>
   </div>
 </div>
-
 {% endblock %}

@@ -2,92 +2,119 @@
 
 {% block title %}Pay Fine | GardenBook{% endblock %}
 
-{% block page %} Pay Fine {% endblock %}
-
-
 {% block content %}
-<div class="container bg-light rounded-3 shadow-sm p-4 mt-4 mb-5">
+<div class="py-5 bg-light-brown">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card rounded-20 shadow-sm">
+          <div class="card-header bg-brown text-white py-3">
+            <h4 class="mb-0">Payment for Fines</h4>
+          </div>
+          <div class="card-body p-4">
+            <!-- User Info Section -->
+            <div class="mb-4">
+              <h5 class="text-brown mb-3">User Details</h5>
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Full Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                  <p><strong>CIN:</strong> {{ user.cin }}</p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Email:</strong> {{ user.email }}</p>
+                  <p><strong>Address:</strong> {{ user.address }}</p>
+                </div>
+              </div>
+            </div>
 
-  <h3 class="mb-4 text-center">Payment for Fines</h3>
+            <!-- Outstanding Fines Section -->
+            <div class="mb-4">
+              <h5 class="text-brown mb-3">Outstanding Fines ({{ fines_count }})</h5>
+              {% if fines %}
+              <div class="table-responsive">
+                <table class="table table-striped">
+                  <thead class="bg-light-brown">
+                    <tr>
+                      <th>#</th>
+                      <th>Book Title</th>
+                      <th>Due Date</th>
+                      <th>Return Date</th>
+                      <th>Fine Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for fine in fines %}
+                    <tr>
+                      <td>{{ forloop.counter }}</td>
+                      <td>{{ fine.book.title }}</td>
+                      <td>{{ fine.due_date }}</td>
+                      <td>{{ fine.return_date }}</td>
+                      <td>{{ fine.fine }} MAD</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr class="table-active">
+                      <td colspan="4" class="text-end"><strong>Total Due:</strong></td>
+                      <td><strong>{{ total_fine }} MAD</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              {% else %}
+              <div class="alert alert-success">
+                <i class="bi bi-check-circle me-2"></i>No unpaid fines.
+              </div>
+              {% endif %}
+            </div>
 
-  <!-- User Info Section -->
-  <div class="mb-4">
-    <h5>User Details</h5>
-    <p><strong>Full Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
-    <p><strong>CIN:</strong> {{ user.cin }}</p>
-    <p><strong>Email:</strong> {{ user.email }}</p>
-    <p><strong>Address:</strong> {{ user.address }}</p>
+            <!-- Payment Form -->
+            {% if total_fine > 0 %}
+            <div class="mt-4">
+              <h5 class="text-brown mb-3">Payment Details</h5>
+              <form method="POST" class="needs-validation">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                  <label for="cardName" class="form-label">Cardholder Name</label>
+                  <input type="text" class="form-control" id="cardName" name="card_name" required>
+                </div>
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <label for="cardNumber" class="form-label">Card Number</label>
+                    <input type="text" class="form-control" id="cardNumber" name="card_number" maxlength="16" required>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label for="expiryDate" class="form-label">Expiry Date</label>
+                    <input type="text" class="form-control" id="expiryDate" name="expiry_date" placeholder="MM/YY"
+                      required>
+                  </div>
+
+                  <div class="col-md-3">
+                    <label for="cvv" class="form-label">CVV</label>
+                    <input type="password" class="form-control" id="cvv" name="cvv" maxlength="3" required>
+                  </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                  <button type="submit" class="btn btn-brown">Pay {{ total_fine }} MAD</button>
+                </div>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Back Link -->
+        <div class="text-center mt-4">
+          <a href="{% url 'profile' user.id %}" class="text-decoration-none text-brown">
+            <i class="bi bi-arrow-left me-2"></i>Back to Profile
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <!-- Outstanding Fines Section -->
-  <div class="mb-4">
-    <h5>Outstanding Fines {{ fines_count }}</h5>
-    {% if fines %}
-    <table class="table table-bordered">
-      <thead class="table-secondary">
-        <tr>
-          <th>#</th>
-          <th>Book Title</th>
-          <th>Due Date</th>
-          <th>Return Date</th>
-          <th>Fine Amount</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for fine in fines %}
-        <tr>
-          <td>{{ forloop.counter }}</td>
-          <td>{{ fine.book.title }}</td>
-          <td>{{ fine.due_date }}</td>
-          <td>{{ fine.return_date }}</td>
-          <td>{{ fine.fine }} MAD</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-      <tfoot>
-        <tr class="table-light">
-          <td colspan="4" class="text-end"><strong>Total Due:</strong></td>
-          <td><strong>{{ total_fine }} MAD</strong></td>
-        </tr>
-      </tfoot>
-    </table>
-    {% else %}
-    <p class="text-muted">No unpaid fines.</p>
-    {% endif %}
-  </div>
-
-  <!-- Payment Form -->
-  {% if total_fine > 0 %}
-  <form method="POST">
-    {% csrf_token %}
-    <h5 class="mb-3">Payment Details</h5>
-
-    <div class="mb-3">
-      <label for="cardName" class="form-label">Cardholder Name</label>
-      <input type="text" class="form-control" id="cardName" name="card_name" required>
-    </div>
-
-    <div class="row">
-      <div class="col-md-6 mb-3">
-        <label for="cardNumber" class="form-label">Card Number</label>
-        <input type="text" class="form-control" id="cardNumber" name="card_number" maxlength="16" required>
-      </div>
-
-      <div class="col-md-3 mb-3">
-        <label for="expiryDate" class="form-label">Expiry Date</label>
-        <input type="text" class="form-control" id="expiryDate" name="expiry_date" placeholder="MM/YY" required>
-      </div>
-
-      <div class="col-md-3 mb-3">
-        <label for="cvv" class="form-label">CVV</label>
-        <input type="password" class="form-control" id="cvv" name="cvv" maxlength="3" required>
-      </div>
-    </div>
-
-    <div class="text-center mt-4">
-      <button type="submit" class="btn btn-success px-5">Pay {{ total_fine }} MAD</button>
-    </div>
-  </form>
-  {% endif %}
 </div>
 {% endblock %}

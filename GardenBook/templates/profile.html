@@ -1,396 +1,382 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}{{person.username}} | GardenBook{% endblock %}
 
+{% block title %}{{ person.username }} | GardenBook{% endblock %}
 
 {% block content %}
-<div class="row d-flex justify-content-center mx-auto my-3 p-2">
-  <div class="col-lg-8 container rounded-20 shadow-sm bg-light-brown mx-3 p-4">
-    <!-- the main container -->
-
-
-
-    <!-- START OF FIRST ROW : PERSONAL INFOS -->
-    <div class="row d-flex flex-wrap gap-2 profile-infos"><!-- contain 3 rows for the infos -->
-
-      <!-- FIRST COL -->
-      <div class="col-md-4 bg-white rounded-3 shadow-sm">
-
-        <div class="d-flex flex-column justify-content-center align-items-center gap-3">
-          <!-- for the pic-->
-          <div class="rounded-circle bg-brown shadow-sm mt-2 overflow-hidden" style="width: 200px; height: 200px;">
-            <img src="{% static 'profile_pic1.png' %}" alt="Profile Picture"
-              style="width: 100%; height: 100%; object-fit: cover;">
-          </div>
-
-          <!-- for the editing buttons -->
-          <div>
-            <a href="{% url 'edit-user' person.id %}" class="btn btn-outline-brown"><img
-                src="{% static 'edit_icon.png' %}" alt="#" width="25">Edit</a>
-            <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#Change-pwd-modal">Change
-              password</button>
-          </div>
-
-          <div class="modal fade" id="Change-pwd-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="modal-title">Set the new password</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="close"></button>
+<div class="py-5 bg-light-brown">
+  <div class="container">
+    <div class="row">
+      <!-- Main Profile Content -->
+      <div class="col-lg-8">
+        <!-- Personal Info -->
+        <div class="card rounded-20 shadow-sm mb-4">
+          <div class="card-body">
+            <div class="row">
+              <!-- Profile Picture and Bio -->
+              <div class="col-md-4 text-center mb-4 mb-md-0">
+                <div class="mb-3">
+                  <div class="rounded-circle bg-white shadow-sm mx-auto overflow-hidden"
+                    style="width: 150px; height: 150px;">
+                    <img src="{% static 'profile_pic1.png' %}" alt="Profile Picture" class="img-fluid">
+                  </div>
                 </div>
-                <div class="modal-body">
-                  <form method="POST" action=""><!-- still needs to be modified -->
-                    {% csrf_token %}
 
-                    <div class="mb-3">
-                      <label for="old-password" class="form-label">Current Password</label>
-                      <input type="password" class="form-control" id="old-password" name="old_password" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="new-password" class="form-label">New Password</label>
-                      <input type="password" class="form-control" id="new-password" name="new_password" required>
-                    </div>
-
-                    <div class="mb-3">
-                      <label for="confirm-password" class="form-label">Confirm New Password</label>
-                      <input type="password" class="form-control" id="confirm-password" name="confirm_password"
-                        required>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Change Password</button>
-                  </form>
-
+                <div class="d-grid gap-2 mb-3">
+                  <a href="{% url 'edit-user' person.id %}" class="btn btn-sm btn-outline-brown">
+                    <i class="bi bi-pencil me-2"></i>Edit Profile
+                  </a>
+                  <button class="btn btn-sm btn-outline-brown" data-bs-toggle="modal"
+                    data-bs-target="#Change-pwd-modal">
+                    <i class="bi bi-key me-2"></i>Change Password
+                  </button>
                 </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-primary">Submit</button>
+
+                <div class="border-top pt-3">
+                  <h6 class="text-brown mb-2">Bio</h6>
+                  <p class="small text-muted">{{ person.bio|default:"No bio provided." }}</p>
+                </div>
+              </div>
+
+              <!-- User Details -->
+              <div class="col-md-8">
+                <h4 class="text-brown mb-4">Personal Information</h4>
+
+                <div class="row mb-4">
+                  <div class="col-md-6">
+                    <h6 class="text-muted mb-2">CIN</h6>
+                    <p>{{ person.cin }}</p>
+
+                    <h6 class="text-muted mb-2">First Name</h6>
+                    <p>{{ person.first_name }}</p>
+
+                    <h6 class="text-muted mb-2">Last Name</h6>
+                    <p>{{ person.last_name }}</p>
+
+                    <h6 class="text-muted mb-2">Role</h6>
+                    <p>{{ person.get_role_display }}</p>
+                  </div>
+
+                  <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Date of Birth</h6>
+                    <p>{{ person.dob }}</p>
+
+                    <h6 class="text-muted mb-2">Phone</h6>
+                    <p>{{ person.phone }}</p>
+
+                    <h6 class="text-muted mb-2">Membership Status</h6>
+                    <p>
+                      <span
+                        class="badge {% if person.status == 'ACTIVE' %}bg-success{% elif person.status == 'SUSPENDED' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                        {{ person.get_status_display }}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <h5 class="text-brown mb-3">Address Information</h5>
+                <div class="row">
+                  <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Address</h6>
+                    <p>{{ person.address }}</p>
+
+                    <h6 class="text-muted mb-2">City</h6>
+                    <p>{{ person.city }}</p>
+                  </div>
+
+                  <div class="col-md-6">
+                    <h6 class="text-muted mb-2">Postal Code</h6>
+                    <p>{{ person.postal_code }}</p>
+
+                    <h6 class="text-muted mb-2">Country</h6>
+                    <p>{{ person.country }}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-
         </div>
 
-        <div class="m-3"><!-- For the bio -->
-          <label for="bio" class="form-label">Bio :</label>
-          <p id="bio">{{ person.bio }}</p>
-          <!-- Add edit button here to allow changing bio -->
+        <!-- Borrowed Books -->
+        <div class="card rounded-20 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-brown">Currently Borrowed Books</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="bg-light-brown">
+                  <tr>
+                    <th>Book</th>
+                    <th>Borrowed Date</th>
+                    <th>Due Date</th>
+                    <th>Fine</th>
+                    <th>Pay Fine</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if borrowed_books %}
+                  {% for borrowedBook in borrowed_books %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img src="{{borrowedBook.book.cover.url}}" alt="Book Cover" class="rounded me-3" width="50">
+                        <div>
+                          <div class="fw-bold">{{borrowedBook.book.title}}</div>
+                          <small class="text-muted">{{borrowedBook.book.author}}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{borrowedBook.borrow_date}}</td>
+                    <td>{{borrowedBook.due_date}}</td>
+                    <td>{{borrowedBook.fine|default:"0"}} MAD</td>
+                    <td>
+                      {% if borrowedBook.fine == None or borrowedBook.fine == 0 %}
+                      <span class="badge bg-success">No Fine</span>
+                      {% elif borrowedBook.is_fine_paid %}
+                      <span class="badge bg-success">Paid</span>
+                      {% else %}
+                      <a href="{% url 'payment-page' person.id 'profile' %}"
+                        class="btn btn-sm btn-outline-brown">Pay</a>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="5" class="text-center py-4">You haven't borrowed any books.</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reserved Books -->
+        <div class="card rounded-20 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-brown">Reserved Books</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="bg-light-brown">
+                  <tr>
+                    <th>Book</th>
+                    <th>Reservation Date</th>
+                    <th>Pickup Deadline</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if reserved_books %}
+                  {% for reservedBook in reserved_books %}
+                  {% if reservedBook.status != "Expired" %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img src="{{reservedBook.book.cover.url}}" alt="Book Cover" class="rounded me-3" width="50">
+                        <div>
+                          <div class="fw-bold">{{reservedBook.book.title}}</div>
+                          <small class="text-muted">{{reservedBook.book.author}}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{reservedBook.reservation_date}}</td>
+                    <td>{{reservedBook.expiration_date}}</td>
+                    <td>
+                      <span
+                        class="badge {% if reservedBook.status == 'Active' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                        {{reservedBook.status}}
+                      </span>
+                    </td>
+                  </tr>
+                  {% endif %}
+                  {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center py-4">You haven't reserved any books.</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reading History -->
+        <div class="card rounded-20 shadow-sm mb-4">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-brown">Reading History</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="bg-light-brown">
+                  <tr>
+                    <th>Book</th>
+                    <th>Borrowed Date</th>
+                    <th>Returned Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if read_books %}
+                  {% for readBook in read_books %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img src="{{readBook.book.cover.url}}" alt="Book Cover" class="rounded me-3" width="50">
+                        <div>
+                          <div class="fw-bold">{{readBook.book.title}}</div>
+                          <small class="text-muted">{{readBook.book.author}}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{readBook.date_borrowed}}</td>
+                    <td>{{readBook.date_returned}}</td>
+                  </tr>
+                  {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="3" class="text-center py-4">You have no reading history.</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Wishlist -->
+        <div class="card rounded-20 shadow-sm">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-brown">Your Wishlist</h5>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="bg-light-brown">
+                  <tr>
+                    <th>Book</th>
+                    <th>Added Date</th>
+                    <th>Remove</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if wishlist %}
+                  {% for wishedBook in wishlist %}
+                  <tr>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <img src="{{wishedBook.book.cover.url}}" alt="Book Cover" class="rounded me-3" width="50">
+                        <div>
+                          <div class="fw-bold">{{wishedBook.book.title}}</div>
+                          <small class="text-muted">{{wishedBook.book.author}}</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{wishedBook.date_added}}</td>
+                    <td>
+                      <button class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-heart-break"></i>
+                      </button>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% else %}
+                  <tr>
+                    <td colspan="3" class="text-center py-4">Your wishlist is empty.</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-      <!-- END OF FIRST COL -->
 
-      <!-- SECOND COL -->
-      <div class="col-md-3 bg-white rounded-3 shadow-sm">
-        <!-- CIN -->
-        <div class="my-3">
-          <label class="form-label d-block p-2" for="cin">CIN</label>
-          <p id="cin">{{ person.cin }}</p>
-        </div>
-
-        <!-- First Name -->
-        <div class="my-3">
-          <label for="first_name" class="form-label">First Name</label>
-          <p id="first_name">{{ person.first_name }}</p>
-        </div>
-
-        <!-- Last Name -->
-        <div class="my-3">
-          <label for="last_name" class="form-label">Last Name</label>
-          <p id="last_name">{{ person.last_name }}</p>
-        </div>
-
-        <!-- Role -->
-        <div class="my-3">
-          <label for="role" class="form-label">Role</label>
-          <p id="role">{{ person.get_role_display }}</p> <!-- Assuming role is a choice field -->
-        </div>
-
-        <!-- Date of Birth -->
-        <div class="my-3">
-          <label for="dob" class="form-label">Date of Birth</label>
-          <p id="dob">{{ person.dob }}</p>
-        </div>
-
-        <!-- Phone -->
-        <div class="my-3">
-          <label for="phone" class="form-label">Phone</label>
-          <p id="phone">{{ person.phone }}</p>
-        </div>
-      </div>
-      <!-- END OF SECOND COL -->
-
-      <!-- THIRD COL -->
-      <div class="col bg-white rounded-3 shadow-sm">
-        <!-- Status -->
-        <div class="my-3">
-          <label for="status" class="form-label">Membership Status</label>
-          <p id="status">{{ person.get_status_display }}</p>
-          <!-- Assuming status is a choice field -->
-        </div>
-
-        <!-- Address -->
-        <div class="my-3">
-          <label for="address" class="form-label">Address</label>
-          <p id="address">{{ person.address }}</p>
-        </div>
-
-        <!-- City -->
-        <div class="my-3">
-          <label for="city" class="form-label">City</label>
-          <p id="city">{{ person.city }}</p>
-        </div>
-
-        <!-- Postal Code -->
-        <div class="my-3">
-          <label for="postal_code" class="form-label">Postal Code</label>
-          <p id="postal_code">{{ person.postal_code }}</p>
-        </div>
-
-        <!-- Country -->
-        <div class="my-3">
-          <label for="country" class="form-label">Country</label>
-          <p id="country">{{ person.country }}</p>
-        </div>
-      </div>
-      <!-- END OF THIRD COL -->
-
-    </div>
-
-    <!-- END OF FIRST ROW -->
-
-
-    <!-- START OF SECOND ROW : BORROWED BOOKS -->
-    <div class="row my-3">
-      <h2 class="text-light-brown">Currently borrowed Books</h2>
-
-      <div class="overflow-hidden shadow-sm p-0 rounded-20">
-        <table class="table align-middle m-0">
-          <thead class="bg-brown-second">
-            <tr>
-              <th scope="col">BOOK</th>
-              <th scope="col">BORROWED DATE</th>
-              <th scope="col">DUE DATE</th>
-              <th scope="col">FINE</th>
-              <th scope="col">Pay Fine</th>
-            </tr>
-          </thead>
-          <tbody class="bg-white">
-            {% if borrowed_books %}
-            {% for borrowedBook in borrowed_books %}
-            <tr>
-              <td class="d-flex align-items-center gap-3">
-                <img src="{{borrowedBook.book.cover.url}}" alt="Book Cover" class="rounded"
-                  style="width: 100px; background-color: #e0e0e0;">
-                <div>
-                  <div class="fw-bold">{{borrowedBook.book.title}}</div>
-                  <small class="text-muted">{{borrowedBook.book.author}}</small>
+      <!-- Notifications Sidebar -->
+      <div class="col-lg-4 mt-4 mt-lg-0">
+        <div class="card rounded-20 shadow-sm">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 text-brown">Notifications</h5>
+          </div>
+          <div class="card-body">
+            {% if alerts %}
+            <div class="notifications-list">
+              {% for alert in alerts %}
+              <div class="notification-item mb-3">
+                <div class="card border-{% if alert.is_read %}light{% else %}success{% endif %}">
+                  <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">{{ alert.title }}</h6>
+                    {% if not alert.is_read %}
+                    <span class="badge bg-success">New</span>
+                    {% endif %}
+                  </div>
+                  <div class="card-body">
+                    <p class="card-text">{{ alert.message }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-muted">{{ alert.date_created }}</small>
+                      {% if not alert.is_read %}
+                      <a href="{% url 'mark-alert-read' alert.id %}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-check2-all me-1"></i>Mark as Read
+                      </a>
+                      {% else %}
+                      <span class="badge bg-light text-dark">Read</span>
+                      {% endif %}
+                    </div>
+                  </div>
                 </div>
-              </td>
-              <td>{{borrowedBook.borrow_date}}</td>
-              <td>{{borrowedBook.due_date}}</td>
-              <td>{{borrowedBook.fine}}</td>
-              <td>
-                {% if borrowedBook.fine == None or borrowedBook.fine == 0 %}
-                <span class="badge rounded-pill" style="background-color: #d4edda; color: #155724;">No Fine</span>
-
-                {% elif borrowedBook.is_fine_paid %}
-                <span class="badge rounded-pill" style="background-color: #d4edda; color: #155724;">Paid</span>
-
-                {% else %}
-                <!-- Button trigger modal -->
-                <a href="{% url 'payment-page' person.id 'profile' %}" class="btn btn-primary">
-                  Pay
-                </a>
-
-                {% endif %}
-              </td>
-            </tr>
-            {% endfor %}
+              </div>
+              {% endfor %}
+            </div>
             {% else %}
-            <tr>
-              <td colspan="5" class="text-center">You haven't borrowed any books.</td>
-            </tr>
+            <div class="text-center py-4">
+              <i class="bi bi-bell-slash fs-1 text-muted"></i>
+              <p class="text-muted mt-3">No notifications at this time.</p>
+            </div>
             {% endif %}
-
-          </tbody>
-        </table>
-      </div>
-
-    </div>
-    <!-- END OF SECOND ROW -->
-
-    <!-- START OF THIRD ROW : RESERVATIONS-->
-    <div class="row my-3">
-      <h2 class="text-light-brown">Reserved Books</h2>
-
-      <div class="rounded-3 overflow-hidden shadow-sm p-0 bg-brown-second">
-        <table class="table align-middle m-0 bg-white">
-          <thead class="bg-brown-second">
-            <tr>
-              <th scope="col">BOOK</th>
-              <th scope="col">RESERVATION DATE</th>
-              <th scope="col">PICKUP DEADLINE</th>
-              <th scope="col">STATUS</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% if reserved_books %}
-            {% for reservedBook in reserved_books %}
-            {% if reservedBook.status != "Expired" %}
-            <tr>
-              <td class="d-flex align-items-center gap-3">
-                <img src="{{reservedBook.book.cover.url}}" alt="Book Cover" class="rounded"
-                  style="width: 40px; height: 40px; background-color: #e0e0e0;">
-                <div>
-                  <div class="fw-bold">{{reservedBook.book.title}}</div>
-                  <small class="text-muted">{{reservedBook.book.author}}</small>
-                </div>
-              </td>
-              <td>{{reservedBook.reservation_date}}</td>
-              <td>{{reservedBook.expiration_date}}</td>
-              <td>{{reservedBook.status}}</td>
-            </tr>
-            {% endif %}
-            {% endfor %}
-            {% else %}
-            <tr>
-              <td colspan="4" class="text-center">You haven't reserved a book or reservation(s) expired.</td>
-            </tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-
-    </div>
-    <!-- END OF THIRD ROW -->
-
-
-    <!-- START OF FOURTH ROW : READING HISTORY-->
-    <div class="row my-3">
-      <h2 class="text-light-brown">Reading History</h2>
-
-      <div class="rounded-3 overflow-hidden shadow-sm p-0 bg-brown-second">
-        <table class="table align-middle m-0 bg-white">
-          <thead class="bg-brown-second">
-            <tr>
-              <th scope="col">BOOK</th>
-              <th scope="col">BORROWED DATE</th>
-              <th scope="col">RETURNED DATE</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% if read_books %}
-            {% for readBook in read_books %}
-            <tr>
-              <td class="d-flex align-items-center gap-3">
-                <img src="{{readBook.book.cover.url}}" alt="Book Cover" class="rounded"
-                  style="width: 40px; height: 40px; background-color: #e0e0e0;">
-                <div>
-                  <div class="fw-bold">{{readBook.book.title}}</div>
-                  <small class="text-muted">{{readBook.book.title}}</small>
-                </div>
-              </td>
-              <td>{{readBook.date_borrowed}}</td>
-              <td>{{readBook.date_returned}}</td>
-
-            </tr>
-            {% endfor %}
-            {% else %}
-            <tr>
-              <td colspan="3" class="text-center">You have no reading history.</td>
-            </tr>
-            {% endif %}
-          </tbody>
-        </table>
+          </div>
+        </div>
       </div>
     </div>
-    <!-- END OF FOURTH ROW -->
-
-    <!-- START OF FIFTH ROW : WISHLIST -->
-    <div class="row my-3">
-      <h2 class="text-light-brown">YOUR WISHLIST</h2>
-
-      <div class="rounded-3 overflow-hidden shadow-sm p-0 bg-brown-second">
-        <table class="table align-middle m-0 bg-white">
-          <thead class="bg-brown-second">
-            <tr>
-              <th scope="col">BOOK</th>
-              <th scope="col">ADDED DATE</th>
-              <th scope="col">REMOVE</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% if wishlist %}
-            {% for wishedBook in wishlist %}
-            <tr>
-              <td class="d-flex align-items-center gap-3">
-                <img src="{{wishedBook.book.cover.url}}" alt="Book Cover" class="rounded"
-                  style="width: 40px; height: 40px; background-color: #e0e0e0;">
-                <div>
-                  <div class="fw-bold">{{readBook.book.title}}</div>
-                  <small class="text-muted">{{readBook.book.title}}</small>
-                </div>
-              </td>
-              <td>{{wishedBook.date_added}}</td>
-              <td><button><i class="bi bi-heartbreak"></i></button></td>
-
-            </tr>
-            {% endfor %}
-            {% else %}
-            <tr>
-              <td colspan="3" class="text-center">You're wishlist is empty</td>
-            </tr>
-            {% endif %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <!-- END OF FIFTH ROW -->
-
-
-
   </div>
 
-  <div class="col-lg-3">
-    <div class="container bordered rounded-20 shadow-sm p-4 bg-light">
-      <div class="row">
-        <h2>NOTIFICATIONS</h2>
-      </div>
-      {% if alerts %}
-      {% for alert in alerts %}
-      <div class="row">
-        <div class="card border-success mb-3" style="min-width: 18rem;">
-          <div class="card-header bg-transparent border-success">Alert</div>
-          <div class="card-body text-success">
-            <h5 class="card-title">{{ alert.title }}</h5>
-            <p class="card-text">
-              {{ alert.message }}
-            </p>
-          </div>
-          <div class="card-footer bg-transparent border-success d-flex justify-content-between">
-            <small class="text-muted">{{ alert.date_created }}</small>
-            {% if alert.is_read %}
-            <span class="badge bg-success">Read</span>
-            {% else %}
-            <a href="{% url 'mark-alert-read' alert.id %}" class="btn btn-outline-brown"><i
-                class="bi bi-check2-all"></i></a>
-            {% endif %}
-          </div>
+  <!-- Change Password Modal -->
+  <div class="modal fade" id="Change-pwd-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="modal-title">Change Password</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+        <div class="modal-body">
+          <form method="POST" action="" class="needs-validation">
+            {% csrf_token %}
 
-      </div>
-      {% endfor %}
-      {% else %}
-      <div class="row">
-        <div class="alert alert-info" role="alert">
-          No Alerts.
+            <div class="mb-3">
+              <label for="old-password" class="form-label">Current Password</label>
+              <input type="password" class="form-control" id="old-password" name="old_password" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="new-password" class="form-label">New Password</label>
+              <input type="password" class="form-control" id="new-password" name="new_password" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="confirm-password" class="form-label">Confirm New Password</label>
+              <input type="password" class="form-control" id="confirm-password" name="confirm_password" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-brown">Change Password</button>
         </div>
       </div>
-      {% endif %}
     </div>
-
-
-
   </div>
 </div>
 {% endblock %}

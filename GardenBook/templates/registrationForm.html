@@ -1,55 +1,87 @@
 {% load static %}
-
 {% load crispy_forms_tags %}
-
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Library Reader Registration</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register | GardenBook</title>
+
+  <!-- Bootstrap CSS -->
   <link href="{% static 'assets/dist/css/bootstrap.min.css' %}" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'assets/brand/logo-white-rbg.png' %}">
 </head>
 
-<body>
-  <div class="container my-5">
-    <div class="card rounded-3 shadow-sm">
-      <div class="card-header bg-brown text-white">
-        <h4 class="mb-0">Registration Form</h4>
-      </div>
-      <div class="card-body">
-        <form method="POST" enctype="multipart/form-data">
+<body class="bg-light-brown">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <!-- Logo -->
+        <div class="text-center mb-4">
+          <a href="{% url 'home' %}" class="d-inline-block">
+            <img src="{% static 'assets/brand/_logo-nobg.png' %}" alt="GardenBook" width="80" height="80">
+          </a>
+          <h2 class="text-brown mt-3">Create Your Account</h2>
+          <p class="text-muted">Join GardenBook to discover and borrow amazing books</p>
+        </div>
 
-          {% csrf_token %}
-          {% crispy form %}
+        <!-- Registration Form -->
+        <div class="card rounded-20 shadow-sm">
+          <div class="card-body p-4">
+            <form method="POST" enctype="multipart/form-data" id="registrationForm" class="needs-validation">
+              {% csrf_token %}
+              {% crispy form %}
 
-        </form>
+              <div class="alert alert-danger d-none" id="passwordMismatch">
+                Passwords do not match!
+              </div>
+
+              <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-brown">Register</button>
+                <a href="{% url 'login' %}" class="btn btn-outline-brown">Already have an account? Login</a>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-4">
+          <a href="{% url 'home' %}" class="text-decoration-none text-brown">
+            <i class="bi bi-arrow-left me-2"></i>Back to Home
+          </a>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- START JS VALIDATION -->
+  <!-- Bootstrap JS -->
+  <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
+
+  <!-- Form Validation -->
   <script>
     const form = document.getElementById('registrationForm');
     const password = document.getElementById('password');
     const confirmPassword = document.getElementById('confirmPassword');
     const mismatchMessage = document.getElementById('passwordMismatch');
 
-    form.addEventListener('change', function (e) {
-      if (password.value !== confirmPassword.value) {
-        e.preventDefault();
-        mismatchMessage.classList.remove('d-none');
-      } else {
-        mismatchMessage.classList.add('d-none');
-      }
-    });
+    if (form && password && confirmPassword && mismatchMessage) {
+      form.addEventListener('change', function () {
+        if (password.value !== confirmPassword.value) {
+          mismatchMessage.classList.remove('d-none');
+          confirmPassword.setCustomValidity('Passwords do not match');
+        } else {
+          mismatchMessage.classList.add('d-none');
+          confirmPassword.setCustomValidity('');
+        }
+      });
+    }
   </script>
-  <!-- END JS VALIDATION -->
-
-  <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 
 </html>

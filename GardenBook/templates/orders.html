@@ -1,273 +1,339 @@
 {% extends 'baseLibrarian.html' %}
-
 {% load static %}
-
 {% load crispy_forms_tags %}
 
 {% block title %}Orders | GardenBook{% endblock %}
-
 {% block page %}Orders{% endblock %}
 
 {% block content %}
-
-<div class="container-fluid row m-2">
-
-  <div class="row">
-    <!-- ________________________________________________________________________ -->
-    <!-- START BUTTONS -->
-    <div class="d-flex justify-content-end m-2 gap-3">
-
-      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-modal">print</button> <!-- popover that contains a form
-        it selects 2 dates then prints all the orders between those dates in a pdf form  -->
-
-      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#order-modal">+New
-        Order</button>
-
-      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#supplier-modal">+New
-        Supplier</button>
-
+<div class="container-fluid">
+  <!-- Action Buttons -->
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-end gap-2">
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-modal">
+        <i class="bi bi-printer me-2"></i>Print
+      </button>
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#order-modal">
+        <i class="bi bi-plus-lg me-2"></i>New Order
+      </button>
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#supplier-modal">
+        <i class="bi bi-plus-lg me-2"></i>New Supplier
+      </button>
     </div>
-    <!-- END BUTTONS -->
-    <!-- ________________________________________________________________________ -->
-    <!-- START PRINT MULTIPLE ORDERS MODAL -->
-    <div class="modal fade" id="print-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
-
-      <div class="modal-dialog">
-
-        <div class="modal-content">
-          <form method="POST"></form>
-          <div class="modal-header bg-brown">
-            <h5 class="modal-title text-light" id="modal-title">Print Orders</h5>
-            <button type="reset" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-
-
-          {% csrf_token %}
-
-          <div class="modal-body">
-
-            <p class="text-secondary">Choose the dates: </p>
-
-            <label for="modal-fromdate" class="form-label">From:</label>
-            <input type="date" class="form-control" id="modal-fromdate" name="from_date">
-
-            <label for="modal-todate" class="form-label">To:</label>
-            <input type="date" class="form-control" id="modal-todate" name="to_date">
-
-            <fieldset class="form-group">
-              <legend class="form-label">Status:</legend>
-
-              <input type="checkbox" class="form-check-input" name="status" id="status-pending" value="pending">
-              <label for="status-pending" class="form-label">Pending</label>
-
-              <input type="checkbox" class="form-check-input" name="status" id="status-delivered" value="delivered">
-              <label for="status-delivered" class="form-label">Delivered</label>
-
-              <input type="checkbox" class="form-check-input" name="status" id="status-cancelled" value="cancelled">
-              <label for="status-cancelled" class="form-label">Cancelled</label>
-
-            </fieldset>
-
-          </div>
-
-          <div class="modal-footer bg-brown">
-            <input type="hidden" name="action" value="print_multiple_orders">
-
-            <button type="submit" class="btn btn-outline-green" name="format" value="pdf">PDF</button>
-            <button type="submit" class="btn btn-outline-green" name="format" value="csv">CSV</button>
-          </div>
-
-          </form>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- END PRINT MODAL -->
-    <!-- ________________________________________________________________________ -->
-
-    <!-- START ADD NEW ORDER MODAL -->
-    <div class="modal fade" id="order-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
-
-      <div class="modal-dialog">
-
-        <div class="modal-content">
-          <form method="POST"></form>
-          <div class="modal-header bg-brown">
-            <h5 class="modal-title text-light" id="modal-title">Add Order</h5>
-            <button type="reset" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-
-
-            {% csrf_token %}
-            {% crispy formOrder %}
-          </div>
-          </form>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- END ADD NEW ORDER MODAL -->
-    <!-- ________________________________________________________________________ -->
-
-    <!-- START ADD NEW SUPPLIER MODAL -->
-    <div class="modal fade" id="supplier-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
-
-      <div class="modal-dialog">
-
-        <div class="modal-content">
-          <form method="POST">
-            <div class="modal-header bg-brown">
-              <h5 class="modal-title text-light" id="modal-title">Add Supplier</h5>
-              <button type="reset" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-
-
-              {% csrf_token %}
-              {% crispy formSupplier %}
-            </div>
-          </form>
-
-        </div>
-      </div>
-    </div>
-
-    <!-- END ADD NEW SUPPLIER MODAL -->
-    <!-- ________________________________________________________________________ -->
   </div>
 
-  <!-- START SEARCH SECTION -->
-  <form method="get" class="bg-white shadow-sm p-3 rounded-20 mb-4">
-    <div class="row g-3 align-items-end">
-      <!-- General Search Input -->
-      <div class="col-md-4">
-        <label for="query" class="form-label">Search</label>
-        <input type="text" class="form-control" name="q" id="query" placeholder="Order ID, Supplier, or Book">
-      </div>
+  <!-- Search & Filter -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card rounded-20 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-search me-2 text-brown"></i>
+            Search & Filter Orders
+          </h5>
+          <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label for="query" class="form-label">Search</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" class="form-control border-start-0" name="q" id="query"
+                  placeholder="Order ID, Supplier, or Book">
+              </div>
+            </div>
 
-      <!-- Order status -->
-      <div class="col-md-3">
-        <label for="statusSearch" class="form-label">Status</label>
-        <select class="form-select" name="status" id="statusSearch">
-          <option value="">All</option>
-          {% for s in status_choices %}
-          <option value="{{ s }}">{{ s }}</option>
-          {% endfor %}
-        </select>
-      </div>
+            <div class="col-md-3">
+              <label for="statusSearch" class="form-label">Status</label>
+              <select class="form-select" name="status" id="statusSearch">
+                <option value="">All</option>
+                {% for s in status_choices %}
+                <option value="{{ s }}">{{ s }}</option>
+                {% endfor %}
+              </select>
+            </div>
 
-      <!-- Order Date -->
-      <div class="col-md-3">
-        <label for="orderDateSearch" class="form-label">Order Date</label>
-        <input type="date" class="form-control" name="order_date" id="orderDateSearch">
-      </div>
+            <div class="col-md-3">
+              <label for="orderDateSearch" class="form-label">Order Date</label>
+              <input type="date" class="form-control" name="order_date" id="orderDateSearch">
+            </div>
 
-      <!-- Submit Button -->
-      <div class="col-md-auto">
-        <button type="submit" class="btn btn-green text-brown">Search</button>
-      </div>
+            <div class="col-md-1">
+              <button type="submit" class="btn btn-brown w-100">
+                <i class="bi bi-search me-1"></i> Search
+              </button>
+            </div>
 
-      <!-- Reset Button -->
-      <div class="col-md-auto">
-        <a href="{% url 'orders' %}" class="btn btn-green text-brown">Reset</a>
+            <div class="col-md-1">
+              <a href="{% url 'orders' %}" class="btn btn-outline-brown w-100">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+              </a>
+            </div>
+          </form>
+        </div>
       </div>
-
     </div>
-  </form>
-  <!-- END SEARCH SECTION -->
+  </div>
 
-  <!-- ________________________________________________________________________ -->
-
-  <!-- START TABLE -->
+  <!-- Orders Table -->
   <div class="row">
-    <div class="overflow-hidden shadow-sm p-0 rounded-20">
-      <table class="table align-middle table-bordered m-0">
-        <thead class="bg-brown-second">
-          <tr>
-            <th>Order ID</th>
-            <th>Supplier</th>
-            <th>Book Title</th>
-            <th>Status</th>
-            <th>Order Date</th>
-            <th>Expected Delivery Date</th>
-            <th>Delivered On</th>
-            <th>Details</th>
-            <th>Update status</th>
-          </tr>
-        </thead>
-        <tbody id="ordersTable" class="bg-white">
-          {% for order in orders %}
-          <tr>
-            <td>{{order.id}}</td>
-            <td>{{order.supplier.name}}</td>
-            <td>{{order.book.title}}</td>
-            <td>{{order.status}}</td>
-            <td>{{order.order_date}}</td>
-            <td>{{order.expected_delivery_date}}</td>
-            <td>{{order.delivery_date}}</td>
-            <td>
-              <!-- button to open the modal to see and print order details -->
-              <button class="btn btn-outline-darkgreen" data-bs-toggle="modal" data-bs-target="#orderDetails-modal"><i
-                  class="bi bi-eye"></i></button>
+    <div class="col-12">
+      <div class="card rounded-20 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0 text-brown">Orders List</h5>
+          <span class="badge bg-green-soft text-brown">Total: {{ orders|length }}</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle m-0">
+              <thead>
+                <tr class="bg-light">
+                  <th>Order ID</th>
+                  <th>Supplier</th>
+                  <th>Book Title</th>
+                  <th>Status</th>
+                  <th>Order Date</th>
+                  <th>Expected Delivery</th>
+                  <th>Delivered On</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable" class="bg-white">
+                {% for order in orders %}
+                <tr>
+                  <td><span class="fw-medium">#{{order.id}}</span></td>
+                  <td>{{order.supplier.name}}</td>
+                  <td>{{order.book.title}}</td>
+                  <td>
+                    <span class="status-indicator 
+                      {% if order.status == 'Delivered' %}bg-success-soft text-success
+                      {% elif order.status == 'Cancelled' %}bg-danger-soft text-danger
+                      {% else %}bg-warning-soft text-warning{% endif %}">
+                      <i class="bi {% if order.status == 'Delivered' %}bi-check-circle-fill
+                        {% elif order.status == 'Cancelled' %}bi-x-circle-fill
+                        {% else %}bi-clock-fill{% endif %}"></i>
+                      {{order.status}}
+                    </span>
+                  </td>
+                  <td>{{order.order_date|date:"M d, Y"}}</td>
+                  <td>{{order.expected_delivery_date|date:"M d, Y"}}</td>
+                  <td>{{order.delivery_date|date:"M d, Y"|default:"-"}}</td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <button class="btn btn-sm btn-outline-brown" data-bs-toggle="modal"
+                        data-bs-target="#orderDetails-modal-{{order.id}}" title="View Details">
+                        <i class="bi bi-eye"></i>
+                      </button>
 
-              <!-- The modal itself -->
-              <div class="modal fade" id="orderDetails-modal" tabindex="-1" aria-labelledby="modal-title"
-                aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content">
-                    <div class="modal-header bg-brown text-green">
-                      <h5 class="modal-title" id="modal-title">Order #{{order.id}}</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      {% if order.status != 'Delivered' and order.status != 'Cancelled' %}
+                      <div class="btn-group">
+                        <a href="{% url 'update_order_status' order.id 'Delivered' %}"
+                          class="btn btn-sm btn-outline-success" title="Mark as Delivered">
+                          <i class="bi bi-check-circle"></i>
+                        </a>
+                        <a href="{% url 'update_order_status' order.id 'Cancelled' %}"
+                          class="btn btn-sm btn-outline-danger" title="Mark as Cancelled">
+                          <i class="bi bi-x-circle"></i>
+                        </a>
+                      </div>
+                      {% endif %}
                     </div>
-                    <div class="modal-body">
-
-                      <ul class="list-group list-group-flush mb-4">
-                        <li class="list-group-item"><strong>Book:</strong> {{order.book.title}}</li>
-                        <li class="list-group-item"><strong>Supplier:</strong> {{order.supplier.name}}</li>
-                        <li class="list-group-item"><strong>Status:</strong> {{order.status}}</li>
-                        <li class="list-group-item"><strong>Order Date:</strong> {{order.order_date}}</li>
-                        <li class="list-group-item"><strong>Expected Delivery:</strong>
-                          {{order.expected_delivery_date}}</li>
-                        <li class="list-group-item"><strong>Delivery:</strong> {{order.delivery_date}}</li>
-                        <li class="list-group-item"><strong>Updated by:</strong> {{order.updated_by}}</li>
-                        <li class="list-group-item"><strong>Updated at:</strong> {{order.updated_at}}</li>
-                      </ul>
-
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="8" class="text-center py-4">
+                    <div class="empty-state">
+                      <i class="bi bi-inbox text-muted"></i>
+                      <p class="mb-0">No orders found</p>
                     </div>
-                    <div class="modal-footer bg-brown">
-                      <form method="POST" name="print_order">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="print_order">
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-                        <input type="hidden" name="order_id" value="{{order.id}}">
-                        <button type="submit" class="btn btn-outline-green" name="format" value="pdf">PDF</button>
-                        <button type="submit" class="btn btn-outline-green" name="format" value="csv">CSV</button>
-                      </form>
-                    </div>
-                  </div>
+  <!-- Print Modal -->
+  <div class="modal fade" id="print-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="modal-title">Print Orders</h5>
+          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" class="needs-validation">
+            {% csrf_token %}
+
+            <p class="text-muted mb-3">Choose the dates and status to filter orders:</p>
+
+            <div class="mb-3">
+              <label for="modal-fromdate" class="form-label">From:</label>
+              <input type="date" class="form-control" id="modal-fromdate" name="from_date">
+            </div>
+
+            <div class="mb-3">
+              <label for="modal-todate" class="form-label">To:</label>
+              <input type="date" class="form-control" id="modal-todate" name="to_date">
+            </div>
+
+            <fieldset class="mb-3">
+              <legend class="form-label">Status:</legend>
+              <div class="d-flex gap-3">
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" name="status" id="status-pending" value="pending">
+                  <label for="status-pending" class="form-check-label">Pending</label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" name="status" id="status-delivered" value="delivered">
+                  <label for="status-delivered" class="form-check-label">Delivered</label>
+                </div>
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" name="status" id="status-cancelled" value="cancelled">
+                  <label for="status-cancelled" class="form-check-label">Cancelled</label>
                 </div>
               </div>
+            </fieldset>
 
-            </td>
-            <td>
-              <a href="{% url 'update_order_status' order.id 'Delivered' %}" class="btn btn-outline-darkgreen"><i
-                  class="bi bi-check-circle"></i></a>
-              <a href="{% url 'update_order_status' order.id 'Cancelled' %}" class="btn btn-outline-darkgreen"><i
-                  class="bi bi-x-circle"></i></a>
-
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+            <input type="hidden" name="action" value="print_multiple_orders">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-brown" name="format" value="pdf">
+            <i class="bi bi-file-pdf me-1"></i> Export PDF
+          </button>
+          <button type="submit" class="btn btn-outline-brown" name="format" value="csv">
+            <i class="bi bi-file-excel me-1"></i> Export CSV
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-  <!-- END TABLE -->
-  <!-- ________________________________________________________________________ -->
 
+  <!-- New Order Modal -->
+  <div class="modal fade" id="order-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="modal-title">Add Order</h5>
+          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" class="needs-validation">
+            {% csrf_token %}
+            {% crispy formOrder %}
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- New Supplier Modal -->
+  <div class="modal fade" id="supplier-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="modal-title">Add Supplier</h5>
+          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" class="needs-validation">
+            {% csrf_token %}
+            {% crispy formSupplier %}
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details Modals -->
+  {% for order in orders %}
+  <div class="modal fade" id="orderDetails-modal-{{order.id}}" tabindex="-1" aria-labelledby="modal-title"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="modal-title">Order #{{order.id}}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="status-indicator 
+              {% if order.status == 'Delivered' %}bg-success-soft text-success
+              {% elif order.status == 'Cancelled' %}bg-danger-soft text-danger
+              {% else %}bg-warning-soft text-warning{% endif %}">
+              <i class="bi {% if order.status == 'Delivered' %}bi-check-circle-fill
+                {% elif order.status == 'Cancelled' %}bi-x-circle-fill
+                {% else %}bi-clock-fill{% endif %}"></i>
+              {{order.status}}
+            </span>
+            <span class="text-muted small">Order ID: #{{order.id}}</span>
+          </div>
+
+          <div class="card bg-light mb-3">
+            <div class="card-body">
+              <h6 class="card-subtitle mb-2 text-muted">Book Information</h6>
+              <h5 class="card-title">{{order.book.title}}</h5>
+              <p class="card-text mb-0">Supplier: {{order.supplier.name}}</p>
+            </div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="detail-item">
+                <span class="text-muted">Order Date:</span>
+                <p class="mb-0 fw-medium">{{order.order_date|date:"M d, Y"}}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <span class="text-muted">Expected Delivery:</span>
+                <p class="mb-0 fw-medium">{{order.expected_delivery_date|date:"M d, Y"}}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <span class="text-muted">Delivery Date:</span>
+                <p class="mb-0 fw-medium">{{order.delivery_date|date:"M d, Y"|default:"Not delivered yet"}}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="detail-item">
+                <span class="text-muted">Updated by:</span>
+                <p class="mb-0 fw-medium">{{order.updated_by}}</p>
+              </div>
+            </div>
+            <div class="col-12">
+              <div class="detail-item">
+                <span class="text-muted">Last Updated:</span>
+                <p class="mb-0 fw-medium">{{order.updated_at|date:"M d, Y H:i"}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Close</button>
+          <form method="POST" name="print_order" class="d-inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="print_order">
+            <input type="hidden" name="order_id" value="{{order.id}}">
+            <button type="submit" class="btn btn-brown" name="format" value="pdf">
+              <i class="bi bi-file-pdf me-1"></i> Export PDF
+            </button>
+            <button type="submit" class="btn btn-outline-brown" name="format" value="csv">
+              <i class="bi bi-file-excel me-1"></i> Export CSV
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
-
 {% endblock %}

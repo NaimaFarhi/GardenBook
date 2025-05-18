@@ -107,6 +107,9 @@ def home(request):
 
   return render(request, 'home.html', context)
 
+#_______________________________________________________________
+def about(request):
+  return render(request, 'about.html')
 
 #_______________________________________________________________
 # for the catalog page where all the books are displayed
@@ -638,6 +641,9 @@ def edit_user(request, pk):
 @login_required(login_url='login')
 def users(request):
   users = Person.objects.filter(is_superuser=False)
+  if request.user.role == 'Librarian':
+    users = users.filter(role=RoleName.READER)
+
   user_fines = {}
 
   # Single search input for ID, CIN, and Name
@@ -677,10 +683,38 @@ def users(request):
     action = request.POST.get('action')
     if action == 'print_users':
       format = request.POST.get('format')
+      dob_from = request.POST.get('dob_from')
+      dob_to = request.POST.get('dob_to')
+      role = request.POST.get('role')
+      status = request.POST.get('status')
+      city = request.POST.get('city')
+      country = request.POST.get('country')
+      from_date_joined = request.POST.get('from_date_joined')
+      to_date_joined = request.POST.get('to_date_joined')
+
+      selected_users = users
+      printing_filter = Q()
+
+      if dob_from and dob_to:
+        printing_filter &= Q(dob__range=[dob_from, dob_to])
+      if role:
+        printing_filter &= Q(role=role)
+      if status:
+        printing_filter &= Q(status=status)
+      if city:
+        printing_filter &= Q(city__icontains=city)
+      if country:
+        printing_filter &= Q(country__icontains=country)
+      if from_date_joined and to_date_joined:
+        printing_filter &= Q(date_joined__range=[from_date_joined, to_date_joined])
+      
+      if printing_filter:
+        selected_users = selected_users.filter(printing_filter)
+
       if format == 'pdf':
-        return generate_person_report(request, users)
+        return generate_person_report(request, selected_users)
       elif format == 'csv':
-        return generate_csv_users(users)
+        return generate_csv_users(selected_users)
     
     return redirect('manage-users')
 

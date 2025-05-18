@@ -41,6 +41,7 @@ urlpatterns = [
   path('print_event/<str:pk>/', views.print_event, name='print_event'),
   path('send_fine_alert/<str:pk>/', views.send_fine_alert, name='send_fine_alert'),
   path('mark-alert-read/<str:pk>/', views.mark_alert_read, name='mark-alert-read'),
+  path('about', views.about, name='about'),
 
 
 ]

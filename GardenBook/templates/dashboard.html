@@ -4,182 +4,518 @@
 
 {% block page %} Dashboard Overview {% endblock %}
 
-
 {% block content %}
 <div class="container-fluid">
-
-  <div class="row my-2 p-4">
-    <h1 class="text-brown">Welcome back, <em> {{ request.user.username }} </em> !!!</h1>
+  <!-- Welcome Section -->
+  <div class="welcome-section mb-4 p-4 bg-white rounded-20 shadow-sm">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <h1 class="text-brown fw-bold mb-2">Welcome back, 
+          <span class="fst-italic text-green">
+            {{ request.user.username }}
+            </span>!
+            </h1>
+        <p class="text-muted mb-0">{{ current_date|date:"l, F j, Y" }} • <span id="currentTime"></span></p>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <div class="d-inline-flex align-items-center bg-green-soft px-3 py-2 rounded-pill">
+          <i class="bi bi-calendar-check me-2 text-green"></i>
+          <span class="fw-medium">Today's Events: 
+            <span class="text-brown fw-bold">
+              {{ today_events|default:"0" }}</span>
+              </span>
+        </div>
+      </div>
+    </div>
   </div>
 
-
   <!-- Dashboard Cards -->
-  <div class="row g-4 dashboard-cards">
-
+  <div class="row g-4 dashboard-cards mb-5">
     <!-- Total Books -->
-    <div class="col-md-3">
-      <div class="card shadow-sm rounded-20">
-        <div class="card-body">
-
-          <h5 class="card-title mt-3">
-            <i class="bi bi-book-half display-4 text-brown"></i>
-            Total Books
-          </h5>
-          <p class="card-text fs-4">{{ total_books }}</p>
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm rounded-20 border-0 stat-card">
+        <div class="card-body position-relative p-4">
+          <div class="stat-icon-large text-green-soft">
+            <i class="bi bi-book-half"></i>
+          </div>
+          <div class="stat-content">
+            <p class="text-muted mb-1 fw-medium">Total Books</p>
+            <h2 class="display-5 fw-bold mb-0 text-brown">{{ total_books }}</h2>
+            <div class="mt-3 d-flex justify-content-between align-items-center">
+              <div class="stat-badge bg-success-soft">
+                <i class="bi bi-arrow-up-short"></i>
+                <span>{{ new_monthly_stock }} added this month</span>
+              </div>
+            </div>
+          </div>
+          <a href="{% url 'stock' %}" class="stretched-link" aria-label="View stock details"></a>
         </div>
-        <div class="card-footer d-flex justify-content-between bg-white align-items-center">
-          <p><span>+ {{ new_monthly_stock }}</span> added</p>
-          <p><a href="{% url 'stock' %}" class=" text-underline">See More</a></p>
-
+        <div class="card-footer bg-white border-0 p-0">
+          <a href="{% url 'stock' %}" class="btn btn-link text-brown w-100 py-3 fw-medium">View Details <i
+              class="bi bi-arrow-right ms-1"></i></a>
         </div>
       </div>
     </div>
 
     <!-- Total borrowed Books -->
-    <div class="col-md-3">
-      <div class="card shadow-sm pb-1 rounded-20">
-        <div class="card-body">
-
-          <h5 class="card-title mt-3">
-            <i class="bi bi-book display-4 text-brown"></i>
-            Total Borrows
-          </h5>
-          <p class="card-text fs-4">{{ total_borrows }}</p>
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm rounded-20 border-0 stat-card">
+        <div class="card-body position-relative p-4">
+          <div class="stat-icon-large text-warning-soft">
+            <i class="bi bi-book"></i>
+          </div>
+          <div class="stat-content">
+            <p class="text-muted mb-1 fw-medium">Total Borrows</p>
+            <h2 class="display-5 fw-bold mb-0 text-brown">{{ total_borrows }}</h2>
+            <div class="mt-3 d-flex justify-content-between align-items-center">
+              <div class="stat-badge bg-warning-soft">
+                <i class="bi bi-clock"></i>
+                <span>{{ active_borrows|default:"0" }} active</span>
+              </div>
+            </div>
+          </div>
+          <a href="{% url 'borrows-returns' %}" class="stretched-link" aria-label="View borrows details"></a>
         </div>
-        <div class="card-footer rounded-20 d-flex justify-content-end bg-white align-items-center">
-          <p><a href="{% url 'borrows-returns' %}" class=" text-underline">See More</a></p>
-
+        <div class="card-footer bg-white border-0 p-0">
+          <a href="{% url 'borrows-returns' %}" class="btn btn-link text-brown w-100 py-3 fw-medium">View Details <i
+              class="bi bi-arrow-right ms-1"></i></a>
         </div>
       </div>
     </div>
 
     <!-- Total Users -->
-    <div class="col-md-3">
-      <div class="card shadow-sm rounded-20">
-        <div class="card-body">
-
-          <h5 class="card-title mt-3">
-            <i class="bi bi-people-fill display-4 text-brown"></i>
-            Total Users
-          </h5>
-          <p class="card-text fs-4">{{ total_users }}</p>
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm rounded-20 border-0 stat-card">
+        <div class="card-body position-relative p-4">
+          <div class="stat-icon-large text-green-soft">
+            <i class="bi bi-people-fill"></i>
+          </div>
+          <div class="stat-content">
+            <p class="text-muted mb-1 fw-medium">Total Users</p>
+            <h2 class="display-5 fw-bold mb-0 text-brown">{{ total_users }}</h2>
+            <div class="mt-3 d-flex justify-content-between align-items-center">
+              <div class="stat-badge bg-success-soft">
+                <i class="bi bi-arrow-up-short"></i>
+                <span>{{ new_monthly_stock }} new this month</span>
+              </div>
+            </div>
+          </div>
+          <a href="{% url 'manage-users' %}" class="stretched-link" aria-label="View users details"></a>
         </div>
-        <div class="card-footer rounded-20 d-flex justify-content-between bg-white align-items-center">
-          <p><span>+ {{ new_monthly_stock }}</span> added</p>
-          <p><a href="{% url 'manage-users' %}" class=" text-underline">See More</a></p>
-
+        <div class="card-footer bg-white border-0 p-0">
+          <a href="{% url 'manage-users' %}" class="btn btn-link text-brown w-100 py-3 fw-medium">View Details <i
+              class="bi bi-arrow-right ms-1"></i></a>
         </div>
       </div>
     </div>
 
     <!-- Active Orders -->
-    <div class="col-md-3">
-      <div class="card shadow-sm rounded-20">
-        <div class="card-body">
-
-          <h5 class="card-title mt-3">
-            <i class="bi bi-clipboard2-data display-4 text-brown"></i>
-            Active Orders
-          </h5>
-          <p class="card-text fs-4">{{ active_orders }}</p>
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100 shadow-sm rounded-20 border-0 stat-card">
+        <div class="card-body position-relative p-4">
+          <div class="stat-icon-large text-warning-soft">
+            <i class="bi bi-clipboard2-data"></i>
+          </div>
+          <div class="stat-content">
+            <p class="text-muted mb-1 fw-medium">Active Orders</p>
+            <h2 class="display-5 fw-bold mb-0 text-brown">{{ active_orders }}</h2>
+            <div class="mt-3 d-flex justify-content-between align-items-center">
+              <div class="stat-badge bg-warning-soft">
+                <i class="bi bi-hourglass-split"></i>
+                <span>{{ pending_orders|default:"0" }} pending</span>
+              </div>
+            </div>
+          </div>
+          <a href="{% url 'orders' %}" class="stretched-link" aria-label="View orders details"></a>
         </div>
-        <div class="card-footer d-flex justify-content-end bg-white align-items-center">
-          <p><a href="{% url 'orders' %}" class=" text-underline">See More</a></p>
+        <div class="card-footer bg-white border-0 p-0">
+          <a href="{% url 'orders' %}" class="btn btn-link text-brown w-100 py-3 fw-medium">View Details <i
+              class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- Charts Section -->
+  <div class="row mb-5">
+    <!-- Borrowing Trends Chart -->
+    <div class="col-lg-8 mb-4 mb-lg-0">
+      <div class="card shadow-sm rounded-20 border-0">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-brown">Borrowing Trends</h5>
+            <div class="btn-group" role="group">
+              <button type="button" class="btn btn-sm btn-outline-brown active" data-period="weekly">Weekly</button>
+              <button type="button" class="btn btn-sm btn-outline-brown" data-period="monthly">Monthly</button>
+              <button type="button" class="btn btn-sm btn-outline-brown" data-period="yearly">Yearly</button>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <canvas id="borrowingTrendsChart" height="300"></canvas>
         </div>
       </div>
     </div>
 
-  </div>
-
-  <!-- START LAST ALERTS SENT -->
-  <div class="row mt-5">
-    <div class="col-md-12">
-      <h2 class="text-brown">Last Alerts Sent</h2>
-    </div>
-    <div class="overflow-hidden shadow-sm p-0 rounded-20">
-      <table class="table table-hover align-middle m-0">
-        <thead class="bg-brown text-white">
-          <tr>
-            <th>Reader</th>
-            <th>Message</th>
-            <th>Date Created</th>
-            <th>Date Read</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white">
-          {% for alert in alerts %}
-          <tr>
-            <td>
-                {{ alert.user.username }}
-            </td>
-            <td>{{ alert.message }}</td>
-            <td>{{ alert.date_created }}</td>
-            <td>
-              {% if alert.is_read %}
-              {{ alert.date_read }}
-
-              {% else %}
-              <span class="text-danger">Not Read</span>
-              {% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-
-    </div>
-
-
-
-  </div>
-  <!-- END LAST ALERTS SENT -->
-
-  <!-- START LAST BORROWS -->
-  <div class="row mt-5">
-    <div class="col-md-12">
-      <h2 class="text-brown">Last Borrows</h2>
-    </div>
-    <div class="overflow-hidden shadow-sm p-0 rounded-20">
-      <table class="table table-hover align-middle m-0">
-        <thead class="bg-brown text-white">
-          <tr>
-            <th>Reader</th>
-            <th>Book</th>
-            <th>Date Borrowed</th>
-            <th>Date Returned</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white">
-          {% for borrow in borrows %}
-          <tr>
-            <td>
-                {{ borrow.borrower.username }}
-            </td>
-            <td>
-              {{  borrow.book.title }}
-            </td>
-            <td>
-              {{ borrow.borrow_date }}
-            </td>
-            <td>
-              {% if borrow.returned %}
-              {{ borrow.return_date }}
-              {% else %}
-              <span class="text-danger">Not Returned</span>
-              {% endif %}
-            </td>
-            
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <!-- Book Categories Chart -->
+    <div class="col-lg-4">
+      <div class="card shadow-sm rounded-20 border-0">
+        <div class="card-header bg-white border-0 py-3">
+          <h5 class="mb-0 text-brown">Book Categories</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="bookCategoriesChart" height="300"></canvas>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- END LAST BORROWS -->
+  <!-- Last Alerts and Borrows Section -->
+  <div class="row">
+    <!-- Last Alerts Sent -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm rounded-20 border-0">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-0 text-brown">Last Alerts Sent</h5>
+              <p class="text-muted mb-0 mt-1 small">Recent notifications sent to users</p>
+            </div>
+            <a href="#" class="btn btn-sm btn-outline-brown">View All</a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th class="border-0">Reader</th>
+                  <th class="border-0">Message</th>
+                  <th class="border-0">Date</th>
+                  <th class="border-0">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for alert in alerts %}
+                <tr class="alert-row {% if not alert.is_read %}unread-alert{% endif %}">
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle bg-green-soft text-brown me-2">
+                        {{ alert.user.username|slice:":1"|upper }}
+                      </div>
+                      <span class="fw-medium">{{ alert.user.username }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="message-cell">{{ alert.message }}</div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-medium">{{ alert.date_created|date:"M d" }}</span>
+                      <span class="text-muted small">{{ alert.date_created|time:"g:i A" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    {% if alert.is_read %}
+                    <div class="status-indicator read">
+                      <i class="bi bi-check-circle-fill me-1"></i>
+                      <span>Read</span>
+                    </div>
+                    {% else %}
+                    <div class="status-indicator unread">
+                      <i class="bi bi-exclamation-circle-fill me-1"></i>
+                      <span>Unread</span>
+                    </div>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4">
+                    <div class="empty-state">
+                      <i class="bi bi-bell-slash display-4 text-muted"></i>
+                      <p class="mt-2 mb-0">No alerts found</p>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-white border-0 p-3 text-center">
+          <button class="btn btn-sm btn-outline-brown">
+            <i class="bi bi-plus-circle me-1"></i> Send New Alert
+          </button>
+        </div>
+      </div>
+    </div>
 
-
-
+    <!-- Last Borrows -->
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm rounded-20 border-0">
+        <div class="card-header bg-white border-0 py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <h5 class="mb-0 text-brown">Last Borrows</h5>
+              <p class="text-muted mb-0 mt-1 small">Recent book borrowing activity</p>
+            </div>
+            <a href="{% url 'borrows-returns' %}" class="btn btn-sm btn-outline-brown">View All</a>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table custom-table mb-0">
+              <thead>
+                <tr>
+                  <th class="border-0">Reader</th>
+                  <th class="border-0">Book</th>
+                  <th class="border-0">Date</th>
+                  <th class="border-0">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for borrow in borrows %}
+                <tr class="borrow-row">
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle bg-green-soft text-brown me-2">
+                        {{ borrow.borrower.username|slice:":1"|upper }}
+                      </div>
+                      <span class="fw-medium">{{ borrow.borrower.username }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="book-cell">
+                      <span class="fw-medium">{{ borrow.book.title }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-medium">{{ borrow.borrow_date|date:"M d" }}</span>
+                      <span class="text-muted small">{{ borrow.borrow_date|time:"g:i A" }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    {% if borrow.returned %}
+                    <div class="status-indicator returned">
+                      <i class="bi bi-check-circle-fill me-1"></i>
+                      <span>Returned</span>
+                    </div>
+                    {% else %}
+                    <div class="status-indicator borrowed">
+                      <i class="bi bi-book-fill me-1"></i>
+                      <span>Borrowed</span>
+                    </div>
+                    {% endif %}
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4">
+                    <div class="empty-state">
+                      <i class="bi bi-book display-4 text-muted"></i>
+                      <p class="mt-2 mb-0">No borrows found</p>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer bg-white border-0 p-3 text-center">
+          <button class="btn btn-sm btn-outline-brown">
+            <i class="bi bi-plus-circle me-1"></i> Record New Borrow
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Add Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Dashboard Charts JavaScript - KEEPING EXACTLY AS BEFORE -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Update current time
+    function updateTime() {
+      const now = new Date();
+      const timeElement = document.getElementById('currentTime');
+      timeElement.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    updateTime();
+    setInterval(updateTime, 60000); // Update every minute
+
+    // Define theme colors
+    const themeColors = {
+      brown: '#5d432f',
+      lightBrown: '#f0e8d9',
+      green: '#8a9982',
+      lightGreen: '#aabda0',
+      softGreen: '#e8f3e8'
+    };
+
+    // Borrowing Trends Chart
+    const borrowingCtx = document.getElementById('borrowingTrendsChart').getContext('2d');
+
+    // Sample data - replace with actual data from your backend
+    const weeklyData = {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      datasets: [
+        {
+          label: 'Borrows',
+          data: [12, 19, 15, 8, 22, 14, 10],
+          borderColor: themeColors.brown,
+          backgroundColor: 'rgba(93, 67, 47, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Returns',
+          data: [8, 15, 12, 6, 18, 10, 7],
+          borderColor: themeColors.green,
+          backgroundColor: 'rgba(138, 153, 130, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
+
+    const monthlyData = {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      datasets: [
+        {
+          label: 'Borrows',
+          data: [65, 59, 80, 81, 56, 55, 40, 45, 60, 70, 75, 80],
+          borderColor: themeColors.brown,
+          backgroundColor: 'rgba(93, 67, 47, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Returns',
+          data: [45, 49, 60, 71, 46, 45, 30, 35, 50, 60, 65, 70],
+          borderColor: themeColors.green,
+          backgroundColor: 'rgba(138, 153, 130, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
+
+    const yearlyData = {
+      labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
+      datasets: [
+        {
+          label: 'Borrows',
+          data: [300, 450, 320, 500, 600, 750],
+          borderColor: themeColors.brown,
+          backgroundColor: 'rgba(93, 67, 47, 0.1)',
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Returns',
+          data: [250, 400, 280, 450, 550, 700],
+          borderColor: themeColors.green,
+          backgroundColor: 'rgba(138, 153, 130, 0.1)',
+          tension: 0.4,
+          fill: true
+        }
+      ]
+    };
+
+    let borrowingChart = new Chart(borrowingCtx, {
+      type: 'line',
+      data: weeklyData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'top',
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            grid: {
+              color: 'rgba(0, 0, 0, 0.05)'
+            }
+          },
+          x: {
+            grid: {
+              display: false
+            }
+          }
+        }
+      }
+    });
+
+    // Book Categories Chart
+    const categoriesCtx = document.getElementById('bookCategoriesChart').getContext('2d');
+
+    // Sample data - replace with actual data from your backend
+    const categoriesData = {
+      labels: ['Fiction', 'Science', 'History', 'Biography', 'Art', 'Other'],
+      datasets: [{
+        data: [30, 20, 15, 10, 15, 10],
+        backgroundColor: [
+          themeColors.brown,
+          themeColors.green,
+          themeColors.lightBrown,
+          themeColors.lightGreen,
+          themeColors.softGreen,
+          'rgba(93, 67, 47, 0.5)'
+        ],
+        borderWidth: 0
+      }]
+    };
+
+    const categoriesChart = new Chart(categoriesCtx, {
+      type: 'doughnut',
+      data: categoriesData,
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+          }
+        },
+        cutout: '65%'
+      }
+    });
+
+    // Handle period buttons for borrowing trends chart
+    document.querySelectorAll('[data-period]').forEach(button => {
+      button.addEventListener('click', function () {
+        // Remove active class from all buttons
+        document.querySelectorAll('[data-period]').forEach(btn => {
+          btn.classList.remove('active');
+        });
+
+        // Add active class to clicked button
+        this.classList.add('active');
+
+        // Update chart data based on selected period
+        const period = this.getAttribute('data-period');
+
+        if (period === 'weekly') {
+          borrowingChart.data = weeklyData;
+        } else if (period === 'monthly') {
+          borrowingChart.data = monthlyData;
+        } else if (period === 'yearly') {
+          borrowingChart.data = yearlyData;
+        }
+
+        borrowingChart.update();
+      });
+    });
+  });
+</script>
 {% endblock %}

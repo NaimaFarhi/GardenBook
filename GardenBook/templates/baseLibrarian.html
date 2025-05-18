@@ -14,81 +14,114 @@
 </head>
 
 <body>
-
-  <div class="row" style="height: 100vh;">
-
-    <header class="col-md-2 shadow-sm" style="font-size: larger;">
-      <aside class="d-flex flex-column justify-content-between vh-100 p-3 mx-2">
-    
+  <div class="layout-container">
+    <!-- Fixed Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-inner">
         <!-- Logo -->
-        <div class="mb-4">
-          <a href="{% url 'dashboard' %}" class="d-flex align-items-center mb-2 text-brown text-decoration-none">
-            <img src="{% static 'assets/brand/_logo-nobg.png' %}" class="me-2" width="80" height="80" role="img"
-              aria-label="GardenBook">
+        <div class="text-center mb-5">
+          <a href="{% url 'dashboard' %}"
+            class="d-flex align-items-center justify-content-center text-brown text-decoration-none">
+            <img src="{% static 'assets/brand/_logo-nobg.png' %}" class="img-fluid" width="90" height="90" role="img"
+              alt="Library Management System">
           </a>
         </div>
-    
-        <!-- Navigation Links (higher up) -->
-        <div class="d-flex flex-column" style="margin-bottom: auto;">
-          <a href="{% url 'dashboard' %}" class="mb-4">
-            <i class="bi bi-clipboard2-data"></i> Dashboard
-          </a>
-          <a href="{% url 'manage-users' %}" class="mb-4">
-            <i class="bi bi-people"></i> Manage Users
-          </a>
-          <a href="{% url 'borrows-returns' %}" class="mb-4">
-            <i class="bi bi-ui-checks"></i> Borrows & Returns
-          </a>
-          <a href="{% url 'stock' %}" class="mb-4">
-            <i class="bi bi-archive"></i> Stock
-          </a>
-          <a href="{% url 'orders' %}" class="mb-4">
-            <i class="bi bi-bag-dash"></i> Orders
-          </a>
-          <a href="{% url 'manage-event' %}" class="mb-4">
-            <i class="bi bi-calendar2-event"></i> Events
-          </a>
-          <a href="{% url 'manage-payment' %}" class="mb-4">
-            <i class="bi bi-wallet2"></i> Payments
-          </a>
-        </div>
-    
+
+        <!-- Navigation Links -->
+        <nav class="sidebar-nav">
+          <ul class="list-unstyled ps-2">
+            <li class="nav-item mb-3">
+              <a href="{% url 'dashboard' %}"
+                class="sidebar-link d-flex align-items-center {% if request.path == '/dashboard/' %}active-link{% endif %}">
+                <i class="bi bi-clipboard2-data me-3"></i>
+                <span>Dashboard</span>
+              </a>
+            </li>
+            <li class="nav-item mb-3">
+              <a href="{% url 'manage-users' %}"
+                class="sidebar-link d-flex align-items-center {% if request.path == '/manage-users/' %}active-link{% endif %}">
+                <i class="bi bi-people me-3"></i>
+                <span>Manage Users</span>
+              </a>
+            </li>
+            <li class="nav-item mb-3">
+              <a href="{% url 'borrows-returns' %}"
+                class="sidebar-link d-flex align-items-center {% if request.path == '/borrows-returns/' %}active-link{% endif %}">
+                <i class="bi bi-ui-checks me-3"></i>
+                <span>Borrows & Returns</span>
+              </a>
+            </li>
+            <li class="nav-item mb-3">
+              <a href="{% url 'stock' %}"
+                class="sidebar-link d-flex align-items-center {% if request.path == '/stock/' %}active-link{% endif %}">
+                <i class="bi bi-archive me-3"></i>
+                <span>Stock</span>
+              </a>
+            </li>
+            <li class="nav-item mb-3">
+              <a href="{% url 'orders' %}"
+                class="sidebar-link d-flex align-items-center {% if request.path == '/orders/' %}active-link{% endif %}">
+                <i class="bi bi-bag-dash me-3"></i>
+                <span>Orders</span>
+              </a>
+            </li>
+            <li class="nav-item mb-3">
+              <a href="{% url 'manage-event' %}"
+                class="sidebar-link d-flex align-items-center {% if request.path == '/manage-event/' %}active-link{% endif %}">
+                <i class="bi bi-calendar2-event me-3"></i>
+                <span>Events</span>
+              </a>
+            </li>
+            <li class="nav-item mb-3">
+              <a href="{% url 'manage-payment' %}"
+                class="sidebar-link d-flex align-items-center {% if request.path == '/manage-payment/' %}active-link{% endif %}">
+                <i class="bi bi-wallet2 me-3"></i>
+                <span>Payments</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
         <!-- Logout at Bottom -->
-        <div class="text-end mt-auto">
-          <a href="{% url 'logout' %}" style="font-weight: bolder;">
-            <i class="bi bi-box-arrow-left"></i> Logout
+        <div class="mt-auto">
+          <a href="{% url 'logout' %}" class="logout-link d-flex align-items-center">
+            <i class="bi bi-box-arrow-left me-3"></i>
+            <span>Logout</span>
           </a>
         </div>
-    
-      </aside>
-    </header>
-    
+      </div>
+    </aside>
 
-    <main class="col px-0">
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="main-header">
+        <button class="sidebar-toggle">
+          <i class="bi bi-list"></i>
+        </button>
 
-      <div class="row py-3 mx-1 shadow-sm">
-        <div class="col-6">
-          <h2>{% block page%} Current page name {% endblock page %}</h2>
+        <div class="header-title">
+          <h4 class="mb-0">{% block page %}Dashboard{% endblock %}</h4>
         </div>
 
-        <div class="col-6 d-flex justify-content-end">
+        <div class="profile-img-container">
+          <!-- Notifications or other header elements -->
           <a href="{% url 'dashboard' %}">
-            <img src="{{ request.user.profile_pic.url }}" alt="Profile" class="rounded-circle"
-              style="height: 30px; width: 30px;">
+            <img
+              src="{% if request.user.profile_pic %}{{ request.user.profile_pic.url }}{% else %}{% static 'profile_pic2.png' %}{% endif %}"
+              alt="Profile" class="profile-img">
           </a>
         </div>
       </div>
 
-      <div class="py-5 bg-green-soft" style="height: 100vh;">
+      <!-- Scrollable Content Area -->
+      <div class="content-area">
         {% block content %}
-
         {% endblock content %}
       </div>
-
     </main>
-
-    <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
   </div>
+
+  <script src="{% static 'assets/dist/js/bootstrap.bundle.min.js' %}"></script>
 </body>
 
 </html>

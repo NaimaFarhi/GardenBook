@@ -1,268 +1,395 @@
 {% extends 'baseLibrarian.html' %}
 {% load static %}
-
 {% load crispy_forms_tags %}
 
 {% block title %}Events | GardenBook{% endblock %}
 {% block page %}Events{% endblock %}
 
 {% block content %}
-
-<div class="container-fluid row m-2">
-
-  <!-- BUTTONS -->
-  <div class="row d-flex justify-content-end align-items-center mb-4">
-    <!-- BUTTON -->
-    <div class="col-auto">
+<div class="container-fluid">
+  <!-- Action Buttons -->
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-end">
       <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#createEventModal">
-        + New Event
+        <i class="bi bi-plus-lg me-2"></i>New Event
       </button>
+    </div>
+  </div>
 
-      <!-- Modal -->
-      <div class="modal fade" id="createEventModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h1 class="modal-title fs-5">Create New Event</h1>
-              <button type="reset" class="btn-close" data-bs-dismiss="modal"></button>
+  <!-- Search & Filter -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card rounded-20 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-search me-2 text-brown"></i>
+            Search & Filter Events
+          </h5>
+          <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+              <label for="q" class="form-label">Search</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="search" name="q" id="q" class="form-control border-start-0"
+                  placeholder="Title, Host, Description...">
+              </div>
             </div>
-            <div class="modal-body">
-              <form method="POST" enctype="multipart/form-data" action="{% url 'create-event' %}">
-                {% csrf_token %}
-                {% crispy create_form %}
-              </form>
+
+            <div class="col-md-2">
+              <label for="event_type" class="form-label">Event Type</label>
+              <select name="event_type" id="event_type" class="form-select">
+                <option value="">All</option>
+                {% for type in types %}
+                <option value="{{ type }}">{{ type }}</option>
+                {% endfor %}
+              </select>
             </div>
+
+            <div class="col-md-2">
+              <label for="date_filter" class="form-label">Date</label>
+              <select name="date_filter" id="date_filter" class="form-select">
+                <option value="">Any Time</option>
+                <option value="year">This Year</option>
+                <option value="month">This Month</option>
+                <option value="week">This Week</option>
+              </select>
+            </div>
+
+            <div class="col-md-2">
+              <button class="btn btn-brown w-100" type="submit">
+                <i class="bi bi-search me-1"></i> Search
+              </button>
+            </div>
+            <div class="col-md-2">
+              <a href="{% url 'manage-event' %}" class="btn btn-outline-brown w-100">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Events Table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card rounded-20 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0 text-brown">Events List</h5>
+          <span class="badge bg-green-soft text-brown">Total: {{ events|length }}</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle m-0">
+              <thead>
+                <tr class="bg-light">
+                  <th>Title</th>
+                  <th>Host</th>
+                  <th>Type</th>
+                  <th>Price</th>
+                  <th>Date</th>
+                  <th>Reservations</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white">
+                {% for event in events %}
+                <tr>
+                  <td class="fw-medium">{{ event.title }}</td>
+                  <td>{{ event.host }}</td>
+                  <td>
+                    <span class="badge bg-green-soft text-brown">
+                      {{ event.event_type }}
+                    </span>
+                  </td>
+                  <td>{{ event.event_price }} MAD</td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ event.start_datetime|date:"M d, Y" }}</span>
+                      <small class="text-muted">
+                        {{ event.start_datetime|time:"H:i" }} - {{ event.end_datetime|time:"H:i" }}
+                      </small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                        <div class="progress-bar bg-brown" role="progressbar" {% if event.nbr_reservations > 0 %}
+                          style="width: {% widthratio event.current_reservations event.nbr_reservations 100 %}%;"
+                          {% else %}
+                          style="width: 0%;"
+                          {% endif %}
+                          aria-valuenow="{{ event.current_reservations }}"
+                          aria-valuemin="0"
+                          aria-valuemax="{{ event.nbr_reservations }}">
+                        </div>
+                      </div>
+                      <span class="small">{{ event.current_reservations }}/{{ event.nbr_reservations }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    {% if event.is_canceled %}
+                    <span class="status-indicator bg-danger-soft text-danger">
+                      <i class="bi bi-x-circle-fill"></i> Canceled
+                    </span>
+                    {% else %}
+                    <span class="status-indicator bg-success-soft text-success">
+                      <i class="bi bi-check-circle-fill"></i> Active
+                    </span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <button type="button" class="btn btn-sm btn-outline-brown" data-bs-toggle="modal"
+                        data-bs-target="#reservationList{{ event.id }}" title="View Reservations">
+                        <i class="bi bi-people"></i>
+                      </button>
+                      <button type="button" class="btn btn-sm btn-outline-brown" data-bs-toggle="modal"
+                        data-bs-target="#eventDetails{{ event.id }}" title="View Details">
+                        <i class="bi bi-eye"></i>
+                      </button>
+                      {% if not event.is_canceled %}
+                      <a href="{% url 'cancel-event' event.id %}" class="btn btn-sm btn-outline-danger"
+                        title="Cancel Event">
+                        <i class="bi bi-x-square"></i>
+                      </a>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="8" class="text-center py-4">
+                    <div class="empty-state">
+                      <i class="bi bi-calendar-x text-muted"></i>
+                      <p class="mb-0">No events found</p>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Horizontal Search Bar -->
-  <form method="GET" class="bg-white shadow-sm rounded-20 p-4 mb-4">
-    <div class="row g-3 align-items-end">
-
-      <div class="col-md-4">
-        <label for="q" class="form-label">Search</label>
-        <input type="search" name="q" class="form-control" placeholder="Title, Host, Description...">
+  <!-- Create Event Modal -->
+  <div class="modal fade" id="createEventModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title">Create New Event</h5>
+          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" enctype="multipart/form-data" action="{% url 'create-event' %}" class="needs-validation">
+            {% csrf_token %}
+            {% crispy create_form %}
+          </form>
+        </div>
       </div>
-
-      <div class="col-md-2">
-        <label for="event_type" class="form-label">Event Type</label>
-        <select name="event_type" id="event_type" class="form-control">
-          <option value="">All</option>
-          {% for type in types %}
-          <option value="{{ type }}">{{ type }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div class="col-md-2">
-        <label for="date_filter" class="form-label">Date</label>
-        <select name="date_filter" id="date_filter" class="form-control">
-          <option value="">Any Time</option>
-          <option value="year">This Year</option>
-          <option value="month">This Month</option>
-          <option value="week">This Week</option>
-        </select>
-      </div>
-
-      <div class="col-md-2">
-        <button class="btn btn-green w-100" type="submit">Search</button>
-      </div>
-      <div class="col-md-2">
-        <a href="{% url 'manage-event' %}" class="btn btn-green w-100">Reset</a>
-      </div>
-
     </div>
-    <small>Press Enter <i class="bi bi-arrow-return-left"></i></small>
-  </form>
+  </div>
 
-  <!-- Events Table -->
-  <div class="col">
-    <div class="overflow-hidden shadow-sm p-0 rounded-20">
-      <table class="table table-bordered table-hover align-middle m-0">
-        <thead class="bg-brown-second">
-          <tr>
-            <th>Title</th>
-            <th>Host</th>
-            <th>Type</th>
-            <th>Price</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Reservations</th>
-            <th>Currently Reserved</th>
-            <th>Show list</th>
-            <th>Status</th>
-            <th>Cancel Event</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody class="bg-white">
-          {% for event in events %}
-          <tr>
-            <td>{{ event.title }}</td>
-            <td>{{ event.host }}</td>
-            <td>{{ event.event_type }}</td>
-            <td>{{ event.event_price }} MAD</td>
-            <td>{{ event.start_datetime }}</td>
-            <td>{{ event.end_datetime }}</td>
-            <td>{{ event.nbr_reservations }}</td>
-            <td>{{ event.current_reservations }}</td>
-            <td class="text-center">
-              <!-- START RESERVATION LIST SECTION -->
-              <button type="button" class="btn btn-outline-brown" data-bs-toggle="modal"
-                data-bs-target="#reservationList{{ event.id }}"><i class="bi bi-card-list"></i></button>
+  <!-- Reservation List Modals -->
+  {% for event in events %}
+  <div class="modal fade" id="reservationList{{ event.id }}" tabindex="-1"
+    aria-labelledby="reservationListTitle{{ event.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="reservationListTitle{{ event.id }}">
+            Reservation List: {{ event.title }}
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="badge bg-green-soft text-brown">
+              <i class="bi bi-people-fill me-1"></i>
+              {{ event.guests.all|length }} Reservations
+            </span>
+            <span class="text-muted">Event ID: #{{ event.id }}</span>
+          </div>
 
-              <!-- Modal -->
-              <div class="modal fade" id="reservationList{{ event.id }}" tabindex="-1"
-                aria-labelledby="reservationListTitle{{ event.id }}" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h1 class="modal-title fs-5" id="reservationListTitle{{ event.id }}">
-                        Reservation List of 
-                        <strong>#{{ event.id }} {{ event.title }}</strong></h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle m-0">
+              <thead class="bg-light">
+                <tr>
+                  <th>Guest ID</th>
+                  <th>Username</th>
+                  <th>Email</th>
+                  <th>Phone</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white">
+                {% for guest in event.guests.all %}
+                <tr>
+                  <td>{{ guest.id }}</td>
+                  <td>{{ guest.username }}</td>
+                  <td>{{ guest.email }}</td>
+                  <td>{{ guest.phone }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="4" class="text-center py-4">
+                    <div class="empty-state">
+                      <i class="bi bi-people text-muted"></i>
+                      <p class="mb-0">No reservations found</p>
                     </div>
-                    <div class="modal-body">
-                      <table class="table table-bordered table-hover align-middle m-0">
-                        <thead class="bg-brown-second">
-                          <tr>
-                            <th>Guest ID</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                          </tr>
-                        </thead>
-                        <tbody class="bg-white">
-                          {% for guest in event.guests.all %}
-                          <tr>
-                            <td>{{ guest.id }}</td>
-                            <td>{{ guest.username }}</td>
-                            <td>{{ guest.email }}</td>
-                            <td>{{ guest.phone }}</td>
-                          </tr>
-                          {% empty %}
-                          <tr>
-                            <td colspan="4" class="text-center text-muted">No reservations found.</td>
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <a href="{% url 'generate_list' event.id 'pdf' %}" class="btn btn-outline-brown">Export to PDF</a>
-                      <a href="{% url 'generate_list' event.id 'csv' %}" class="btn btn-outline-brown">Export to CSV</a>
-                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Close</button>
+          <a href="{% url 'generate_list' event.id 'pdf' %}" class="btn btn-brown">
+            <i class="bi bi-file-pdf me-1"></i> Export to PDF
+          </a>
+          <a href="{% url 'generate_list' event.id 'csv' %}" class="btn btn-outline-brown">
+            <i class="bi bi-file-excel me-1"></i> Export to CSV
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <!-- Event Details Modals -->
+  {% for event in events %}
+  <div class="modal fade" id="eventDetails{{ event.id }}" tabindex="-1"
+    aria-labelledby="eventDetailsTitle{{ event.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="eventDetailsTitle{{ event.id }}">{{ event.title }}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-4">
+            <img src="{{ event.poster.url }}" class="img-fluid rounded shadow-sm" alt="event poster"
+              style="max-height: 300px;">
+          </div>
+
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="card h-100 border-0 bg-light">
+                <div class="card-body">
+                  <h6 class="card-subtitle mb-3 text-muted">Event Details</h6>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Event ID</div>
+                    <div class="fw-medium">#{{ event.id }}</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Event Type</div>
+                    <div class="fw-medium">{{ event.event_type }}</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Location</div>
+                    <div class="fw-medium">{{ event.location }}</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Host</div>
+                    <div class="fw-medium">{{ event.host|default:"N/A" }}</div>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Price</div>
+                    <div class="fw-medium">{{ event.event_price }} MAD</div>
                   </div>
                 </div>
               </div>
-              <!-- END RESERVATION LIST SECTION -->
-            </td>
-            <td>
-              {% if event.is_canceled %}
-              <span class="text-danger">Canceled</span>
-              {% else %}
-              <span class="text-success">Active</span>
-              {% endif %}
-            </td>
-            <td class="text-center">
-              <!-- FOR CANCELING AN EVENT -->
-              <a href="{% url 'cancel-event' event.id %}" class="btn btn-outline-brown"><i class="bi bi-x-square"></i></a>
+            </div>
 
-            </td>
+            <div class="col-md-6">
+              <div class="card h-100 border-0 bg-light">
+                <div class="card-body">
+                  <h6 class="card-subtitle mb-3 text-muted">Schedule & Status</h6>
 
-            <td class="text-center">
-              <button type="button" class="btn btn-outline-brown " data-bs-toggle="modal"
-                data-bs-target="#eventDetails{{ event.id }}"><i class="bi bi-eye"></i></button>
+                  <div class="mb-3">
+                    <div class="text-muted small">Start Date & Time</div>
+                    <div class="fw-medium">{{ event.start_datetime|date:"F d, Y" }} at 
+                      {{ event.start_datetime|time:"H:i" }}</div>
+                  </div>
 
-              <!-- Modal -->
-              <div class="modal fade" id="eventDetails{{ event.id }}" tabindex="-1"
-                aria-labelledby="eventDetailsTitle{{ event.id }}" aria-hidden="true">
-                <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h1 class="modal-title fs-5" id="eventDetailsTitle{{ event.id }}">{{ event.title }}</h1>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  <div class="mb-3">
+                    <div class="text-muted small">End Date & Time</div>
+                    <div class="fw-medium">{{ event.end_datetime|date:"F d, Y" }} at 
+                      {{ event.end_datetime|time:"H:i" }}
                     </div>
-                    <div class="modal-body">
-                      <div class="card">
-                        <div class="card-body">
-                          <p class="card-text"><small class="text-body-secondary"><img src="{{ event.poster.url }}"
-                                class="img-fluid rounded-start" alt="event poster"></small>
-                          </p>
-                          <p class="card-text">Event ID: <small class="text-body-secondary">{{ event.id }}</small></p>
-                          <p class="card-text">Description:
-                            <small class="text-body-secondary">{{ event.description }}</small>
-                          </p>
-                          <p class="card-text">Starts:
-                            <small class="text-body-secondary">{{ event.start_datetime }}</small>
-                          </p>
-                          <p class="card-text">Ends:
-                            <small class="text-body-secondary">{{ event.end_datetime }}</small>
-                          </p>
-                          <p class="card-text">Location:
-                            <small class="text-body-secondary">{{ event.location }}</small>
-                          </p>
-                          <p class="card-text">Event Type:
-                            <small class="text-body-secondary">{{ event.event_type }}</small>
-                          </p>
-                          <p class="card-text">Event Host:
-                            <small class="text-body-secondary">{{ event.host|default:"N/A" }}</small>
-                          </p>
-                          <p class="card-text">Event Price:
-                            <small class="text-body-secondary">{{ event.event_price }}</small>
-                          </p>
-                          <p class="card-text">Event Status: <small class="text-body-secondary">
-                              {% if event.is_canceled %}
-                              <span class="text-danger">Canceled</span>
-                              {% else %}
-                              <span class="text-success">Active</span>
-                              {% endif %}
-                            </small></p>
-                          <p class="card-text">Reservations:
-                            <small class="text-body-secondary">
-                              {{ event.nbr_reservations }} / {{ event.current_reservations }}
-                            </small>
-                          </p>
-                          <p class="card-text">Created At:
-                            <small class="text-body-secondary">{{ event.created_at }}</small>
-                          </p>
-                          <p class="card-text">Updated At:
-                            <small class="text-body-secondary">{{ event.updated_at }}</small>
-                          </p>
-                          <p class="card-text">Created By:
-                            <small class="text-body-secondary">{{ event.created_by }}</small>
-                          </p>
-                          <p class="card-text">Updated By:
-                            <small class="text-body-secondary">{{ event.updated_by }}</small>
-                          </p>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Reservations</div>
+                    <div class="fw-medium">
+                      <div class="d-flex align-items-center">
+                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                          <div class="progress-bar bg-brown" role="progressbar" {% if event.nbr_reservations > 0 %}
+                            style="width: {% widthratio event.current_reservations event.nbr_reservations 100 %}%;"
+                            {% else %}
+                            style="width: 0%;"
+                            {% endif %}
+                            aria-valuenow="{{ event.current_reservations }}"
+                            aria-valuemin="0"
+                            aria-valuemax="{{ event.nbr_reservations }}">
+                          </div>
                         </div>
+                        <span>{{ event.current_reservations }}/{{ event.nbr_reservations }}</span>
                       </div>
                     </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                      <a href="{% url 'print_event' event.id %}" class="btn btn-primary">Print PDF</a>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Status</div>
+                    <div class="fw-medium">
+                      {% if event.is_canceled %}
+                      <span class="badge bg-danger">Canceled</span>
+                      {% else %}
+                      <span class="badge bg-success">Active</span>
+                      {% endif %}
                     </div>
+                  </div>
+
+                  <div class="mb-3">
+                    <div class="text-muted small">Created By</div>
+                    <div class="fw-medium">{{ event.created_by }}</div>
                   </div>
                 </div>
               </div>
+            </div>
 
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="13" class="text-center text-muted">No events found.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+            <div class="col-12">
+              <div class="card border-0 bg-light">
+                <div class="card-body">
+                  <h6 class="card-subtitle mb-3 text-muted">Description</h6>
+                  <p class="card-text">{{ event.description }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Close</button>
+          <a href="{% url 'print_event' event.id %}" class="btn btn-brown">
+            <i class="bi bi-printer me-1"></i> Print Event
+          </a>
+        </div>
+      </div>
     </div>
   </div>
-
+  {% endfor %}
 </div>
-
 {% endblock %}

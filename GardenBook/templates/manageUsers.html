@@ -1,323 +1,413 @@
 {% extends 'baseLibrarian.html' %}
-
 {% load static %}
 {% load custom_filters %}
 
 {% block title %}Users | GardenBook{% endblock %}
-
 {% block page %}Manage Users{% endblock %}
 
-
-
-
 {% block content %}
-<div class="container-fluid row m-2">
-
-  <!-- START BUTTONS -->
-  <div class="row d-flex justify-content-end">
-    <div class="col-auto">
-      <a href="{% url 'create-user' %}" class="btn btn-outline-brown">+New User</a>
-
+<div class="container-fluid">
+  <!-- Action Buttons -->
+  <div class="row mb-4">
+    <div class="col-12 d-flex justify-content-end gap-2">
+      <a href="{% url 'create-user' %}" class="btn btn-outline-brown">
+        <i class="bi bi-person-plus me-2"></i>New User
+      </a>
+      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-users-modal">
+        <i class="bi bi-printer me-2"></i>Print List Of Users
+      </button>
     </div>
-    <div class="col-auto">
-      <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-users-modal">Print List Of
-        users</button>
-      <!-- ________________________________________________________________________ -->
-      <!-- START PRINT MULTIPLE USERS MODAL -->
-      <div class="modal fade" id="print-users-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+  </div>
 
-        <div class="modal-dialog">
+  <!-- Messages -->
+  {% if messages %}
+  <div class="row mb-4">
+    <div class="col-12">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
 
-          <div class="modal-content">
-
-            <div class="modal-header bg-brown">
-              <h5 class="modal-title text-light" id="modal-title">Print Users</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  <!-- Search & Filter -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card rounded-20 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-search me-2 text-brown"></i>
+            Search & Filter Users
+          </h5>
+          <form method="GET" action="{% url 'manage-users' %}" class="row g-3 align-items-end">
+            <div class="col-md-3">
+              <label for="searchUser" class="form-label">Search Users</label>
+              <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                  <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="search" name="q" id="searchUser" class="form-control border-start-0"
+                  placeholder="ID, CIN, First name, Last name">
+              </div>
             </div>
 
-            <form method="POST">
-              {% csrf_token %}
+            {% if request.user.role == 'Administrator' %}
+            <div class="col-md-2">
+              <label class="form-label">Role</label>
+              <select class="form-select" name="role">
+                <option value="">Select Role</option>
+                <option value="librarian">Librarian</option>
+                <option value="reader">Reader</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            {% endif %}
 
-              <div class="modal-body">
-                <p class="text-secondary">Filter users:</p>
+            <div class="col-md-2">
+              <label class="form-label">Date of Birth</label>
+              <input type="date" name="dob" class="form-control">
+            </div>
 
-                <!-- Date of Birth Range -->
+            <div class="col-md-2">
+              <label class="form-label">Status</label>
+              <select class="form-select" name="membershipStatus">
+                <option value="">Select Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="suspended">Suspended</option>
+              </select>
+            </div>
+
+            <div class="col-md-1">
+              <button type="submit" class="btn btn-brown w-100">
+                <i class="bi bi-search me-1"></i> Search
+              </button>
+            </div>
+
+            <div class="col-md-1">
+              <a href="{% url 'manage-users' %}" class="btn btn-outline-brown w-100">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Table -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card rounded-20 shadow-sm">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="card-title mb-0 text-brown">Users List</h5>
+          <span class="badge bg-green-soft text-brown">Total: {{ users|length }}</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle m-0">
+              <thead>
+                <tr class="bg-light">
+                  <th>ID</th>
+                  <th>Photo</th>
+                  <th>User</th>
+                  <th>Contact</th>
+                  <th>Role</th>
+                  <th>DOB</th>
+                  <th>Fines</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody class="bg-white">
+                {% for user in users %}
+                <tr class="clickable-row" data-href="{% url 'profile' user.id %}">
+                  <td>{{user.id}}</td>
+                  <td>
+                    {% if user.profile_pic %}
+                    <img src="{{ user.profile_pic.url }}" alt="{{ user.first_name }}" class="rounded-circle" width="40"
+                      height="40">
+                    {% else %}
+                    <img src="{% static 'profile_pic2.png' %}" alt="Default User" class="rounded-circle" width="40"
+                      height="40">
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-medium">{{user.first_name}} {{user.last_name}}</span>
+                      <small class="text-muted">CIN: {{user.cin}}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{user.phone}}</span>
+                      <small class="text-muted text-truncate" style="max-width: 150px;">{{user.email}}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="status-indicator 
+                      {% if user.role == 'Administrator' %}bg-danger-soft text-danger
+                      {% elif user.role == 'Librarian' %}bg-primary-soft text-primary
+                      {% else %}bg-success-soft text-success{% endif %}">
+                      <i class="bi {% if user.role == 'Administrator' %}bi-shield-lock-fill
+                        {% elif user.role == 'Librarian' %}bi-person-badge-fill
+                        {% else %}bi-person-fill{% endif %}"></i>
+                      {{user.role}}
+                    </span>
+                  </td>
+                  <td>{{user.dob|date:"M d, Y"}}</td>
+                  <td>
+                    {% if user_fines|get_item:user.id > 0 %}
+                    <span class="badge bg-warning text-dark">{{ user_fines|get_item:user.id }} MAD</span>
+                    {% else %}
+                    <span class="badge bg-success-soft text-success">No Fines</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="status-indicator 
+                      {% if user.status == 'ACTIVE' %}bg-success-soft text-success
+                      {% elif user.status == 'SUSPENDED' %}bg-warning-soft text-warning
+                      {% else %}bg-danger-soft text-danger{% endif %}">
+                      <i class="bi {% if user.status == 'ACTIVE' %}bi-check-circle-fill
+                        {% elif user.status == 'SUSPENDED' %}bi-pause-circle-fill
+                        {% else %}bi-x-circle-fill{% endif %}"></i>
+                      {{user.status}}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <a href="{% url 'send_fine_alert' user.id %}" class="btn btn-sm btn-outline-brown"
+                        title="Send Alert">
+                        <i class="bi bi-bell"></i>
+                      </a>
+
+                      {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
+                      <div class="btn-group">
+                        <button class="btn btn-sm btn-outline-warning" data-bs-toggle="modal"
+                          data-bs-target="#suspendModal{{ user.id }}" title="Suspend Account">
+                          <i class="bi bi-pause-circle"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                          data-bs-target="#banModal{{ user.id }}" title="Ban Account">
+                          <i class="bi bi-x-circle"></i>
+                        </button>
+                        <a href="{% url 'edit-user' user.id %}" class="btn btn-sm btn-outline-brown" title="Edit User">
+                          <i class="bi bi-pencil"></i>
+                        </a>
+                      </div>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Print Users Modal -->
+  <div class="modal fade" id="print-users-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="modal-title">Print Users</h5>
+          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" class="needs-validation">
+            {% csrf_token %}
+
+            <p class="text-muted mb-3">Filter users for export:</p>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
                 <label for="dob-from" class="form-label">Date of Birth From:</label>
                 <input type="date" class="form-control" id="dob-from" name="dob_from">
-
+              </div>
+              <div class="col-md-6">
                 <label for="dob-to" class="form-label">Date of Birth To:</label>
                 <input type="date" class="form-control" id="dob-to" name="dob_to">
+              </div>
+            </div>
 
-                <!-- Role -->
-                <label for="role" class="form-label mt-3">Role:</label>
-                <select name="role" class="form-select" id="role">
-                  <option value="">-- All --</option>
-                  <option value="READER">Reader</option>
-                  <option value="LIBRARIAN">Librarian</option>
-                  <option value="ADMIN">Admin</option>
-                </select>
+            {% if request.user.role == 'Administrator' %}
+            <div class="mb-3">
+              <label for="role" class="form-label">Role:</label>
+              <select name="role" class="form-select" id="role">
+                <option value="">-- All --</option>
+                <option value="READER">Reader</option>
+                <option value="LIBRARIAN">Librarian</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+            {% endif %}
 
-                <!-- Status -->
-                <fieldset class="form-group mt-3">
-                  <legend class="form-label">Status:</legend>
-
+            <div class="mb-3">
+              <label class="form-label">Status:</label>
+              <div class="d-flex gap-3">
+                <div class="form-check">
                   <input type="checkbox" class="form-check-input" name="status" id="status-active" value="ACTIVE">
-                  <label for="status-active" class="form-label">Active</label>
-
+                  <label for="status-active" class="form-check-label">Active</label>
+                </div>
+                <div class="form-check">
                   <input type="checkbox" class="form-check-input" name="status" id="status-inactive" value="SUSPENDED">
-                  <label for="status-inactive" class="form-label">Suspended</label>
-
+                  <label for="status-inactive" class="form-check-label">Suspended</label>
+                </div>
+                <div class="form-check">
                   <input type="checkbox" class="form-check-input" name="status" id="status-banned" value="BANNED">
-                  <label for="status-banned" class="form-label">Banned</label>
-                </fieldset>
+                  <label for="status-banned" class="form-check-label">Banned</label>
+                </div>
+              </div>
+            </div>
 
-                <!-- City -->
-                <label for="city" class="form-label mt-3">City:</label>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="city" class="form-label">City:</label>
                 <input type="text" class="form-control" id="city" name="city">
-
-                <!-- Country -->
-                <label for="country" class="form-label mt-3">Country:</label>
+              </div>
+              <div class="col-md-6">
+                <label for="country" class="form-label">Country:</label>
                 <input type="text" class="form-control" id="country" name="country">
-
-                <!-- Date Added -->
-                <label for="date-added" class="form-label mt-3">Joined From:</label>
-                <input type="date" class="form-control" id="date-added" name="from_date_joined">
-
-                <label for="date-added" class="form-label mt-3">To:</label>
-                <input type="date" class="form-control" id="date-added" name="to_date_joined">
               </div>
+            </div>
 
-              <div class="modal-footer bg-brown">
-                <input type="hidden" name="action" value="print_users">
-                <button type="submit" class="btn btn-outline-green" name="format" value="pdf">PDF</button>
-                <button type="submit" class="btn btn-outline-green" name="format" value="csv">CSV</button>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="from_date_joined" class="form-label">Joined From:</label>
+                <input type="date" class="form-control" id="from_date_joined" name="from_date_joined">
               </div>
-            </form>
+              <div class="col-md-6">
+                <label for="to_date_joined" class="form-label">To:</label>
+                <input type="date" class="form-control" id="to_date_joined" name="to_date_joined">
+              </div>
+            </div>
 
-
-          </div>
+            <input type="hidden" name="action" value="print_users">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-brown" name="format" value="pdf">
+            <i class="bi bi-file-pdf me-1"></i> Export PDF
+          </button>
+          <button type="submit" class="btn btn-outline-brown" name="format" value="csv">
+            <i class="bi bi-file-excel me-1"></i> Export CSV
+          </button>
         </div>
       </div>
-
-      <!-- END PRINT MODAL -->
     </div>
   </div>
-  <!-- END BUTTONS -->
 
-  <!-- START DISPLAY USERS -->
-  <div class="container-fluid row m-2">
-
-    <!-- START SEARCH BAR SECTION -->
-    <!-- START SEARCH / FILTER SECTION -->
-    <div class="container bg-white shadow-sm rounded-20 m-2 p-4 mb-4">
-      <h2 class="mb-3">Search & Filter Users</h2>
-      <form method="GET" action="{% url 'manage-users' %}">
-        <div class="row gx-3 gy-2 align-items-end">
-
-          <div class="col-md-3">
-            <label for="searchUser" class="form-label">Search Users</label>
-            <input type="search" name="q" id="searchUser" class="form-control"
-              placeholder="ID, CIN, First name, Last name">
-          </div>
-
-          <!-- Role -->
-          <div class="col-md-2">
-            <label class="form-label">Role</label>
-            <select class="form-select" name="role">
-              <option value="">Select Role</option>
-              <option value="librarian">Librarian</option>
-              <option value="reader">Reader</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-
-          <!-- Date of Birth -->
-          <div class="col-md-2">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" name="dob" class="form-control">
-          </div>
-
-          <!-- Membership Status -->
-          <div class="col-md-2">
-            <label class="form-label">Status</label>
-            <select class="form-select" name="membershipStatus">
-              <option value="">Select Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="suspended">Suspended</option>
-            </select>
-          </div>
-
-          <!-- Search Button -->
-          <div class="col-md-1 d-grid">
-            <button type="submit" class="btn btn-green">Search</button>
-          </div>
-
-          <!-- Reset Button -->
-          <div class="col-md-1 d-grid">
-            <a href="{% url 'manage-users' %}" class="btn btn-green">Reset</a>
-          </div>
-
+  <!-- Suspend User Modals -->
+  {% for user in users %}
+  <div class="modal fade" id="suspendModal{{ user.id }}" tabindex="-1" aria-labelledby="suspendModalLabel{{ user.id }}"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="suspendModalLabel{{ user.id }}">Suspend User</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-      </form>
-    </div>
-    <!-- END SEARCH / FILTER SECTION -->
+        <div class="modal-body">
+          <div class="text-center mb-4">
+            {% if user.profile_pic %}
+            <img src="{{ user.profile_pic.url }}" alt="{{ user.first_name }}" class="rounded-circle mb-3" width="80"
+              height="80">
+            {% else %}
+            <img src="{% static 'profile_pic2.png' %}" alt="Default User" class="rounded-circle mb-3" width="80"
+              height="80">
+            {% endif %}
+            <h5 class="mb-0">{{user.first_name}} {{user.last_name}}</h5>
+            <p class="text-muted">{{user.email}}</p>
+          </div>
 
-    <!-- END SEARCH BAR SECTION -->
-
-    <!-- START MESSAGE -->
-    {% if messages %}
-    <ul class="messages">
-      {% for message in messages %}
-      <li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-    <!-- END MASSAGE -->
-    <!-- START TABLE OF USERS -->
-
-    <div class="col mx-3">
-      <div class="overflow-hidden shadow-sm p-0 rounded-20">
-        <table class="table align-middle m-0">
-          <thead class="bg-brown-second">
-            <tr>
-              <th>Matricule</th>
-              <th>Photo</th>
-              <th>CIN</th>
-              <th>First Name</th>
-              <th>Last name</th>
-              <th>Phone Number</th>
-              <th>Role</th>
-              <th>DOB</th>
-              <th>Fines</th>
-              <th>Send Alert</th>
-              <th>Membership Status</th>
-              {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
-              <th>Suspend Account</th>
-              <th>Ban Account</th>
-              <th>Edit</th>
-              {% endif %}
-            </tr>
-          </thead>
-          <tbody class="bg-white">
-            {% for user in users %}
-            <tr class="clickable-row" data-href="{% url 'profile' user.id %}">
-              <td>{{user.id}}</td>
-              <td>
-                {% if user.profile_pic %}
-                <img src="{{ user.profile_pic.url }}" alt="{{ user.first_name }}" class="img-thumbnail" width="50">
-                {% else %}
-                <img src="{% static 'profile_pic2.png' %}" alt="Default User" class="img-thumbnail" width="50">
-                {% endif %}
-              </td>
-              <td>{{user.cin}}</td>
-              <td>{{user.first_name}}</td>
-              <td>{{user.last_name}}</td>
-              <td>{{user.phone}}</td>
-              <td>{{user.role}}</td>
-              <td>{{user.dob}}</td>
-              <td>
-                {{ user_fines|get_item:user.id }}
-              </td>
-              <td>
-                <a href="{% url 'send_fine_alert' user.id %}" class="btn btn-outline-brown">
-                  <i class="bi bi-send"></i>
-                </a>
-              </td>
-              <td>{{user.status}}</td>
-              {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
-
-              <td>
-                <button class="btn btn-outline-brown" data-bs-toggle="modal"
-                  data-bs-target="#suspendModal{{ user.id }}">suspend</button>
-                <!-- ______________________________________________________________________________________________________________ -->
-                <div class="modal fade" id="suspendModal{{ user.id }}" tabindex="-1"
-                  aria-labelledby="suspendModalLabel{{ user.id }}" aria-hidden="true">
-
-                  <div class="modal-dialog">
-
-                    <div class="modal-content">
-
-                      <div class="modal-header bg-brown">
-                        <h5 class="modal-title text-light" id="suspendModalLabel{{ user.id }}">Suspend User {{
-                          user.username }}</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <p>Are you sure you want to SUSPEND the account of <em>{{user.last_name}}
-                            {{user.first_name}}</em></p>
-                      </div>
-                      <div class="modal-footer bg-brown">
-                        <a href="{% url 'change-account-status' user.id 'Suspend' %}" class="btn btn-outline-green">Yes!
-                          I'm sure</a>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">No.</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <button class="btn btn-outline-brown" data-bs-toggle="modal"
-                  data-bs-target="#banModal{{ user.id }}">Ban</button>
-                <!-- ______________________________________________________________________________________________________________ -->
-                <div class="modal fade" id="banModal{{ user.id }}" tabindex="-1"
-                  aria-labelledby="banModalLabel{{ user.id }}" aria-hidden="true">
-
-                  <div class="modal-dialog">
-
-                    <div class="modal-content">
-
-                      <div class="modal-header bg-brown">
-                        <h5 class="modal-title text-light" id="banModalLabel{{ user.id }}">Ban User {{ user.username }}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <p>Are you sure you want to BAN the account of <em>{{user.last_name}}
-                            {{user.first_name}}</em></p>
-                      </div>
-                      <div class="modal-footer bg-brown">
-                        <a href="{% url 'change-account-status' user.id 'Ban' %}" class="btn btn-outline-green">Yes! I'm
-                          sure</a>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">No.</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </td>
-              <td>
-                <a href="{% url 'edit-user' user.id %}" class="btn bg-white"><img src="{% static 'edit_icon.png' %}"
-                    alt="#" class="border-light" width="25"></a>
-              </td>
-              {% endif %}
-              
-            </tr>
-            {% endfor %}
-          </tbody>
-
-
-        </table>
+          <div class="alert alert-warning">
+            <div class="d-flex">
+              <div class="me-3">
+                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+              </div>
+              <div>
+                <h6 class="alert-heading">Warning!</h6>
+                <p class="mb-0">Are you sure you want to suspend this account? This action will prevent the user from
+                  accessing the system.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
+          <a href="{% url 'change-account-status' user.id 'Suspend' %}" class="btn btn-warning">
+            <i class="bi bi-pause-circle me-1"></i> Suspend Account
+          </a>
+        </div>
       </div>
     </div>
-    <!-- END TABLE OF USERS -->
-
-
   </div>
-  <!-- END DISPLAY USERS -->
+  {% endfor %}
+
+  <!-- Ban User Modals -->
+  {% for user in users %}
+  <div class="modal fade" id="banModal{{ user.id }}" tabindex="-1" aria-labelledby="banModalLabel{{ user.id }}"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="banModalLabel{{ user.id }}">Ban User</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="text-center mb-4">
+            {% if user.profile_pic %}
+            <img src="{{ user.profile_pic.url }}" alt="{{ user.first_name }}" class="rounded-circle mb-3" width="80"
+              height="80">
+            {% else %}
+            <img src="{% static 'profile_pic2.png' %}" alt="Default User" class="rounded-circle mb-3" width="80"
+              height="80">
+            {% endif %}
+            <h5 class="mb-0">{{user.first_name}} {{user.last_name}}</h5>
+            <p class="text-muted">{{user.email}}</p>
+          </div>
+
+          <div class="alert alert-danger">
+            <div class="d-flex">
+              <div class="me-3">
+                <i class="bi bi-exclamation-triangle-fill fs-4"></i>
+              </div>
+              <div>
+                <h6 class="alert-heading">Danger!</h6>
+                <p class="mb-0">Are you sure you want to ban this account? This action is permanent and cannot be easily
+                  reversed.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
+          <a href="{% url 'change-account-status' user.id 'Ban' %}" class="btn btn-danger">
+            <i class="bi bi-x-circle me-1"></i> Ban Account
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 </div>
 
 <script>
-
   document.querySelectorAll(".clickable-row").forEach(row => {
-    row.addEventListener("click", () => {
+    row.addEventListener("click", (event) => {
       if (event.target.closest("button") || event.target.closest("a")) {
         return;
       }
       window.location.href = row.dataset.href;
     });
   });
-
-
 </script>
 
 {% endblock %}
