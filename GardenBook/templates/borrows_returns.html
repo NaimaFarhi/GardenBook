@@ -95,8 +95,12 @@
                 <tr>
                   <td class="d-flex align-items-center gap-3">
                     <div class="book-cover rounded shadow-sm d-flex align-items-center justify-content-center bg-light"
-                      style="width: 40px; height: 50px;">
+                      style="width: 40px; height: 50px; flex-shrink: 0;">
+                      {% if borrow.book.cover %}
+                      <img src="{{ borrow.book.cover.url }}" alt="Book Cover" class="img-fluid rounded">
+                      {% else %}
                       <i class="bi bi-book text-brown"></i>
+                      {% endif %}
                     </div>
                     <div>
                       <div class="fw-medium">{{borrow.book.title}}</div>
@@ -194,6 +198,17 @@
           <form method="POST" class="needs-validation">
             {% csrf_token %}
             {% crispy form %}
+
+            <datalist id="borrower-options">
+              {% for person in form.borrowers %}
+              <option value="{{ person.first_name }} {{ person.last_name }}"></option>
+              {% endfor %}
+            </datalist>
+            <datalist id="book-options">
+              {% for book in form.books %}
+              <option value="{{ book.title }}"></option>
+              {% endfor %}
+            </datalist>
 
             <div class="d-flex justify-content-end gap-2 mt-4">
               <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>

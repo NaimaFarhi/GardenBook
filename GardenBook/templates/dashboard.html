@@ -10,20 +10,20 @@
   <div class="welcome-section mb-4 p-4 bg-white rounded-20 shadow-sm">
     <div class="row align-items-center">
       <div class="col-md-8">
-        <h1 class="text-brown fw-bold mb-2">Welcome back, 
+        <h1 class="text-brown fw-bold mb-2">Welcome back,
           <span class="fst-italic text-green">
             {{ request.user.username }}
-            </span>!
-            </h1>
+          </span>!
+        </h1>
         <p class="text-muted mb-0">{{ current_date|date:"l, F j, Y" }} • <span id="currentTime"></span></p>
       </div>
       <div class="col-md-4 text-md-end mt-3 mt-md-0">
         <div class="d-inline-flex align-items-center bg-green-soft px-3 py-2 rounded-pill">
           <i class="bi bi-calendar-check me-2 text-green"></i>
-          <span class="fw-medium">Today's Events: 
+          <span class="fw-medium">Today's Events:
             <span class="text-brown fw-bold">
               {{ today_events|default:"0" }}</span>
-              </span>
+          </span>
         </div>
       </div>
     </div>
@@ -358,102 +358,79 @@
       lightGreen: '#aabda0',
       softGreen: '#e8f3e8'
     };
+    const weeklyLabels = JSON.parse('{{ weekly_labels|safe }}');
+    const weeklyDataPoints = JSON.parse('{{ weekly_data|safe }}');
+    const monthlyLabels = JSON.parse('{{ monthly_labels|safe }}');
+    const monthlyDataPoints = JSON.parse('{{ monthly_data|safe }}');
+    const yearlyLabels = JSON.parse('{{ yearly_labels|safe }}');
+    const yearlyDataPoints = JSON.parse('{{ yearly_data|safe }}');
 
-    // Borrowing Trends Chart
+    const borrowingChartData = {
+      weekly: {
+        labels: weeklyLabels,
+        datasets: [{
+          label: 'Borrows',
+          data: weeklyDataPoints,
+          borderColor: themeColors.brown,
+          backgroundColor: 'rgba(93, 67, 47, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      monthly: {
+        labels: monthlyLabels,
+        datasets: [{
+          label: 'Borrows',
+          data: monthlyDataPoints,
+          borderColor: themeColors.brown,
+          backgroundColor: 'rgba(93, 67, 47, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      yearly: {
+        labels: yearlyLabels,
+        datasets: [{
+          label: 'Borrows',
+          data: yearlyDataPoints,
+          borderColor: themeColors.brown,
+          backgroundColor: 'rgba(93, 67, 47, 0.1)',
+          tension: 0.4,
+          fill: true
+        }]
+      }
+    };
+
     const borrowingCtx = document.getElementById('borrowingTrendsChart').getContext('2d');
-
-    // Sample data - replace with actual data from your backend
-    const weeklyData = {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      datasets: [
-        {
-          label: 'Borrows',
-          data: [12, 19, 15, 8, 22, 14, 10],
-          borderColor: themeColors.brown,
-          backgroundColor: 'rgba(93, 67, 47, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'Returns',
-          data: [8, 15, 12, 6, 18, 10, 7],
-          borderColor: themeColors.green,
-          backgroundColor: 'rgba(138, 153, 130, 0.1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
-    };
-
-    const monthlyData = {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      datasets: [
-        {
-          label: 'Borrows',
-          data: [65, 59, 80, 81, 56, 55, 40, 45, 60, 70, 75, 80],
-          borderColor: themeColors.brown,
-          backgroundColor: 'rgba(93, 67, 47, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'Returns',
-          data: [45, 49, 60, 71, 46, 45, 30, 35, 50, 60, 65, 70],
-          borderColor: themeColors.green,
-          backgroundColor: 'rgba(138, 153, 130, 0.1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
-    };
-
-    const yearlyData = {
-      labels: ['2018', '2019', '2020', '2021', '2022', '2023'],
-      datasets: [
-        {
-          label: 'Borrows',
-          data: [300, 450, 320, 500, 600, 750],
-          borderColor: themeColors.brown,
-          backgroundColor: 'rgba(93, 67, 47, 0.1)',
-          tension: 0.4,
-          fill: true
-        },
-        {
-          label: 'Returns',
-          data: [250, 400, 280, 450, 550, 700],
-          borderColor: themeColors.green,
-          backgroundColor: 'rgba(138, 153, 130, 0.1)',
-          tension: 0.4,
-          fill: true
-        }
-      ]
-    };
 
     let borrowingChart = new Chart(borrowingCtx, {
       type: 'line',
-      data: weeklyData,
+      data: borrowingChartData.weekly,
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top',
-          }
-        },
+        plugins: { legend: { position: 'top' } },
         scales: {
           y: {
             beginAtZero: true,
-            grid: {
-              color: 'rgba(0, 0, 0, 0.05)'
-            }
+            grid: { color: 'rgba(0, 0, 0, 0.05)' }
           },
           x: {
-            grid: {
-              display: false
-            }
+            grid: { display: false }
           }
         }
       }
+    });
+
+    // Period switcher
+    document.querySelectorAll('[data-period]').forEach(button => {
+      button.addEventListener('click', function () {
+        document.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        const period = this.getAttribute('data-period');
+        borrowingChart.data = borrowingChartData[period];
+        borrowingChart.update();
+      });
     });
 
     // Book Categories Chart

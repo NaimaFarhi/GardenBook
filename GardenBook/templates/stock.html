@@ -165,9 +165,9 @@
                   <td>{{book.date_creation|date:"M d, Y"}}</td>
                   <td>
                     <span class="status-indicator 
-                      {% if book.availability == 'AVAILABLE' %}bg-success-soft text-success
-                      {% elif book.availability == 'BORROWED' %}bg-warning-soft text-warning
-                      {% else %}bg-danger-soft text-danger{% endif %}">
+                      {% if book.availability == 'Available' %}bg-success-soft text-success
+                      {% elif book.availability == 'Deleted' %}bg-danger-soft text-danger
+                      {% else %}bg-warning-soft text-warning{% endif %}">
                       <i class="bi {% if book.availability == 'AVAILABLE' %}bi-check-circle-fill
                         {% elif book.availability == 'BORROWED' %}bi-clock-fill
                         {% else %}bi-x-circle-fill{% endif %}"></i>
@@ -206,41 +206,54 @@
 
   <!-- Print Stock Modal -->
   <div class="modal fade" id="print-stock-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-brown text-white">
-          <h5 class="modal-title" id="modal-title">Export Stock</h5>
-          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" class="needs-validation">
+        <form method="POST" class="needs-validation">
+          <div class="modal-header bg-brown text-white">
+            <h5 class="modal-title" id="modal-title">Export Stock</h5>
+            <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
             {% csrf_token %}
 
             <p class="text-muted mb-3">Filter books for export:</p>
 
             <div class="mb-3">
               <label for="title" class="form-label">Title:</label>
-              <input type="text" name="title" id="title" class="form-control">
+              <input type="text" name="title" id="title" class="form-control" list="titleList">
+              <datalist id="titleList">
+                {% for book in stock %}
+                <option value="{{ book.title }}">{{ book.title }}</option>
+                {% endfor %}
             </div>
 
             <div class="mb-3">
               <label for="author" class="form-label">Author:</label>
-              <input type="text" name="author" id="author" class="form-control">
+              <input type="text" name="author" id="author" class="form-control" list="authorList">
+              <datalist id="authorList">
+                {% for book in stock %}
+                <option value="{{ book.author }}">{{ book.author }}</option>
+                {% endfor %}
             </div>
 
             <div class="mb-3">
               <label for="availability" class="form-label">Availability:</label>
               <select name="availability" id="availability" class="form-select">
                 <option value="">-- All --</option>
-                <option value="AVAILABLE">Available</option>
-                <option value="BORROWED">Borrowed</option>
-                <option value="UNAVAILABLE">Unavailable</option>
+                {% for stat in status %}
+                <option value="{{ stat }}">{{ stat }}</option>
+                {% endfor %}
               </select>
             </div>
 
             <div class="mb-3">
               <label for="lang" class="form-label">Language:</label>
-              <input type="text" name="lang" id="lang" class="form-control">
+              <input type="text" name="lang" id="lang" class="form-control" list="langList">
+              <datalist id="langList">
+                {% for lang in langs %}
+                <option value="{{ lang }}">{{ lang }}</option>
+                {% endfor %}
             </div>
 
             <div class="form-check mb-3">
@@ -248,18 +261,20 @@
               <label class="form-check-label" for="is_reserved">Only show reserved books</label>
             </div>
 
+
             <input type="hidden" name="action" value="print_stock">
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-brown" name="format" value="pdf">
-            <i class="bi bi-file-pdf me-1"></i> Export to PDF
-          </button>
-          <button type="submit" class="btn btn-outline-brown" name="format" value="csv">
-            <i class="bi bi-file-excel me-1"></i> Export to CSV
-          </button>
-        </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="reset" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-brown" name="format" value="pdf">
+              <i class="bi bi-file-pdf me-1"></i> Export to PDF
+            </button>
+            <button type="submit" class="btn btn-outline-brown" name="format" value="csv">
+              <i class="bi bi-file-excel me-1"></i> Export to CSV
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

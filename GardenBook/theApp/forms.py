@@ -288,8 +288,12 @@ class BorrowForm(forms.ModelForm):
         fields = ['borrower', 'book']
 
         widgets = {
-            'borrower': forms.Select(attrs={'class': 'form-select my-2'}),
-            'book': forms.Select(attrs={'class': 'form-select my-2'}),
+            'borrower': forms.TextInput(attrs={
+                'class': 'form-control my-2',
+                'list': 'borrower-options' }),
+            'book': forms.TextInput(attrs={
+                'class': 'form-control my-2',
+                'list': 'book-options' }),
         }
 
     def __init__(self, *args, **kwargs):
@@ -297,10 +301,26 @@ class BorrowForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'POST'
         self.helper.add_input(Hidden('action', 'add_borrow'))
-        self.helper.add_input(Submit('submit', 'Add Borrow', css_class="btn-green text-brown border-0 hover-shadow my-2"))
 
         # Filter borrowers to only show READER users
         self.fields['borrower'].queryset = Person.objects.filter(role=RoleName.READER)
+        # Get data for the datalists
+        self.borrowers = Person.objects.filter(role=RoleName.READER)
+        self.books = Book.objects.all()
+
+    def clean_borrower(self):
+        name = self.cleaned_data['borrower']
+        try:
+            return Person.objects.get(full_name=name, role=RoleName.READER)
+        except Person.DoesNotExist:
+            raise forms.ValidationError("Borrower not found or is not a reader.")
+
+    def clean_book(self):
+        title = self.cleaned_data['book']
+        try:
+            return Book.objects.get(title=title)
+        except Book.DoesNotExist:
+            raise forms.ValidationError("Book not found.")
 
 #_____________________________________________________________
 class ReviewForm(forms.ModelForm):

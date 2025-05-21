@@ -1,5 +1,8 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from django.db.models.functions import TruncDay, TruncMonth, TruncYear
+from django.db.models import Count
+import json
 from django.http import HttpResponse
 from django.utils import timezone
 from django.shortcuts import render, redirect
@@ -120,7 +123,7 @@ def about(request):
 # for the catalog page where all the books are displayed
 # + a filter to see the wishlist(liked books)
 def catalog(request):
-  catalog = Book.objects.filter(~Q(availability=Availability.REMOVED))
+  catalog = Book.objects.filter(~Q(availability=Availability.DELETED))
 
   # Search bar query
   q = request.GET.get('q')
@@ -172,7 +175,7 @@ def catalog(request):
   pub_year_max = pub_year_stats['pub_year_max'] or 9999
 
   result_count = catalog.count()
-  book_count = Book.objects.filter(~Q(availability=Availability.REMOVED)).count()
+  book_count = Book.objects.filter(~Q(availability=Availability.DELETED)).count()
 
   # Pagination
   paginator = Paginator(catalog, 12)  # 10 books per page
@@ -371,33 +374,77 @@ def update_order_status(request, pk, new_status):
 @login_required(login_url='login')
 @role_required(['Administrator', 'Librarian'])  # Optional, use only if role-based access is needed
 def dashboard(request):
-    now = timezone.now()
-    start_of_month = now.replace(day=1)
+  now = timezone.now()
+  start_of_month = now.replace(day=1)
 
-    total_books = Book.objects.count()
-    new_monthly_stock = Book.objects.filter(date_creation__gte=start_of_month).count()
+  total_books = Book.objects.count()
+  new_monthly_stock = Book.objects.filter(date_creation__gte=start_of_month).count()
 
-    total_users = Person.objects.count()
-    active_orders = Order.objects.filter(status='Pending').count()
+  total_users = Person.objects.count()
+  active_orders = Order.objects.filter(status='Pending').count()
 
-    # Recent alerts (you can limit to 5 or 10)
-    alerts = Alert.objects.select_related('user').order_by('-date_created')[:5]
+  alerts = Alert.objects.select_related('user').order_by('-date_created')[:5]
+  borrows = Borrow.objects.select_related('borrower', 'book').order_by('-borrow_date')[:5]
+  total_borrows = Borrow.objects.count()
 
-    # Recent borrows
-    borrows = Borrow.objects.select_related('borrower', 'book').order_by('-borrow_date')[:5]
-    total_borrows = borrows.count()
+  # Borrowing trends data
+  last_week = now - timedelta(days=6)
+  weekly_borrows = (
+      Borrow.objects
+      .filter(borrow_date__gte=last_week)
+      .annotate(day=TruncDay('borrow_date'))
+      .values('day')
+      .annotate(count=Count('id'))
+      .order_by('day')
+  )
 
-    context = {
-        'total_books': total_books,
-        'total_borrows': total_borrows,
-        'new_monthly_stock': new_monthly_stock,
-        'total_users': total_users,
-        'active_orders': active_orders,
-        'alerts': alerts,
-        'borrows': borrows,
-    }
+  # Transform to dict
+  weekly_labels = [entry['day'].strftime('%a') for entry in weekly_borrows]
+  weekly_data = [entry['count'] for entry in weekly_borrows]
 
-    return render(request, 'dashboard.html', context)
+  # Monthly borrows
+  monthly_borrows = (
+      Borrow.objects
+      .annotate(month=TruncMonth('borrow_date'))
+      .values('month')
+      .annotate(count=Count('id'))
+      .order_by('month')
+  )
+
+  monthly_labels = [entry['month'].strftime('%b') for entry in monthly_borrows]
+  monthly_data = [entry['count'] for entry in monthly_borrows]
+
+  # Yearly borrows
+  yearly_borrows = (
+      Borrow.objects
+      .annotate(year=TruncYear('borrow_date'))
+      .values('year')
+      .annotate(count=Count('id'))
+      .order_by('year')
+  )
+
+  yearly_labels = [entry['year'].strftime('%Y') for entry in yearly_borrows]
+  yearly_data = [entry['count'] for entry in yearly_borrows]
+
+  context = {
+      'total_books': total_books,
+      'new_monthly_stock': new_monthly_stock,
+      'total_users': total_users,
+      'active_orders': active_orders,
+      'alerts': alerts,
+      'borrows': borrows,
+      'total_borrows': total_borrows,
+
+      # Chart data as JSON
+      'weekly_labels': json.dumps(weekly_labels),
+      'weekly_data': json.dumps(weekly_data),
+      'monthly_labels': json.dumps(monthly_labels),
+      'monthly_data': json.dumps(monthly_data),
+      'yearly_labels': json.dumps(yearly_labels),
+      'yearly_data': json.dumps(yearly_data),
+  }
+
+  return render(request, 'dashboard.html', context)
 
 #_______________________________________________________________
 @login_required(login_url='login')
@@ -492,6 +539,7 @@ def stock(request):
   genres = Genre.objects.all()
   langs = Book.objects.values_list('lang', flat=True).distinct()
   auds = Book.objects.values_list('audience', flat=True).distinct()
+  status = Availability.values
 
   # Get real min/max from DB for publication_year
   pub_year_stats = Book.objects.aggregate(pub_year_min=Min('publication_year'), pub_year_max=Max('publication_year'))
@@ -499,7 +547,7 @@ def stock(request):
   pub_year_max = pub_year_stats['pub_year_max'] or 9999
 
   result_count = stock.count()
-  book_count = Book.objects.filter(~Q(availability=Availability.REMOVED)).count()
+  book_count = Book.objects.filter(~Q(availability=Availability.DELETED)).count()
 
   # Pagination
   paginator = Paginator(stock, 15)  # 10 books per page
@@ -515,7 +563,8 @@ def stock(request):
     'pub_year_max': pub_year_max,
     'result_count': result_count,
     'book_count': book_count,
-    'stock': stock
+    'stock': stock,
+    'status': status,
     }
   return render(request, 'stock.html', context)
 

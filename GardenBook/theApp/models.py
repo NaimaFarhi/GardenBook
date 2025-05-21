@@ -42,7 +42,7 @@ class Availability(models.TextChoices):
    AVAILABLE = "Available"
    RESERVED = "Reserved"
    BORROWED = "Borrowed"
-   REMOVED = "Remove"
+   DELETED = "Deleted"
 
 #______________________________________________________________________________
 class Person(AbstractUser):
@@ -78,7 +78,7 @@ class Genre(models.Model):
 #______________________________________________________________________________
 class Book(models.Model):
     ISBN = models.CharField(max_length=13, unique=True)
-    cover = models.ImageField(upload_to='book_covers/', null=True, blank=True, default="book_covers/default_cover.webp") # 'ImageField' handels image uploads
+    cover = models.ImageField(upload_to='book_covers/', null=True, blank=True, default="book_covers/default_book_cover.png") # 'ImageField' handels image uploads
     # Installed "Pillow" using 'pip install Pillow'
     title = models.CharField(max_length=255,default="")
     author = models.CharField(max_length=255,default="")
