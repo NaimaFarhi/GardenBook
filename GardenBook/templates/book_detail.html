@@ -4,113 +4,548 @@
 
 {% block title %}{{ book.title }} | GardenBook{% endblock %}
 
+{% block style %}
+<style>
+  /* Book Detail Page Styles */
+  .book-detail-container {
+    background-color: #f8f5f0;
+    padding: 3rem 0;
+  }
+
+  /* Back Link */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    color: #5d432f;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .back-link:hover {
+    transform: translateX(-5px);
+    color: #402e21;
+  }
+
+  .back-link i {
+    margin-right: 0.5rem;
+  }
+
+  /* Book Detail Card */
+  .book-detail-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2.5rem;
+  }
+
+  /* Book Cover */
+  .book-cover-wrapper {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+
+  .book-cover {
+    max-height: 450px;
+    width: auto;
+    max-width: 100%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+  }
+
+  .book-cover:hover {
+    transform: scale(1.02);
+  }
+
+  /* Book Info */
+  .book-info {
+    padding: 2rem;
+  }
+
+  .book-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #402e21;
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+  }
+
+  .book-author {
+    font-size: 1.2rem;
+    color: #5d432f;
+    margin-bottom: 1rem;
+    font-style: italic;
+  }
+
+  /* Rating */
+  .book-rating {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .rating-stars {
+    color: #ffc107;
+    margin-right: 0.75rem;
+  }
+
+  .rating-stars i {
+    margin-right: 0.1rem;
+  }
+
+  .rating-text {
+    color: #666;
+    font-weight: 500;
+  }
+
+  /* Genre Badge */
+  .genre-badge {
+    display: inline-block;
+    background-color: #e8f3e8;
+    color: #5d432f;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: 1rem;
+  }
+
+  /* Description */
+  .book-description {
+    margin-bottom: 1.5rem;
+  }
+
+  .book-description h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e8f3e8;
+  }
+
+  .book-description p {
+    color: #555;
+    line-height: 1.6;
+  }
+
+  /* Book Details */
+  .book-details {
+    margin-bottom: 1.5rem;
+  }
+
+  .book-details h5 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e8f3e8;
+  }
+
+  .details-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .details-list li {
+    display: flex;
+    margin-bottom: 0.5rem;
+    color: #555;
+  }
+
+  .details-list li strong {
+    width: 100px;
+    color: #5d432f;
+  }
+
+  .availability-available {
+    color: #28a745;
+    font-weight: 600;
+  }
+
+  .availability-unavailable {
+    color: #dc3545;
+    font-weight: 600;
+  }
+
+  /* Action Buttons */
+  .book-actions {
+    margin-top: 2rem;
+  }
+
+  .action-btn {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    margin-right: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .action-btn i {
+    margin-right: 0.5rem;
+  }
+
+  .btn-borrow {
+    background-color: #5d432f;
+    color: white;
+    border: none;
+  }
+
+  .btn-borrow:hover:not(:disabled) {
+    background-color: #402e21;
+    transform: translateY(-2px);
+  }
+
+  .btn-reserve,
+  .btn-wishlist {
+    background-color: transparent;
+    color: #5d432f;
+    border: 1px solid #5d432f;
+  }
+
+  .btn-reserve:hover:not(:disabled),
+  .btn-wishlist:hover:not(:disabled) {
+    background-color: rgba(93, 67, 47, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Categories */
+  .categories-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .categories-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .categories-title i {
+    margin-right: 0.75rem;
+    color: #8a9982;
+  }
+
+  .category-tag {
+    display: inline-block;
+    background-color: #e8f3e8;
+    color: #5d432f;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+
+  .category-tag:hover {
+    background-color: #8a9982;
+    color: white;
+    transform: translateY(-2px);
+  }
+
+  /* Review Form */
+  .review-form-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 2.5rem;
+  }
+
+  .review-form-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .review-form-title i {
+    margin-right: 0.75rem;
+    color: #8a9982;
+  }
+
+  /* Reviews List */
+  .reviews-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .reviews-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .reviews-title i {
+    margin-right: 0.75rem;
+    color: #8a9982;
+  }
+
+  .average-rating {
+    display: flex;
+    align-items: center;
+  }
+
+  .average-rating-label {
+    margin-right: 0.75rem;
+    color: #666;
+  }
+
+  .average-rating-stars {
+    color: #ffc107;
+    margin-right: 0.5rem;
+  }
+
+  .average-rating-value {
+    color: #666;
+    font-weight: 600;
+  }
+
+  /* Review Item */
+  .review-item {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .review-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .reviewer-info {
+    display: flex;
+    align-items: center;
+  }
+
+  .reviewer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e8f3e8;
+    color: #5d432f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    margin-right: 0.75rem;
+  }
+
+  .reviewer-name {
+    font-weight: 600;
+    color: #402e21;
+  }
+
+  .review-rating {
+    color: #ffc107;
+  }
+
+  .review-content {
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+  }
+
+  .review-date {
+    color: #999;
+    font-size: 0.85rem;
+  }
+
+  /* No Reviews */
+  .no-reviews {
+    text-align: center;
+    padding: 2rem 0;
+  }
+
+  .no-reviews-icon {
+    font-size: 3rem;
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+  }
+
+  .no-reviews-text {
+    color: #999;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 767.98px) {
+    .book-info {
+      padding: 1.5rem;
+    }
+
+    .book-title {
+      font-size: 1.5rem;
+    }
+
+    .book-author {
+      font-size: 1rem;
+    }
+
+    .reviews-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .average-rating {
+      margin-top: 1rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="py-5 bg-light-brown">
+<div class="book-detail-container">
   <div class="container">
     <!-- Back Link -->
-    <div class="mb-4">
-      <a href="{% url 'catalog' %}" class="text-decoration-none text-brown">
-        <i class="bi bi-arrow-left me-2"></i>Back to Catalog
-      </a>
-    </div>
+    <a href="{% url 'catalog' %}" class="back-link">
+      <i class="bi bi-arrow-left"></i>Back to Catalog
+    </a>
 
     <!-- Book Details -->
-    <div class="book-detail mb-5">
-      <div class="row">
+    <div class="book-detail-card">
+      <div class="row g-0">
         <!-- Book Cover -->
-        <div class="col-md-4 mb-4 mb-md-0">
-          <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="book-detail-img img-fluid">
+        <div class="col-md-4 bg-light-brown">
+          <div class="book-cover-wrapper">
+            <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="book-cover">
+          </div>
         </div>
 
         <!-- Book Info -->
         <div class="col-md-8">
-          <h1 class="book-detail-title">{{ book.title }}</h1>
-          <p class="book-detail-author">by {{ book.author }}</p>
+          <div class="book-info">
+            <h1 class="book-title">{{ book.title }}</h1>
+            <p class="book-author">by {{ book.author }}</p>
 
-          <!-- Rating -->
-          <div class="book-detail-rating d-flex align-items-center mb-3">
-            <div class="text-warning me-2">
-              {% for i in "12345" %}
-              {% if book.review|floatformat:1 >= i %}
-              <i class="bi bi-star-fill"></i>
-              {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
-              <i class="bi bi-star-half"></i>
-              {% else %}
-              <i class="bi bi-star"></i>
+            <!-- Rating -->
+            <div class="book-rating">
+              <div class="rating-stars">
+                {% for i in "12345" %}
+                {% if book.review|floatformat:1 >= i %}
+                <i class="bi bi-star-fill"></i>
+                {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
+                <i class="bi bi-star-half"></i>
+                {% else %}
+                <i class="bi bi-star"></i>
+                {% endif %}
+                {% endfor %}
+              </div>
+              <span class="rating-text">{{ book.review }}/10</span>
+
+              <!-- Genre Badge -->
+              {% with book.genres.first as first_genre %}
+              {% if first_genre %}
+              <span class="genre-badge">{{ first_genre.name }}</span>
               {% endif %}
-              {% endfor %}
+              {% endwith %}
             </div>
-            <span class="text-muted">{{ book.review }}/10</span>
 
-            <!-- Genre Badge -->
-            {% with book.genres.first as first_genre %}
-            {% if first_genre %}
-            <span class="ms-3 badge bg-light-green text-brown">{{ first_genre.name }}</span>
-            {% endif %}
-            {% endwith %}
-          </div>
-
-          <!-- Description -->
-          <div class="book-detail-description">
-            <h5>Description</h5>
-            <p>{{ book.description }}</p>
-          </div>
-
-          <!-- Book Details -->
-          <div class="row book-detail-info">
-            <div class="col-md-6">
-              <h5>Details</h5>
-              <ul>
-                <li><strong>ISBN:</strong> {{ book.ISBN }}</li>
-                <li><strong>Publisher:</strong> {{ book.edition }}</li>
-                <li><strong>Published:</strong> {{ book.publication_year|date:"Y" }}</li>
-                <li><strong>Pages:</strong> {{ book.nbPage }}</li>
-                <li><strong>Language:</strong> {{ book.lang }}</li>
-                <li><strong>Keywords:</strong> {{ book.keywords }}</li>
-              </ul>
+            <!-- Description -->
+            <div class="book-description">
+              <h5>Description</h5>
+              <p>{{ book.description }}</p>
             </div>
-            <div class="col-md-6">
-              <h5>Availability</h5>
-              <ul>
-                <li>
-                  <strong>Status:</strong>
-                  <span class="{% if book.availability == 'Available' %}text-success{% else %}text-danger{% endif %}">
-                    {{ book.availability }}
-                  </span>
-                </li>
-                <li><strong>Borrowed:</strong> {{ book.nb_borrows }} times</li>
-              </ul>
-            </div>
-          </div>
 
-          <!-- Action Buttons -->
-          <div class="book-detail-actions">
-            <div class="d-flex flex-wrap gap-2">
+            <!-- Book Details -->
+            <div class="row book-details">
+              <div class="col-md-6">
+                <h5>Details</h5>
+                <ul class="details-list">
+                  <li><strong>ISBN:</strong> {{ book.ISBN }}</li>
+                  <li><strong>Publisher:</strong> {{ book.edition }}</li>
+                  <li><strong>Published:</strong> {{ book.publication_year|date:"Y" }}</li>
+                  <li><strong>Pages:</strong> {{ book.nbPage }}</li>
+                  <li><strong>Language:</strong> {{ book.lang }}</li>
+                  <li><strong>Keywords:</strong> {{ book.keywords }}</li>
+                </ul>
+              </div>
+              <div class="col-md-6">
+                <h5>Availability</h5>
+                <ul class="details-list">
+                  <li>
+                    <strong>Status:</strong>
+                    <span
+                      class="{% if book.availability == 'Available' %}availability-available{% else %}availability-unavailable{% endif %}">
+                      {{ book.availability }}
+                    </span>
+                  </li>
+                  <li><strong>Borrowed:</strong> {{ book.nb_borrows }} times</li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="book-actions">
               <!-- Borrow Button -->
               {% if book.availability == 'Available' and not book.is_reserved %}
-              <a href="{% url 'reader-borrow' book.id %}" class="btn btn-brown">
-                <i class="bi bi-book me-2"></i>Borrow Book
+              <a href="{% url 'reader-borrow' book.id %}" class="action-btn btn-borrow">
+                <i class="bi bi-book"></i>Borrow Book
               </a>
               {% else %}
-              <button class="btn btn-brown" disabled>
-                <i class="bi bi-book me-2"></i>Borrow Book
+              <button class="action-btn btn-borrow" disabled>
+                <i class="bi bi-book"></i>Borrow Book
               </button>
               {% endif %}
 
               <!-- Reserve Button -->
               {% if book.availability != 'Available' and not book.is_reserved %}
-              <a href="{% url 'reserve' book.id %}" class="btn btn-outline-brown">
-                <i class="bi bi-bookmark me-2"></i>Reserve Book
+              <a href="{% url 'reserve' book.id %}" class="action-btn btn-reserve">
+                <i class="bi bi-bookmark"></i>Reserve Book
               </a>
               {% else %}
-              <button class="btn btn-outline-brown" disabled>
-                <i class="bi bi-bookmark me-2"></i>Reserve Book
+              <button class="action-btn btn-reserve" disabled>
+                <i class="bi bi-bookmark"></i>Reserve Book
               </button>
               {% endif %}
 
               <!-- Wishlist Button -->
-              <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="btn btn-outline-brown">
-                <i class="bi bi-heart me-2"></i>Add to Wishlist
+              <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="action-btn btn-wishlist">
+                <i class="bi bi-heart"></i>Add to Wishlist
               </a>
             </div>
           </div>
@@ -119,20 +554,25 @@
     </div>
 
     <!-- Categories -->
-    <div class="mb-5">
-      <h4 class="text-brown mb-3">Categories</h4>
-      <div class="d-flex flex-wrap gap-2">
+    <div class="categories-section">
+      <h4 class="categories-title">
+        <i class="bi bi-tags"></i>Categories
+      </h4>
+      <div class="d-flex flex-wrap">
         {% for genre in book.genres.all %}
-        <a href="{% url 'catalog' %}?genre={{ genre.name }}"
-          class="badge bg-light-green text-brown text-decoration-none p-2">{{ genre.name }}</a>
+        <a href="{% url 'catalog' %}?genre={{ genre.name }}" class="category-tag">
+          {{ genre.name }}
+        </a>
         {% endfor %}
       </div>
     </div>
 
     <!-- Review Form -->
-    <div class="card rounded-20 shadow-sm mb-5">
-      <div class="card-body">
-        <h4 class="text-brown mb-3">Leave a Review</h4>
+    <div class="review-form-card">
+      <div class="card-body p-4">
+        <h4 class="review-form-title">
+          <i class="bi bi-pencil-square"></i>Leave a Review
+        </h4>
         <form method="post">
           {% csrf_token %}
           {% crispy form %}
@@ -141,13 +581,15 @@
     </div>
 
     <!-- Reviews -->
-    <div class="card rounded-20 shadow-sm">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h4 class="text-brown mb-0">Reader Reviews</h4>
-          <div class="d-flex align-items-center">
-            <span class="me-2">Average Rating:</span>
-            <div class="text-warning me-2">
+    <div class="reviews-card">
+      <div class="card-body p-4">
+        <div class="reviews-header">
+          <h4 class="reviews-title">
+            <i class="bi bi-chat-quote"></i>Reader Reviews
+          </h4>
+          <div class="average-rating">
+            <span class="average-rating-label">Average Rating:</span>
+            <div class="average-rating-stars">
               {% for i in "12345" %}
               {% if average_rating >= i %}
               <i class="bi bi-star-fill"></i>
@@ -158,7 +600,7 @@
               {% endif %}
               {% endfor %}
             </div>
-            <span class="text-muted">{{ average_rating|floatformat:1 }}/5</span>
+            <span class="average-rating-value">{{ average_rating|floatformat:1 }}/5</span>
           </div>
         </div>
 
@@ -166,17 +608,15 @@
         {% if reviews %}
         <div class="reviews-list">
           {% for review in reviews %}
-          <div class="review-item border-bottom pb-3 mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="d-flex align-items-center">
-                <div
-                  class="avatar-sm bg-light-green text-brown rounded-circle me-2 d-flex align-items-center justify-content-center"
-                  style="width: 40px; height: 40px;">
-                  <span>{{ review.user.username|slice:":1" }}</span>
+          <div class="review-item">
+            <div class="review-header">
+              <div class="reviewer-info">
+                <div class="reviewer-avatar">
+                  {{ review.user.username|slice:":1" }}
                 </div>
-                <span class="fw-bold">{{ review.user.username }}</span>
+                <span class="reviewer-name">{{ review.user.username }}</span>
               </div>
-              <div class="text-warning">
+              <div class="review-rating">
                 {% for i in "12345" %}
                 {% if review.rating >= i %}
                 <i class="bi bi-star-fill"></i>
@@ -186,14 +626,15 @@
                 {% endfor %}
               </div>
             </div>
-            <p class="mb-1">{{ review.comment }}</p>
-            <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+            <p class="review-content">{{ review.comment }}</p>
+            <small class="review-date">{{ review.created_at|date:"M d, Y" }}</small>
           </div>
           {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-4">
-          <p class="text-muted">No reviews yet. Be the first to review this book!</p>
+        <div class="no-reviews">
+          <i class="bi bi-chat-square-text no-reviews-icon"></i>
+          <p class="no-reviews-text">No reviews yet. Be the first to review this book!</p>
         </div>
         {% endif %}
       </div>

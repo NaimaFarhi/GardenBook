@@ -3,226 +3,555 @@
 
 {% block title %}Catalog | GardenBook{% endblock %}
 
+{% block style %}
+<style>
+  /* Catalog Page Styles */
+  .catalog-container {
+    background-color: #f8f5f0;
+    min-height: calc(100vh - 70px);
+  }
+
+  /* Search Panel Styles */
+  .search-panel {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    height: auto;
+  }
+
+  .search-panel-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .search-panel-body {
+    padding: 1.25rem;
+  }
+
+  .filter-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+  }
+
+  .filter-title i {
+    margin-right: 0.5rem;
+    color: #8a9982;
+  }
+
+  .filter-section {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .filter-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .genre-list {
+    max-height: 150px;
+    overflow-y: auto;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .genre-list::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .genre-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .genre-list::-webkit-scrollbar-thumb {
+    background: #aabda0;
+    border-radius: 10px;
+  }
+
+  .form-check-input:checked {
+    background-color: #5d432f;
+    border-color: #5d432f;
+  }
+
+  .search-btn {
+    background-color: #5d432f;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    margin-bottom: 0.75rem;
+    width: 100%;
+  }
+
+  .search-btn:hover {
+    background-color: #402e21;
+    transform: translateY(-2px);
+  }
+
+  .reset-btn {
+    background-color: transparent;
+    color: #5d432f;
+    border: 1px solid #5d432f;
+    padding: 0.6rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    width: 100%;
+  }
+
+  .reset-btn:hover {
+    background-color: rgba(93, 67, 47, 0.1);
+  }
+
+  /* Book Grid Styles */
+  .book-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .book-card {
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .book-cover-wrapper {
+    height: 320px;
+    overflow: hidden;
+    position: relative;
+    background-color: #f8f5f0;
+  }
+
+  .book-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .book-card:hover .book-cover {
+    transform: scale(1.05);
+  }
+
+  .book-info {
+    padding: 1.25rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .book-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    height: 3rem;
+  }
+
+  .book-author {
+    font-size: 0.9rem;
+    color: #5d432f;
+    margin-bottom: 0.5rem;
+    font-style: italic;
+  }
+
+  .book-edition {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 0.75rem;
+  }
+
+  .book-rating {
+    margin-bottom: 1rem;
+  }
+
+  .book-rating .bi-star-fill,
+  .book-rating .bi-star-half {
+    color: #ffc107;
+  }
+
+  .book-rating .bi-star {
+    color: #e0e0e0;
+  }
+
+  .book-rating-text {
+    font-size: 0.85rem;
+    color: #666;
+    margin-left: 0.5rem;
+  }
+
+  .book-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background-color: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .details-btn {
+    padding: 0.5rem 1rem;
+    background-color: transparent;
+    color: #5d432f;
+    border: 1px solid #5d432f;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .details-btn:hover {
+    background-color: #5d432f;
+    color: white;
+  }
+
+  .wishlist-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0e8d9;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+  }
+
+  .wishlist-btn:hover {
+    background-color: #e8f3e8;
+    transform: scale(1.1);
+  }
+
+  /* Results and Pagination */
+  .results-info {
+    background-color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #5d432f;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .results-info i {
+    margin-right: 0.5rem;
+    color: #8a9982;
+  }
+
+  .pagination {
+    margin-top: 2rem;
+  }
+
+  .pagination .page-link {
+    color: #5d432f;
+    border-color: #e0e0e0;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: #5d432f;
+    border-color: #5d432f;
+    color: white;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: #aaa;
+  }
+
+  /* Fix for blue links */
+  .reset-btn,
+  .reset-btn:link,
+  .reset-btn:visited,
+  .reset-btn:hover,
+  .reset-btn:active {
+    color: #5d432f;
+    text-decoration: none;
+  }
+
+  .page-link:focus {
+    box-shadow: 0 0 0 0.25rem rgba(93, 67, 47, 0.25);
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 991.98px) {
+    .search-panel {
+      margin-bottom: 1.5rem;
+    }
+
+    .book-grid {
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .book-cover-wrapper {
+      height: 280px;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="py-5 bg-light-brown">
-  
-  <!-- START RESULT COUNT -->
-  <div class="row d-flex justify-content-end">
-    <div class="col-auto">
-      <p><i><strong>{{ result_count }}</strong> out of <strong>{{ book_count }}</strong> book results found.</i></p>
+<div class="catalog-container py-4">
+  <div class="container-fluid">
+    <!-- Results Count -->
+    <div class="d-flex justify-content-end mb-4">
+      <div class="results-info">
+        <i class="bi bi-book"></i>
+        <span><strong>{{ result_count }}</strong> out of <strong>{{ book_count }}</strong> book results found</span>
+      </div>
     </div>
-  </div>
-  <!-- END RESULT COUNT -->
 
-  <!-- START SEARCH BAR + DISPLAY SECTION -->
-  <div class="container-fluid row m-2">
+    <div class="row g-4">
+      <!-- Search & Filter Panel -->
+      <div class="col-lg-2">
+        <div class="search-panel">
+          <div class="search-panel-header">
+            <h5 class="m-0 d-flex align-items-center">
+              <i class="bi bi-search me-2 text-green-dark"></i>
+              Search & Filter
+            </h5>
+          </div>
 
-    <!-- START SEARCH / FILTER SECTION -->
-    <div class="col-md-2 p-4 bg-white shadow-sm rounded-20">
-      <h2>Search Bar</h2>
+          <div class="search-panel-body">
+            <form method="GET" action="{% url 'catalog' %}">
+              <!-- Search Bar -->
+              <div class="filter-section">
+                <div class="filter-title">
+                  <i class="bi bi-search"></i>
+                  <span>Search</span>
+                </div>
+                <input type="search" name="q" class="form-control" id="searchBar"
+                  placeholder="ISBN, Title, Author, Edition..." value="{{ request.GET.q|default:'' }}"
+                  aria-label="Search">
+              </div>
 
-      <form method="GET" action="{% url 'catalog' %}">
+              <!-- Genre Section -->
+              <div class="filter-section">
+                <div class="filter-title">
+                  <i class="bi bi-tags"></i>
+                  <span>Genre</span>
+                </div>
+                <div class="genre-list">
+                  {% if genres %}
+                  {% for genre in genres %}
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" name="genre" value="{{ genre }}"
+                      id="genre{{ genre }}" {% if genre in request.GET.genre|default:'' %}checked{% endif %}>
+                    <label class="form-check-label text-capitalize small" for="genre{{ genre }}">
+                      {{ genre }}
+                    </label>
+                  </div>
+                  {% endfor %}
+                  {% else %}
+                  <p class="text-muted small mb-0">No genres available</p>
+                  {% endif %}
+                </div>
+              </div>
 
-        <!-- FOR : TITLE AUTHOR EDITION KEYWORDS -->
-        <div class="row">
-          <input type="search" name="q" class="form-control form-control-dark" id="searchBar"
-            placeholder="ISBN, Title, Author, Edition, Keywords..." aria-label="Search">
+              <!-- Publication Year Section -->
+              <div class="filter-section">
+                <div class="filter-title">
+                  <i class="bi bi-calendar3"></i>
+                  <span>Publication Year</span>
+                </div>
+                <div class="row g-2">
+                  <div class="col-6">
+                    <label for="publicationYearFrom" class="form-label small text-muted">From</label>
+                    <input type="number" name="publicationYearFrom" id="publicationYearFrom"
+                      value="{{ request.GET.publicationYearFrom|default:pub_year_min }}" min="{{ pub_year_min }}"
+                      max="{{ pub_year_max }}" class="form-control form-control-sm">
+                  </div>
+                  <div class="col-6">
+                    <label for="publicationYearTo" class="form-label small text-muted">To</label>
+                    <input type="number" name="publicationYearTo" id="publicationYearTo"
+                      value="{{ request.GET.publicationYearTo|default:pub_year_max }}" min="{{ pub_year_min }}"
+                      max="{{ pub_year_max }}" class="form-control form-control-sm">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Language Section -->
+              <div class="filter-section">
+                <div class="filter-title">
+                  <i class="bi bi-translate"></i>
+                  <span>Language</span>
+                </div>
+                <select class="form-select" name="language" id="language">
+                  <option value="">Select a language</option>
+                  {% for lang in langs %}
+                  <option value="{{ lang }}" >
+                    {{ lang }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Audience Section -->
+              <div class="filter-section">
+                <div class="filter-title">
+                  <i class="bi bi-people"></i>
+                  <span>Audience</span>
+                </div>
+                <select class="form-select" name="audience" id="audience">
+                  <option value="">Select an audience</option>
+                  {% for aud in auds %}
+                  <option value="{{ aud }}">
+                    {{ aud }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Review Section -->
+              <div class="filter-section">
+                <div class="filter-title">
+                  <i class="bi bi-star"></i>
+                  <span>Review (minimum)</span>
+                </div>
+                <input type="number" name="review" id="review" min="0" max="10" step="0.5"
+                  value="{{ request.GET.review|default:'' }}" class="form-control">
+              </div>
+
+              <!-- Buttons -->
+              <div class="filter-section">
+                <button type="submit" class="search-btn">
+                  <i class="bi bi-search me-2"></i>Search
+                </button>
+                <a href="{% url 'catalog' %}" class="reset-btn d-block text-center text-decoration-none">
+                  <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                </a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Book Display Section -->
+      <div class="col-lg-10">
+        {% if page_obj %}
+        <div class="book-grid">
+          {% for book in page_obj %}
+          <div class="book-card">
+            <div class="book-cover-wrapper">
+              <img src="{{ book.cover.url }}" class="book-cover" alt="{{ book.title }} cover">
+            </div>
+            <div class="book-info">
+              <h5 class="book-title">{{ book.title }}</h5>
+              <p class="book-author">by {{ book.author }}</p>
+              <p class="book-edition">{{ book.edition }}</p>
+              <div class="book-rating">
+                {% for i in "12345" %}
+                {% if book.review|floatformat:1 >= i %}
+                <i class="bi bi-star-fill"></i>
+                {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
+                <i class="bi bi-star-half"></i>
+                {% else %}
+                <i class="bi bi-star"></i>
+                {% endif %}
+                {% endfor %}
+                <span class="book-rating-text">{{ book.review }}/10</span>
+              </div>
+            </div>
+            <div class="book-footer">
+              <a href="{% url 'book-detail' book.id %}" class="details-btn">
+                <i class="bi bi-info-circle me-1"></i>Details
+              </a>
+              <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="wishlist-btn"
+                data-bs-toggle="tooltip" data-bs-placement="top" title="Add To Wishlist">
+                <img src="{% static 'wishlist_icon.png' %}" width="20" alt="Add to wishlist">
+              </a>
+            </div>
+          </div>
+          {% endfor %}
         </div>
 
-        <!-- GENRE SECTION -->
-        <div class="row my-2">
-          <p class="fs-5">Genre</p>
-          <div class="bg-light border rounded" style="max-height: 100px; overflow: auto;">
-
-            {% if genres %}
-            {% for genre in genres %}
-            <div class="form-check mb-3">
-              <input class="form-check-input" type="checkbox" name="genre" value="{{ genre }}" id="genre{{ genre }}">
-              <label class="form-check-label text-uppercase small text-muted" for="genre{{ genre }}">{{ genre }}</label>
-            </div>
-            {% endfor %}
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Book pagination">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link"
+                href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
+                <i class="bi bi-chevron-left"></i> Previous
+              </a>
+            </li>
             {% else %}
-            <p><small>No genres available</small></p>
+            <li class="page-item disabled">
+              <span class="page-link"><i class="bi bi-chevron-left"></i> Previous</span>
+            </li>
             {% endif %}
 
-          </div>
+            <li class="page-item active">
+              <span class="page-link">{{ page_obj.number }}</span>
+            </li>
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link"
+                href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
+                Next <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link">Next <i class="bi bi-chevron-right"></i></span>
+            </li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-search display-1 text-muted"></i>
+          <h3 class="mt-3">No books found</h3>
+          <p class="text-muted">Try adjusting your search criteria</p>
+          <a href="{% url 'catalog' %}" class="btn btn-outline-brown mt-3">
+            <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Filters
+          </a>
         </div>
-
-        <!-- PUBLICATION YEAR SECTION -->
-        <div class="row my-2">
-          <p class="fs-5">Publication Year</p>
-          <div class="col-md-6">
-            <p class="fs-5">From</p>
-            <input type="number" name="publicationYearFrom" id="publicationYearFrom" value="{{pub_year_min}}"
-              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control form-control-dark">
-          </div>
-          <div class="col-md-6">
-            <p class="fs-5"> To </p>
-            <input type="number" name="publicationYearTo" id="publicationYearTo" value="{{pub_year_max}}"
-              min="{{pub_year_min}}" max="{{pub_year_max}}" class="form-control form-control-dark">
-          </div>
-        </div>
-
-        <!-- LANGUAGE SECTION -->
-        <div class="row my-2">
-          <p class="fs-5">Language</p>
-          <select class="form-control" name="language" id="language">
-            <option value="">select a language</option>
-
-            {% for lang in langs %}
-            <option value="{{lang}}">{{lang}}</option>
-            {% endfor%}
-
-          </select>
-        </div>
-
-        <!-- AUDIENCE SECTION -->
-        <div class="row my-2">
-          <p class="fs-5">Audience</p>
-          <select class="form-control" name="audience" id="audience">
-            <option value="">select an audience</option>
-
-            {% for aud in auds %}
-            <option value="{{aud}}">{{aud}}</option>
-            {% endfor%}
-
-          </select>
-        </div>
-
-        <!-- REVIEW SECTION -->
-        <div class="row my-2">
-          <p class="fs-5">Review (minimum)</p>
-          <input type="number" name="review" id="review" min="0" max="10" class="form-control form-control-dark">
-        </div>
-
-        <!-- SEARCH BUTTON -->
-        <div class="row my-2">
-          <button type="submit" class="btn btn-green" id="resetButton">Search</button>
-        </div>
-
-        <!-- RESET BUTTON -->
-        <div class="row my-2">
-          <a href="{% url 'catalog' %}" class="btn btn-green" id="resetButton">Reset</a>
-        </div>
-      </form>
-
-    </div>
-    <!-- END SEARCH / FILTER SECTION -->
-
-
-    <!-- START BOOK DISPLAY SECTION -->
-    <div class="col-auto">
-
-      <!-- START ROW OF 4 BOOKS SECTION -->
-      <div class="row m-4 d-flex justify-content-center align-items-center gap-5">
-
-        {% for book in page_obj %}
-        <!-- START ONE CARD BOOK SECTION -->
-
-        <div class="card rounded-20" style="width: 22rem;">
-
-          <div class="card-header p-0 my-2 shadow-sm" style="height: 30rem; background: inherit;">
-            <img src="{{ book.cover.url }}" class="card-img-top border-dark" alt="...">
-          </div>
-
-          <div class="card-body" style="height: 12rem;">
-
-            <h4 class="card-text" style="height: 4rem; overflow: hidden;">
-              <span>{{ book.title }}</span>
-            </h4>
-
-            <p>{{ book.author }}</p>
-
-            <p>{{ book.edition }}</p>
-
-            <div class="text-warning me-2">
-              {% for i in "12345" %}
-              {% if book.review|floatformat:1 >= i %}
-              <i class="bi bi-star-fill"></i>
-              {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
-              <i class="bi bi-star-half"></i>
-              {% else %}
-              <i class="bi bi-star"></i>
-              {% endif %}
-              {% endfor %}
-              <span class="text-muted">{{ book.review }}/10</span>
-            </div>
-
-
-          </div>
-          <div class="card-footer d-flex justify-content-between my-2" style="background: inherit;">
-            <a href="{% url 'book-detail' book.id %}" class="btn btn-outline-brown">Details</a>
-            <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}">
-              <img src="{% static 'wishlist_icon.png' %}" width="30" data-bs-toggle="tooltip" data-bs-placement="right"
-                title="Add To Wishlist">
-            </a>
-          </div>
-        </div>
-
-        <!-- END ONE CARD BOOK SECTION -->
-        {% endfor %}
-
+        {% endif %}
       </div>
-      <!-- END ROW OF 4 BOOKS SECTION -->
-    </div>
-    <!-- END BOOK DISPLAY SECTION -->
-
-
-    <!-- END BOOK DISPLAY SECTION -->
-  </div>
-  <!-- START SEARCH BAR + DISPLAY SECTION -->
-
-  <!-- START _ SECTION -->
-  <div class="row">
-    <div class="col-auto bg-green">
-      {% if page_obj.has_other_pages %}
-      <nav class="mt-4">
-        <ul class="pagination justify-content-center">
-
-          {# Previous button #}
-          {% if page_obj.has_previous %}
-          <li class="page-item">
-            <a class="page-link"
-              href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">
-              Previous
-            </a>
-          </li>
-          {% else %}
-          <li class="page-item disabled"><span class="page-link">Previous</span></li>
-          {% endif %}
-
-          {# Current page number #}
-          <li class="page-item active"><span class="page-link">{{ page_obj.number }}</span></li>
-
-          {# Next button #}
-          {% if page_obj.has_next %}
-          <li class="page-item">
-            <a class="page-link"
-              href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">
-              Next
-            </a>
-          </li>
-          {% else %}
-          <li class="page-item disabled"><span class="page-link">Next</span></li>
-          {% endif %}
-
-        </ul>
-      </nav>
-      {% endif %}
-
-
     </div>
   </div>
-  <!-- END _ SECTION -->
-
 </div>
+
 <script>
-
-  var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-  tooltipTriggerList.map(function (tooltipTriggerEl) {
-    return new bootstrap.Tooltip(tooltipTriggerEl)
-  })
-
+  // Initialize tooltips
+  document.addEventListener('DOMContentLoaded', function () {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+  });
 </script>
 {% endblock %}

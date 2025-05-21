@@ -157,6 +157,7 @@
                         title="Cancel Event">
                         <i class="bi bi-x-square"></i>
                       </a>
+                      
                       {% endif %}
                     </div>
                   </td>
@@ -321,13 +322,13 @@
 
                   <div class="mb-3">
                     <div class="text-muted small">Start Date & Time</div>
-                    <div class="fw-medium">{{ event.start_datetime|date:"F d, Y" }} at 
+                    <div class="fw-medium">{{ event.start_datetime|date:"F d, Y" }} at
                       {{ event.start_datetime|time:"H:i" }}</div>
                   </div>
 
                   <div class="mb-3">
                     <div class="text-muted small">End Date & Time</div>
-                    <div class="fw-medium">{{ event.end_datetime|date:"F d, Y" }} at 
+                    <div class="fw-medium">{{ event.end_datetime|date:"F d, Y" }} at
                       {{ event.end_datetime|time:"H:i" }}
                     </div>
                   </div>

@@ -297,7 +297,7 @@ class BorrowForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'POST'
         self.helper.add_input(Hidden('action', 'add_borrow'))
-        self.helper.add_input(Submit('submit', 'Add Borrow', css_class="btn btn-outline-green"))
+        self.helper.add_input(Submit('submit', 'Add Borrow', css_class="btn-green text-brown border-0 hover-shadow my-2"))
 
         # Filter borrowers to only show READER users
         self.fields['borrower'].queryset = Person.objects.filter(role=RoleName.READER)
@@ -318,7 +318,7 @@ class ReviewForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = 'POST'
         self.helper.add_input(Hidden('action', 'add_review'))
-        self.helper.add_input(Submit('submit', 'Submit Review', css_class="btn btn-outline-green"))
+        self.helper.add_input(Submit('submit', 'Submit Review', css_class="btn-green text-brown border-0 hover-shadow my-2"))
 
 
 #_____________________________________________________________
@@ -348,36 +348,7 @@ class EventCreateForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'POST'
-        self.helper.add_input(Submit('submit', 'Create Event', css_class="btn btn-success"))
+        self.helper.add_input(Submit('submit', 'Create Event', css_class="btn-green text-brown border-0 hover-shadow my-2"))
 
-#_____________________________________________________________
-class EventEditForm(forms.ModelForm):
-    class Meta:
-        model = Event
-        fields = [
-            'title', 'host', 'poster', 'description', 'event_price', 'audience',
-            'location', 'start_datetime', 'end_datetime', 'nbr_reservations', 'event_type', 'is_public', 'is_canceled'
-        ]
-        widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control my-2'}),
-            'host': forms.TextInput(attrs={'class': 'form-control my-2'}),
-            'poster': forms.ClearableFileInput(attrs={'class': 'form-control my-2'}),
-            'description': forms.Textarea(attrs={'class': 'form-control my-2', 'rows': 3}),
-            'event_price': forms.NumberInput(attrs={'class': 'form-control my-2'}),
-            'audience': forms.Select(attrs={'class': 'form-select my-2'}),
-            'location': forms.TextInput(attrs={'class': 'form-control my-2'}),
-            'start_datetime': forms.DateTimeInput(attrs={'class': 'form-control my-2', 'type': 'datetime-local'}),
-            'end_datetime': forms.DateTimeInput(attrs={'class': 'form-control my-2', 'type': 'datetime-local'}),
-            'nbr_reservations': forms.NumberInput(attrs={'class': 'form-control my-2'}),
-            'event_type': forms.Select(attrs={'class': 'form-select my-2'}),
-            'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'is_canceled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'POST'
-        self.helper.add_input(Submit('submit', 'Save Changes', css_class="btn btn-outline-brown"))
 
 

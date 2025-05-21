@@ -162,12 +162,13 @@
   <div class="modal fade" id="print-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header bg-brown text-white">
-          <h5 class="modal-title" id="modal-title">Print Orders</h5>
-          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="POST" class="needs-validation">
+        <form method="POST" class="needs-validation">
+          <div class="modal-header bg-brown text-white">
+            <h5 class="modal-title" id="modal-title">Print Orders</h5>
+            <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
             {% csrf_token %}
 
             <p class="text-muted mb-3">Choose the dates and status to filter orders:</p>
@@ -201,17 +202,18 @@
             </fieldset>
 
             <input type="hidden" name="action" value="print_multiple_orders">
-          </form>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-brown" name="format" value="pdf">
-            <i class="bi bi-file-pdf me-1"></i> Export PDF
-          </button>
-          <button type="submit" class="btn btn-outline-brown" name="format" value="csv">
-            <i class="bi bi-file-excel me-1"></i> Export CSV
-          </button>
-        </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-brown" name="format" value="pdf">
+              <i class="bi bi-file-pdf me-1"></i> Export PDF
+            </button>
+            <button type="submit" class="btn btn-outline-brown" name="format" value="csv">
+              <i class="bi bi-file-excel me-1"></i> Export CSV
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

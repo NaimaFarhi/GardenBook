@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from weasyprint import HTML
 from .utils import generate_csv_books, generate_csv_guestsList, generate_csv_orders, generate_csv_payments, generate_csv_users, generate_event_pdf, generate_guest_list, generate_order_report, generate_payment_report, generate_person_report, generate_stock_report
 from .models import Alert, Availability, Borrow, Genre, Order, Payment, Person, Book, ReadingHistory, Reservation, Review, RoleName, Wishlist, Event
-from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, EventCreateForm, EventEditForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
+from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, EventCreateForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
 from django.db.models import Q,Sum,Min, Max,Avg
 from django.core.paginator import Paginator
 import uuid
@@ -97,6 +97,11 @@ def home(request):
     .order_by('-avg_rating')
     .first()
   )
+
+  if book_of_month == None:
+    book_of_month = Book.objects.get(id=1)
+  if book_of_week == None:
+    book_of_week = Book.objects.get(id=1)
 
   context = {
     'new_arrivals': new_arrivals,
@@ -988,12 +993,20 @@ def payment_staff(request):
     action = request.POST.get('action')
 
     if action == 'print_payments':
+      user_id = request.POST.get('reader')
+      book_id = request.POST.get('book')
       start_date = request.POST.get('start_date')
       end_date = request.POST.get('end_date')
       type_payment = request.POST.getlist('type_payment')
 
       # Start with all payments
       selected_payments = payments
+
+      if user_id:
+        selected_payments = selected_payments.filter(borrow__borrower__id=user_id)
+
+      if book_id:
+        selected_payments = selected_payments.filter(borrow__book__id=book_id)
 
       # Filter by date range if valid
       if start_date and end_date:
@@ -1051,7 +1064,6 @@ def event_staff(request):
   event_type = request.GET.get("event_type", "")
   date_filter = request.GET.get("date_filter", "")
   create_form = EventCreateForm()
-  edit_forms = {event.id: EventEditForm(instance=event) for event in events}
 
   # Search
   if query:
@@ -1084,7 +1096,6 @@ def event_staff(request):
       "events": events.order_by("-start_datetime"),
       "types": types,
       "create_form": create_form,
-      "edit_forms": edit_forms,
   }
 
   return render(request, "manage_event.html", context)
@@ -1098,7 +1109,7 @@ def create_event(request):
       event = form.save(commit=False)
       event.created_by = request.user
       event.save()
-      return redirect('manage_events')
+      return redirect('manage-event')
 
 #_______________________________________________________________
 #for canceling an event
@@ -1108,7 +1119,7 @@ def cancel_event(request, pk):
   event.updated_by = request.user
   event.updated_at = date.today()
   event.save()
-  return redirect('manage_events')
+  return redirect('manage-event')
 
 #_______________________________________________________________
 #for generating a list of event guests

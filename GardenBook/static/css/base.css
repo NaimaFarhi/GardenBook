@@ -130,19 +130,19 @@ footer a:hover {
   cursor: pointer;
 }
 
-/* Carousel base class */
+/* Carousel base class 
 .carousel {
   margin: 4rem auto;
 }
-
-/* Since positioning the image, we need to help out the caption */
+ */
+/* Since positioning the image, we need to help out the caption 
 .carousel-caption {
   height: 75%;
   top: 3rem;
   bottom: 3rem;
   z-index: 10;
 }
-
+*/
 /* Declare heights because of positioning of img element */
 .carousel-item {
   height: 32rem;
@@ -159,14 +159,14 @@ footer a:hover {
 .rounded-20 {
   border-radius: 15px;
 }
-
+/* 
 #myCarouselNewArrivals .carousel-caption,
 #myCarouselNewArrivals .carousel-caption h1,
 #myCarouselNewArrivals .carousel-caption p,
 #myCarouselNewArrivals .carousel-caption a {
   color: #402e21 !important;
 }
-
+ */
 .btn-outline-brown {
   border-color: #402e21 !important;
   color: #402e21 !important;
@@ -176,14 +176,14 @@ footer a:hover {
   background-color: #402e21 !important;
   color: #e8f3e8 !important;
 }
-
+/* 
 #myCarouselRecommendations .carousel-caption,
 #myCarouselRecommendations .carousel-caption h1,
 #myCarouselRecommendations .carousel-caption p,
 #myCarouselRecommendations .carousel-caption a {
   color: #e8f3e8 !important;
 }
-
+ */
 .btn-outline-green {
   border-color: #e8f3e8 !important;
   color: #e8f3e8 !important;
@@ -203,6 +203,7 @@ footer a:hover {
   background-color: #8a9982 !important;
   color: #402e21 !important;
 }
+
 
 /* Featurettes
 ------------------------- */
@@ -859,3 +860,58 @@ footer a:hover {
   object-fit: cover;
   margin-left: 15px;
 }
+
+/* Add these styles to your base.css file */
+
+/* Hover effect for footer links */
+.hover-text-white:hover {
+  color: #ffffff !important;
+  text-decoration: underline !important;
+}
+
+/* Navbar active link styling */
+.nav-link.border-brown {
+  border-bottom-width: 3px !important;
+}
+
+/* Social media buttons in footer */
+.btn-outline-light.rounded-circle {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-light.rounded-circle:hover {
+  background-color: #ffffff;
+  color: #5d432f;
+}
+
+/* Dropdown menu styling */
+.dropdown-menu {
+  border-radius: 0.5rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(138, 153, 130, 0.1);
+}
+
+.dropdown-item i {
+  color: #8a9982;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+  .footer h5 {
+    margin-top: 1rem;
+  }
+}
+

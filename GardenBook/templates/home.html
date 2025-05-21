@@ -1,130 +1,431 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Home | GardenBook{% endblock %}
 
+{% block style %}
+<style>
+  /* Hero Section */
+  .hero-section {
+    background-color: #f0e8d9;
+    padding: 3rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-pattern {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235d432f' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #402e21;
+    margin-bottom: 1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+    color: #5d432f;
+    margin-bottom: 2rem;
+  }
+
+  /* Book Card */
+  .book-card {
+    background-color: #fff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+
+  .book-card-img {
+    height: 280px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .book-card-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .book-card:hover .book-card-img img {
+    transform: scale(1.05);
+  }
+
+  .book-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 1;
+  }
+
+  .badge-new {
+    background-color: #8a9982;
+    color: white;
+  }
+
+  .badge-recommended {
+    background-color: #5d432f;
+    color: white;
+  }
+
+  .book-card-body {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .book-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #402e21;
+    margin-bottom: 0.5rem;
+    line-height: 1.4;
+  }
+
+  .book-card-author {
+    font-size: 0.9rem;
+    color: #5d432f;
+    margin-bottom: 1rem;
+  }
+
+  .book-card-text {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+  }
+
+  .book-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Featured Books */
+  .featured-section {
+    padding: 4rem 0;
+    background-color: #fff;
+  }
+
+  .section-title {
+    position: relative;
+    display: inline-block;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #402e21;
+    margin-bottom: 2.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+  }
+
+  .section-title.green::after {
+    background-color: #8a9982;
+  }
+
+  .section-title.brown::after {
+    background-color: #5d432f;
+  }
+
+  .featured-book {
+    display: flex;
+    background-color: #f8f5f0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    height: 100%;
+  }
+
+  .featured-book-img {
+    flex: 0 0 40%;
+    position: relative;
+  }
+
+  .featured-book-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .featured-book-content {
+    flex: 0 0 60%;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .featured-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .badge-week {
+    background-color: #8a9982;
+    color: white;
+  }
+
+  .badge-month {
+    background-color: #5d432f;
+    color: white;
+  }
+
+  .featured-book-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #402e21;
+    margin-bottom: 0.5rem;
+  }
+
+  .featured-book-author {
+    font-size: 1rem;
+    color: #5d432f;
+    margin-bottom: 1rem;
+  }
+
+  .featured-book-quote {
+    position: relative;
+    font-style: italic;
+    color: #666;
+    background-color: rgba(138, 153, 130, 0.1);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+  }
+
+  .featured-book-quote::before {
+    content: '"';
+    font-size: 2rem;
+    color: #8a9982;
+    position: absolute;
+    top: -10px;
+    left: 10px;
+    font-family: serif;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 991.98px) {
+    .featured-book {
+      flex-direction: column;
+    }
+
+    .featured-book-img {
+      flex: 0 0 200px;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .hero-section {
+      padding: 2rem 0;
+    }
+
+    .hero-title {
+      font-size: 2rem;
+    }
+
+    .book-card-img {
+      height: 220px;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="py-4">
-  <!-- START NEW ARRIVALS SECTION -->
-  <div id="myCarouselNewArrivals" class="carousel slide" data-bs-ride="carousel">
-    <h1 class="d-flex align-items-center justify-content-center text-brown" style="font-size: 3.5em;">!!! New Arrivals
-      !!!</h1>
-    <div class="carousel-indicators">
-      {% for book in new_arrivals %}
-      <button type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide-to="{{ forloop.counter0 }}"
-        class="{% if forloop.first %}active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
-      {% endfor %}
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-pattern"></div>
+  <div class="container hero-content">
+    <div class="row align-items-center">
+      <div class="col-lg-6 mb-4 mb-lg-0">
+        <h1 class="hero-title">Discover Your Next Favorite Book</h1>
+        <p class="hero-subtitle">Explore our curated collection of books and find your perfect read.</p>
+        <a href="{% url 'catalog' %}" class="btn btn-brown">
+          <i class="bi bi-search me-2"></i>Browse Catalog
+        </a>
+      </div>
+      <div class="col-lg-6">
+        <img src="{% static 'edit_icon.png' %}" alt="Library Illustration" class="img-fluid">
+      </div>
     </div>
-    <div class="carousel-inner">
+  </div>
+</section>
+
+<!-- New Arrivals Section -->
+<section class="py-5 bg-light">
+  <div class="container">
+    <h2 class="section-title green text-center mx-auto">New Arrivals</h2>
+
+    <div class="row g-4">
       {% for book in new_arrivals %}
-      <div class="carousel-item {% if forloop.first %}active{% endif %}">
-        <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-          preserveAspectRatio="xMidYMid slice" focusable="false">
-          <rect width="100%" height="100%" fill="#e8f3e8" />
-        </svg>
-        <div class="container">
-          <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
-            <div class="col-4 d-flex align-items-center justify-content-center shadow-lg"
-              style="background: url('{{ book.cover.url }}') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #8a998288; border-radius: 10px;">
-            </div>
-            <div>
-              <h1>{{ book.title }}</h1>
-              <p>{{ book.description|truncatewords:20 }}</p>
-              <p><a class="btn btn-lg btn-outline-brown" href="{% url 'book-detail' book.id %}">See Details</a></p>
+      <div class="col-md-6 col-lg-3">
+        <div class="book-card">
+          <div class="book-card-img">
+            <img src="{{ book.cover.url }}" alt="{{ book.title }}">
+            <span class="book-badge badge-new">New</span>
+          </div>
+          <div class="book-card-body">
+            <h5 class="book-card-title">{{ book.title }}</h5>
+            <p class="book-card-author">by {{ book.author }}</p>
+            <p class="book-card-text">{{ book.description|truncatewords:15 }}</p>
+            <div class="book-card-footer">
+              <a href="{% url 'book-detail' book.id %}" class="btn btn-sm btn-outline-brown">
+                <i class="bi bi-book me-1"></i>Details
+              </a>
+              <span class="text-muted small">
+                <i class="bi bi-calendar3 me-1"></i>{{ book.publication_date|date:"M d, Y" }}
+              </span>
             </div>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide="prev">
-      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#myCarouselNewArrivals" data-bs-slide="next">
-      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Next</span>
-    </button>
-  </div>
-  <!-- END NEW ARRIVALS SECTION -->
 
-  <hr class="m-5">
-
-  <!-- START RECOMMENDATIONS SECTION -->
-  <div id="myCarouselRecommendations" class="carousel slide" data-bs-ride="carousel">
-    <h1 class="d-flex align-items-center justify-content-center my-2 text-brown" style="font-size: 3.5em;">
-      Recommendations</h1>
-    <div class="carousel-indicators">
-      {% for book in recommended_books %}
-      <button type="button" data-bs-target="#myCarouselRecommendations" data-bs-slide-to="{{ forloop.counter0 }}"
-        class="{% if forloop.first %}active{% endif %}" aria-label="Slide {{ forloop.counter }}"></button>
-      {% endfor %}
+    <div class="text-center mt-4">
+      <a href="{% url 'catalog' %}?filter=new" class="btn btn-outline-brown">
+        <i class="bi bi-arrow-right-circle me-2"></i>View All New Arrivals
+      </a>
     </div>
-    <div class="carousel-inner">
+  </div>
+</section>
+
+<!-- Recommendations Section -->
+<section class="py-5 bg-green-soft">
+  <div class="container">
+    <h2 class="section-title brown text-center mx-auto">Recommended For You</h2>
+
+    <div class="row g-4">
       {% for book in recommended_books %}
-      <div class="carousel-item {% if forloop.first %}active{% endif %}">
-        <svg class="bd-placeholder-img" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-          preserveAspectRatio="xMidYMid slice" focusable="false">
-          <rect width="100%" height="100%" fill="#5c4033" />
-        </svg>
-        <div class="container">
-          <div class="carousel-caption text-start d-flex justify-content-between align-items-center gap-5">
-            <div class="col-4 d-flex align-items-center justify-content-center shadow-lg"
-              style="background: url('{{ book.cover.url }}') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #402e2188; border-radius: 10px;">
-            </div>
-            <div>
-              <h1>{{ book.title }}</h1>
-              <p>{{ book.description|truncatewords:20 }}</p>
-              <p><a class="btn btn-lg btn-outline-green" href="{% url 'book-detail' book.id %}">See Details</a></p>
+      <div class="col-md-6 col-lg-3">
+        <div class="book-card">
+          <div class="book-card-img">
+            <img src="{{ book.cover.url }}" alt="{{ book.title }}">
+            <span class="book-badge badge-recommended">Recommended</span>
+          </div>
+          <div class="book-card-body">
+            <h5 class="book-card-title">{{ book.title }}</h5>
+            <p class="book-card-author">by {{ book.author }}</p>
+            <p class="book-card-text">{{ book.description|truncatewords:15 }}</p>
+            <div class="book-card-footer">
+              <a href="{% url 'book-detail' book.id %}" class="btn btn-sm btn-outline-brown">
+                <i class="bi bi-book me-1"></i>Details
+              </a>
+              <span class="text-muted small">
+                <i class="bi bi-star-fill me-1 text-warning"></i>{{ book.average_rating|floatformat:1 }}
+              </span>
             </div>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    <button class="carousel-control-prev" type="button" data-bs-target="#myCarouselRecommendations"
-      data-bs-slide="prev">
-      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Previous</span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#myCarouselRecommendations"
-      data-bs-slide="next">
-      <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      <span class="visually-hidden">Next</span>
-    </button>
+
+    <div class="text-center mt-4">
+      <a href="{% url 'catalog' %}?filter=recommended" class="btn btn-outline-brown">
+        <i class="bi bi-arrow-right-circle me-2"></i>View All Recommendations
+      </a>
+    </div>
   </div>
-  <!-- END RECOMMENDATIONS SECTION -->
+</section>
 
-  <hr class="m-5">
+<!-- Featured Books Section -->
+<section class="featured-section mb-5">
+  <div class="container">
+    <div class="row g-4">
+      <!-- Book of the Week -->
+      <div class="col-lg-6 mb-4">
+        <h3 class="section-title green">Book of the Week</h3>
+        <div class="featured-book">
+          <div class="featured-book-img">
+            <img src="{{ book_of_week.cover.url }}" alt="{{ book_of_week.title }}">
+          </div>
+          <div class="featured-book-content">
+            <span class="featured-badge badge-week">
+              <i class="bi bi-star-fill me-1"></i>Weekly Pick
+            </span>
+            <h4 class="featured-book-title">{{ book_of_week.title }}</h4>
+            <p class="featured-book-author">by {{ book_of_week.author }}</p>
 
-  <!-- START MOST LIKED BOOKS PER WEEK/MONTH -->
-  <div class="container-fluid my-4">
-    <!-- START BOOK OF THE WEEK SECTION -->
-    <div class="row featurette d-flex justify-content-center align-items-center gap-5 bg-light-brown p-5">
-      <div class="col-md-7">
-        <h2 class="featurette-heading">BOOK OF THE WEEK. <br>
-         <span class="text-muted">{{ book_of_week.title }} - {{ book_of_week.author }}</span></h2>
-        <p class="lead">&lt;&lt;<i>{{ book_of_week.reviews.first.comment|truncatewords:5 }}</i>&gt;&gt;</p>
+            {% if book_of_week.reviews.first %}
+            <div class="featured-book-quote">
+              {{ book_of_week.reviews.first.comment|truncatewords:20 }}
+            </div>
+            {% endif %}
+
+            <a href="{% url 'book-detail' book_of_week.id %}" class="btn btn-sm btn-outline-brown">
+              <i class="bi bi-info-circle me-1"></i>View Details
+            </a>
+          </div>
+        </div>
       </div>
-      <div class="col-md-5 d-flex align-items-center justify-content-center shadow-lg"
-        style="background: url('{{ book_of_week.cover.url }}') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #5d432f88; border-radius: 10px;">
+
+      <!-- Book of the Month -->
+      <div class="col-lg-6 mb-4">
+        <h3 class="section-title brown">Book of the Month</h3>
+        <div class="featured-book">
+          <div class="featured-book-img">
+            <img src="{{ book_of_month.cover.url }}" alt="{{ book_of_month.title }}">
+          </div>
+          <div class="featured-book-content">
+            <span class="featured-badge badge-month">
+              <i class="bi bi-trophy-fill me-1"></i>Monthly Pick
+            </span>
+            <h4 class="featured-book-title">{{ book_of_month.title }}</h4>
+            <p class="featured-book-author">by {{ book_of_month.author }}</p>
+
+            {% if book_of_month.reviews.first %}
+            <div class="featured-book-quote">
+              {{ book_of_month.reviews.first.comment|truncatewords:20 }}
+            </div>
+            {% endif %}
+
+            <a href="{% url 'book-detail' book_of_month.id %}" class="btn btn-sm btn-outline-brown">
+              <i class="bi bi-info-circle me-1"></i>View Details
+            </a>
+          </div>
+        </div>
       </div>
     </div>
-    <!-- END BOOK OF THE WEEK SECTION -->
-
-    <hr class="m-5">
-
-    <!-- START BOOK OF THE MONTH SECTION -->
-    <div class="row featurette d-flex justify-content-center align-items-center gap-5 bg-light-brown p-5">
-      <div class="col-md-7">
-        <h2 class="featurette-heading">BOOK OF THE MONTH. <br> 
-          <span class="text-muted">{{ book_of_month.title }} - {{ book_of_month.author }}</span>
-        </h2>
-        <p class="lead">&lt;&lt;<i>{{ book_of_month.reviews.first.comment|truncatewords:5 }}</i>&gt;&gt;</p>
-      </div>
-      <div class="col-md-5 d-flex align-items-center justify-content-center shadow-lg"
-        style="background: url(' {{ book_of_month.cover.url }} ') no-repeat center center / cover; height: 400px; width: 250px; border: 2px solid #5d432f88; border-radius: 10px;">
-      </div>
-    </div>
-    <!-- END BOOK OF THE MONTH SECTION -->
   </div>
-</div>
+</section>
 {% endblock %}

@@ -65,8 +65,8 @@ def generate_csv_payments(payments):
     for payment in payments:
         writer.writerow([
             payment.transaction_Id,
-            f"{payment.person}",
-            payment.borrow,
+            f"{payment.borrow.borrower}",
+            payment.borrow.book,
             payment.type_payment,
             payment.amount,
             payment.transaction_date.strftime("%Y-%m-%d") if payment.transaction_date else ''

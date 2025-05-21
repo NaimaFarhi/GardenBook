@@ -15,36 +15,78 @@
   <link rel="icon" type="image/png" href="{% static 'assets/brand/logo-white-rbg.png' %}">
 
   <title>{% block title %}GardenBook{% endblock %}</title>
+
+  <style>
+    /* Fix scrolling issue */
+    html,
+    body {
+      height: auto;
+      overflow: auto;
+    }
+
+    /* Fix link colors */
+    a.nav-link {
+      color: #402e21 !important;
+    }
+
+    .dropdown-item {
+      color: #402e21 !important;
+    }
+
+    /* Notification indicator */
+    .profile-notification {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 12px;
+      height: 12px;
+      background-color: #5c4033;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+
+    /* Profile wrapper for positioning */
+    .profile-wrapper {
+      position: relative;
+    }
+
+  </style>
+  {% block style %}{% endblock %}
 </head>
 
 <body>
   <!-- Header -->
-  <header class="client-nav shadow-sm">
+  <header class="client-nav shadow-sm sticky-top bg-white">
     <div class="container">
       <div class="row align-items-center py-2">
         <!-- Logo -->
         <div class="col-auto">
           <a href="{% url 'home' %}" class="d-flex align-items-center text-decoration-none">
-            <img src="{% static 'assets/brand/_logo-nobg.png' %}" alt="GardenBook" width="60" height="60">
+            <img src="{% static 'assets/brand/_logo-nobg.png' %}" alt="GardenBook" width="60" height="60"
+              class="img-fluid">
           </a>
         </div>
 
         <!-- Navigation -->
         <div class="col text-center">
           <nav class="nav justify-content-center">
-            <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">
+            <a href="{% url 'home' %}"
+              class="nav-link px-3 {% if request.path == '/' %}fw-bold border-bottom border-brown{% endif %}">
               <i class="bi bi-house-door"></i>
               <span class="d-none d-md-inline ms-1">Home</span>
             </a>
-            <a href="{% url 'catalog' %}" class="nav-link {% if '/catalog/' in request.path %}active{% endif %}">
+            <a href="{% url 'catalog' %}"
+              class="nav-link px-3 {% if '/catalog/' in request.path %}fw-bold border-bottom border-brown{% endif %}">
               <i class="bi bi-book-half"></i>
               <span class="d-none d-md-inline ms-1">Catalog</span>
             </a>
-            <a href="{% url 'events' %}" class="nav-link {% if '/events/' in request.path %}active{% endif %}">
+            <a href="{% url 'events' %}"
+              class="nav-link px-3 {% if '/events/' in request.path %}fw-bold border-bottom border-brown{% endif %}">
               <i class="bi bi-calendar2-event"></i>
               <span class="d-none d-md-inline ms-1">Events</span>
             </a>
-            <a href="{% url 'about' %}" class="nav-link">
+            <a href="{% url 'about' %}"
+              class="nav-link px-3 {% if '/about/' in request.path %}fw-bold border-bottom border-brown{% endif %}">
               <i class="bi bi-info-circle"></i>
               <span class="d-none d-md-inline ms-1">About</span>
             </a>
@@ -55,32 +97,43 @@
         <div class="col-auto">
           {% if request.user.is_authenticated %}
           <div class="d-flex align-items-center">
-            <a href="{% url 'profile' request.user.id %}" class="me-2">
-              <img src="{{ request.user.profile_pic.url }}" alt="Profile" class="rounded-circle" width="32" height="32">
-            </a>
-
-            {% if request.user.unread_alerts > 0 %}
-            <a href="{% url 'profile' request.user.id %}" class="btn btn-sm btn-brown position-relative me-2">
-              <i class="bi bi-bell"></i>
-              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                {{ request.user.unread_alerts }}
-              </span>
-            </a>
-            {% else %}
-            <a href="{% url 'profile' request.user.id %}" class="btn btn-sm btn-outline-brown me-2">
-              <i class="bi bi-bell"></i>
-            </a>
-            {% endif %}
-
-            <a href="{% url 'logout' %}" class="btn btn-sm btn-brown">
-              <i class="bi bi-box-arrow-right d-inline d-md-none"></i>
-              <span class="d-none d-md-inline">Logout</span>
-            </a>
+            <div class="dropdown">
+              <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userDropdown"
+                data-bs-toggle="dropdown" aria-expanded="false">
+                <div class="profile-wrapper">
+                  <img src="{{ request.user.profile_pic.url }}" alt="Profile"
+                    class="rounded-circle border border-2 border-green-dark" width="38" height="38">
+                  {% if request.user.unread_alerts > 0 %}
+                  <span class="profile-notification"></span>
+                  {% endif %}
+                </div>
+                <span class="d-none d-lg-inline ms-2 text-brown">{{ request.user.username }}</span>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="userDropdown">
+                <li>
+                  <a class="dropdown-item" href="{% url 'profile' request.user.id %}">
+                    <i class="bi bi-person me-2 text-green"></i>My Profile
+                    {% if request.user.unread_alerts > 0 %}
+                    <span class="ms-2 badge bg-brown rounded-pill">{{ request.user.unread_alerts }}</span>
+                    {% endif %}
+                  </a>
+                </li>
+                <li>
+                  <hr class="dropdown-divider">
+                </li>
+                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i
+                      class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+              </ul>
+            </div>
           </div>
           {% else %}
           <div>
-            <a href="{% url 'login' %}" class="btn btn-sm btn-outline-brown me-2">Login</a>
-            <a href="{% url 'register' %}" class="btn btn-sm btn-brown">Register</a>
+            <a href="{% url 'login' %}" class="btn btn-sm btn-outline-brown me-2">
+              <i class="bi bi-box-arrow-in-right me-1 d-none d-sm-inline"></i>Login
+            </a>
+            <a href="{% url 'register' %}" class="btn btn-sm btn-brown">
+              <i class="bi bi-person-plus me-1 d-none d-sm-inline"></i>Register
+            </a>
           </div>
           {% endif %}
         </div>
@@ -94,45 +147,84 @@
   </main>
 
   <!-- Footer -->
-  <footer class="footer">
+  <footer class="footer bg-brown py-4">
     <div class="container">
-      <div class="row">
+      <div class="row gy-4">
         <!-- About Section -->
-        <div class="col-md-4 mb-4">
+        <div class="col-md-4 mb-md-0">
           <div class="d-flex align-items-center mb-3">
-            <img src="{% static 'assets/brand/logo-white-rbg.png' %}" alt="GardenBook" width="40" height="40">
-            <span class="ms-2 fs-5 fw-bold">GardenBook</span>
+            <img src="{% static 'assets/brand/logo-white-rbg.png' %}" alt="GardenBook" width="40" height="40"
+              class="img-fluid">
+            <span class="ms-2 fs-5 fw-bold text-white">GardenBook</span>
           </div>
-          <p class="text-white-50">We provide the best book management system to keep your library organized and
-            efficient.</p>
+          <p class="text-white-50 mb-3">Your gateway to knowledge and discovery. Explore our vast collection of books
+            and join our community events.</p>
+          <div class="d-flex gap-2">
+            <a href="#" class="btn btn-sm btn-outline-light rounded-circle" aria-label="Facebook">
+              <i class="bi bi-facebook"></i>
+            </a>
+            <a href="#" class="btn btn-sm btn-outline-light rounded-circle" aria-label="Twitter">
+              <i class="bi bi-twitter-x"></i>
+            </a>
+            <a href="#" class="btn btn-sm btn-outline-light rounded-circle" aria-label="Instagram">
+              <i class="bi bi-instagram"></i>
+            </a>
+            <a href="#" class="btn btn-sm btn-outline-light rounded-circle" aria-label="LinkedIn">
+              <i class="bi bi-linkedin"></i>
+            </a>
+          </div>
         </div>
 
         <!-- Quick Links -->
-        <div class="col-md-4 mb-4">
-          <h5>Quick Links</h5>
-          <ul>
-            <li><a href="{% url 'home' %}">Home</a></li>
-            <li><a href="{% url 'catalog' %}">Catalog</a></li>
-            <li><a href="{% url 'events' %}">Events</a></li>
-            <li><a href="#">About</a></li>
-          </ul>
+        <div class="col-md-4 mb-md-0">
+          <h5 class="text-white mb-3 border-start border-3 border-light-green ps-2">Quick Links</h5>
+          <div class="row">
+            <div class="col-6">
+              <ul class="list-unstyled">
+                <li class="mb-2"><a href="{% url 'home' %}"
+                    class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>Home</a></li>
+                <li class="mb-2"><a href="{% url 'catalog' %}"
+                    class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>Catalog</a></li>
+                <li class="mb-2"><a href="{% url 'events' %}"
+                    class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>Events</a></li>
+                <li class="mb-2"><a href="{% url 'about' %}"
+                    class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>About</a></li>
+              </ul>
+            </div>
+            <div class="col-6">
+              <ul class="list-unstyled">
+                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>FAQ</a></li>
+                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>Privacy</a></li>
+                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>Terms</a></li>
+                <li class="mb-2"><a href="#" class="text-white-50 text-decoration-none hover-text-white"><i
+                      class="bi bi-chevron-right small me-1"></i>Contact</a></li>
+              </ul>
+            </div>
+          </div>
         </div>
 
-        <!-- Social Media Links -->
-        <div class="col-md-4 mb-4">
-          <h5>Follow Us</h5>
-          <div class="d-flex gap-3 fs-4">
-            <a href="#" class="text-white-50 hover-text-white"><i class="bi bi-facebook"></i></a>
-            <a href="#" class="text-white-50 hover-text-white"><i class="bi bi-twitter"></i></a>
-            <a href="#" class="text-white-50 hover-text-white"><i class="bi bi-instagram"></i></a>
-            <a href="#" class="text-white-50 hover-text-white"><i class="bi bi-linkedin"></i></a>
-          </div>
+        <!-- Contact & Newsletter -->
+        <div class="col-md-4">
+          <h5 class="text-white mb-3 border-start border-3 border-light-green ps-2">Contact Us</h5>
+          <ul class="list-unstyled text-white-50">
+            <li class="mb-2"><i class="bi bi-geo-alt me-2"></i>123 Library Street, Book City</li>
+            <li class="mb-2"><i class="bi bi-envelope me-2"></i>info@gardenbook.com</li>
+            <li class="mb-2"><i class="bi bi-telephone me-2"></i>(123) 456-7890</li>
+            <li class="mb-2"><i class="bi bi-clock me-2"></i>Mon-Fri: 9AM-6PM</li>
+          </ul>
         </div>
       </div>
 
       <!-- Copyright -->
-      <div class="footer-bottom text-center">
-        <p class="mb-0 text-white-50">&copy; 2025 GardenBook. All Rights Reserved.</p>
+      <div class="border-top border-secondary mt-4 pt-3 text-center">
+        <p class="mb-0 text-white-50">&copy; {% now "Y" %} GardenBook. All Rights Reserved.</p>
       </div>
     </div>
   </footer>

@@ -1,84 +1,450 @@
 {% extends 'base.html' %}
 
-
 {% block title %} Events | GardenBook {% endblock title %}
 
+{% block style %}
+<style>
+  /* Events Page Styles */
+  .events-container {
+    background-color: #f8f5f0;
+    min-height: calc(100vh - 70px);
+    padding: 2rem 0;
+  }
+
+  /* Search Form */
+  .search-form {
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+  }
+
+  .search-form:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #5d432f;
+    margin-bottom: 0.5rem;
+  }
+
+  .search-btn {
+    background-color: #5d432f;
+    color: white;
+    border: none;
+    height: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .search-btn:hover {
+    background-color: #402e21;
+    transform: translateY(-2px);
+  }
+
+  .reset-btn {
+    background-color: #8a9982;
+    color: white;
+    border: none;
+    height: 100%;
+    transition: all 0.3s ease;
+  }
+
+  .reset-btn:hover {
+    background-color: #6d7a68;
+    transform: translateY(-2px);
+  }
+
+  .search-hint {
+    color: #999;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+  }
+
+  /* Section Title */
+  .section-title {
+    position: relative;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #402e21;
+    margin-bottom: 2rem;
+    padding-bottom: 0.75rem;
+    display: inline-block;
+  }
+
+  .section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background-color: #8a9982;
+  }
+
+  /* Event Cards */
+  .events-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .event-card {
+    background-color: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    height: 100%;
+  }
+
+  .event-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .event-card-inner {
+    display: flex;
+    height: 100%;
+  }
+
+  .event-image-wrapper {
+    width: 35%;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .event-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .event-card:hover .event-image {
+    transform: scale(1.05);
+  }
+
+  .event-content {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .event-body {
+    padding: 1.5rem;
+    flex-grow: 1;
+  }
+
+  .event-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #402e21;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  .event-description {
+    color: #555;
+    margin-bottom: 1rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.6;
+  }
+
+  .event-footer {
+    background-color: #f8f9fa;
+    padding: 1.25rem 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .event-info {
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  .event-info:last-of-type {
+    margin-bottom: 1.25rem;
+  }
+
+  .event-info-label {
+    font-weight: 600;
+    color: #5d432f;
+    width: 70px;
+    flex-shrink: 0;
+  }
+
+  .event-info-value {
+    color: #666;
+  }
+
+  .event-details-btn {
+    padding: 0.5rem 1.25rem;
+    background-color: transparent;
+    color: #5d432f;
+    border: 1px solid #5d432f;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .event-details-btn:hover {
+    background-color: #5d432f;
+    color: white;
+  }
+
+  /* Modal Styles */
+  .modal-header {
+    background-color: #5d432f;
+    color: white;
+    padding: 1rem 1.5rem;
+  }
+
+  .modal-title {
+    font-weight: 600;
+  }
+
+  .btn-close {
+    filter: brightness(0) invert(1);
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .modal-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .event-modal-image {
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1rem;
+  }
+
+  .event-modal-info {
+    margin-bottom: 0.75rem;
+    display: flex;
+  }
+
+  .event-modal-label {
+    font-weight: 600;
+    color: #5d432f;
+    width: 100px;
+    flex-shrink: 0;
+  }
+
+  .event-modal-value {
+    color: #555;
+  }
+
+  .modal-close-btn {
+    background-color: #8a9982;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .modal-close-btn:hover {
+    background-color: #6d7a68;
+  }
+
+  .modal-register-btn {
+    background-color: #5d432f;
+    color: white;
+    border: none;
+    padding: 0.5rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .modal-register-btn:hover {
+    background-color: #402e21;
+  }
+
+  /* Registration Form */
+  .form-control:focus {
+    border-color: #8a9982;
+    box-shadow: 0 0 0 0.25rem rgba(138, 153, 130, 0.25);
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 0;
+  }
+
+  .empty-state-icon {
+    font-size: 3rem;
+    color: #e0e0e0;
+    margin-bottom: 1rem;
+  }
+
+  .empty-state-text {
+    color: #999;
+    font-size: 1.1rem;
+  }
+
+  /* Pagination */
+  .pagination {
+    margin-top: 2rem;
+  }
+
+  .pagination .page-link {
+    color: #5d432f;
+    border-color: #e0e0e0;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: #5d432f;
+    border-color: #5d432f;
+    color: white;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: #aaa;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 991.98px) {
+    .event-card-inner {
+      flex-direction: column;
+    }
+
+    .event-image-wrapper {
+      width: 100%;
+      height: 200px;
+    }
+
+    .event-content {
+      width: 100%;
+    }
+  }
+
+  @media (max-width: 767.98px) {
+    .search-form {
+      padding: 1.25rem;
+    }
+
+    .section-title {
+      font-size: 1.5rem;
+    }
+
+    .event-title {
+      font-size: 1.2rem;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
+<div class="events-container">
+  <div class="container">
+    <!-- Search Form -->
+    <form method="GET" action="{% url 'events' %}" class="search-form">
+      <div class="row align-items-end g-3">
+        <!-- Search Text -->
+        <div class="col-md-6">
+          <label for="searchBar" class="form-label">
+            <i class="bi bi-search me-2"></i>Search Events
+          </label>
+          <input type="search" name="q" class="form-control" id="searchBar"
+            placeholder="Title, Description, Keywords..." value="{{ request.GET.q|default:'' }}">
+        </div>
 
-<div class="container-fluid row d-flex justify-content-center my-4">
+        <!-- Event Type -->
+        <div class="col-md-2">
+          <label for="event_type" class="form-label">
+            <i class="bi bi-tag me-2"></i>Event Type
+          </label>
+          <select class="form-select" name="event_type" id="event_type">
+            <option value="">All types</option>
+            {% for type in types %}
+            <option value="{{ type }}">{{ type }}</option>
+            {% endfor %}
+          </select>
+        </div>
 
-  <!-- START HORIZONTAL EVENT SEARCH BAR -->
-  <form method="GET" action="{% url 'events' %}" class="bg-white shadow-sm rounded-20 p-4" style="width: 75%;">
-    <div class="row align-items-end g-3">
+        <!-- Date Filter -->
+        <div class="col-md-2">
+          <label for="date_filter" class="form-label">
+            <i class="bi bi-calendar3 me-2"></i>Date
+          </label>
+          <select class="form-select" name="date_filter" id="date_filter">
+            <option value="">Any Time</option>
+            <option value="year">This Year</option>
+            <option value="month">This Month</option>
+            <option value="week">This Week</option>
+          </select>
+        </div>
 
-      <!-- SEARCH TEXT -->
-      <div class="col-md-6">
-        <label for="searchBar" class="form-label">Search</label>
-        <input type="search" name="q" class="form-control" id="searchBar" placeholder="Title, Description, Keywords...">
+        <!-- Search Button -->
+        <div class="col-md-1 d-grid">
+          <button type="submit" class="btn search-btn">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+
+        <!-- Reset Button -->
+        <div class="col-md-1 d-grid">
+          <a href="{% url 'events' %}" class="btn reset-btn">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        </div>
       </div>
-
-      <!-- EVENT TYPE -->
-      <div class="col-md-2">
-        <label for="event_type" class="form-label">Event Type</label>
-        <select class="form-control" name="event_type" id="event_type">
-          <option value="">All types</option>
-          {% for type in types %}
-          <option value="{{ type }}">{{ type }}</option>
-          {% endfor %}
-        </select>
+      <div class="search-hint">
+        <i class="bi bi-arrow-return-left me-1"></i>Press Enter to search
       </div>
+    </form>
 
-      <!-- DATE FILTER -->
-      <div class="col-md-2">
-        <label for="date_filter" class="form-label">Date</label>
-        <select class="form-control" name="date_filter" id="date_filter">
-          <option value="">Any Time</option>
-          <option value="year">This Year</option>
-          <option value="month">This Month</option>
-          <option value="week">This Week</option>
-        </select>
-      </div>
+    <!-- Events Section -->
+    <div class="mb-5">
+      <h2 class="section-title">Upcoming Events</h2>
 
-      <!-- SEARCH BUTTON -->
-      <div class="col-md-1 d-grid">
-        <button type="submit" class="btn btn-green">Search</button>
-      </div>
-
-      <div class="col-md-1 d-grid">
-        <a href="{% url 'events' %}" class="btn btn-green">Reset</a>
-      </div>
-
-    </div>
-    <small>Press Enter <i class="bi bi-arrow-return-left"></i></small>
-  </form>
-  <!-- END HORIZONTAL EVENT SEARCH BAR -->
-
-  <div class="m-5">
-    <h3 class="m-5">Upcoming Events</h3>
-
-    <div class="row">
       {% if events %}
-      {% for event in events %}
-      <div class="col-auto">
-        <div class="card mb-3 rounded-20" style="width: 50rem; height: 30rem;">
-          <div class="row g-0" style="height: 100%">
-            <div class="col-md-4">
-              <img src="{{ event.poster.url }}" class="img-fluid rounded-start" alt="event poster">
+      <div class="events-grid">
+        {% for event in events %}
+        <div class="event-card">
+          <div class="event-card-inner">
+            <div class="event-image-wrapper">
+              <img src="{{ event.poster.url }}" class="event-image" alt="{{ event.title }} poster">
             </div>
-            <div class="col-md-8">
-              <div class="card-body bg-white overflow-hidden" style="height: 53%;">
-                <h5 class="card-title">{{ event.title }}</h5>
-                <div></div>
-                <p class="card-text">{{ event.description }}</p>
+            <div class="event-content">
+              <div class="event-body">
+                <h3 class="event-title">{{ event.title }}</h3>
+                <p class="event-description">{{ event.description }}</p>
               </div>
-              <div class="card-footer bg-white">
-                <p class="card-text"><strong>Starts:</strong> <small class="text-body-secondary">{{ event.start_datetime}}</small></p>
-                <p class="card-text"><strong>Ends:</strong> <small class="text-body-secondary">{{ event.end_datetime}}</small></p>
-                <p class="card-text"><strong>Location:</strong> <small class="text-body-secondary">{{ event.location}}</small></p>
+              <div class="event-footer">
+                <div class="event-info">
+                  <span class="event-info-label">Starts:</span>
+                  <span class="event-info-value">{{ event.start_datetime }}</span>
+                </div>
+                <div class="event-info">
+                  <span class="event-info-label">Ends:</span>
+                  <span class="event-info-value">{{ event.end_datetime }}</span>
+                </div>
+                <div class="event-info">
+                  <span class="event-info-label">Location:</span>
+                  <span class="event-info-value">{{ event.location }}</span>
+                </div>
+
                 <!-- Button to open event details -->
-                <button type="button" class="btn btn-outline-brown" data-bs-toggle="modal"
+                <button type="button" class="event-details-btn" data-bs-toggle="modal"
                   data-bs-target="#eventDetails{{ event.id }}">
-                  Details
+                  <i class="bi bi-info-circle me-1"></i>Details
                 </button>
 
                 <!-- Modal 1: Event Details -->
@@ -92,44 +458,79 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
-                        <div class="row">
+                        <div class="row g-4">
                           <div class="col-md-4">
-                            <img src="{{ event.poster.url }}" class="img-fluid rounded-start" alt="event poster">
+                            <img src="{{ event.poster.url }}" class="img-fluid rounded event-modal-image"
+                              alt="{{ event.title }} poster">
                           </div>
                           <div class="col-md-8">
-                            <p class="card-text">{{ event.description }}</p>
-                            <p class="card-text"><strong>Starts:</strong>
-                              <small class="text-body-secondary">{{ event.start_datetime }}</small>
-                            </p>
-                            <p class="card-text"><strong>Ends:</strong>
-                              <small class="text-body-secondary">{{ event.end_datetime }}</small>
-                            </p>
-                            <p class="card-text"><strong>Location: </strong>
-                              <small class="text-body-secondary">{{ event.location }}</small>
-                            </p>
-                            <p class="card-text"><strong>Event Type:</strong>
-                              <small class="text-body-secondary">{{ event.event_type }}</small>
-                            </p>
-                            <p class="card-text"><strong>Event Host:</strong>
-                              <small class="text-body-secondary">{{ event.event_host }}</small>
-                            </p>
-                            <p class="card-text"><strong>Event Price:</strong>
-                              <small class="text-body-secondary">{{ event.event_price }}</small>
-                            </p>
+                            <p>{{ event.description }}</p>
+
+                            <div class="event-modal-info">
+                              <span class="event-modal-label">Starts:</span>
+                              <span class="event-modal-value">{{ event.start_datetime }}</span>
+                            </div>
+                            <div class="event-modal-info">
+                              <span class="event-modal-label">Ends:</span>
+                              <span class="event-modal-value">{{ event.end_datetime }}</span>
+                            </div>
+                            <div class="event-modal-info">
+                              <span class="event-modal-label">Location:</span>
+                              <span class="event-modal-value">{{ event.location }}</span>
+                            </div>
+                            <div class="event-modal-info">
+                              <span class="event-modal-label">Event Type:</span>
+                              <span class="event-modal-value">{{ event.event_type }}</span>
+                            </div>
+                            <div class="event-modal-info">
+                              <span class="event-modal-label">Event Host:</span>
+                              <span class="event-modal-value">{{ event.event_host }}</span>
+                            </div>
+                            <div class="event-modal-info">
+                              <span class="event-modal-label">Event Price:</span>
+                              <span class="event-modal-value">{{ event.event_price }}</span>
+                            </div>
+
+                            <!-- Reservations Progress -->
+                            <div class="mt-3">
+                              <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small text-muted">Reservations</span>
+                                <span class="small">{{ event.current_reservations }}/{{ event.nbr_reservations }}</span>
+                              </div>
+                              <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-brown" role="progressbar" {% if event.nbr_reservations > 0 %}
+                                  style="width: {% widthratio event.current_reservations event.nbr_reservations 100 %}%;"
+                                  {% else %}
+                                  style="width: 0%;"
+                                  {% endif %}
+                                  aria-valuenow="{{ event.current_reservations }}"
+                                  aria-valuemin="0"
+                                  aria-valuemax="{{ event.nbr_reservations }}">
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
                       <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-green" data-bs-dismiss="modal">Close</button>
-                        <!-- Open register modal and close current -->
-                         {% if event.nbr_reservations == 0 %} 
-                        <button class="btn btn-outline-brown">Free Entrance</button>
-                         {% elif event.nbr_reservations == current_reservations %}
-                         <button class="btn btn-outline-brown">Guests List Full</button>
-                         {% else %}
-                        <button class="btn btn-outline-brown" data-bs-target="#registerEvent{{ event.id }}"
-                          data-bs-toggle="modal" data-bs-dismiss="modal">Register</button>
-                          {% endif %}
+                        <button type="button" class="btn modal-close-btn" data-bs-dismiss="modal">
+                          <i class="bi bi-x-circle me-1"></i>Close
+                        </button>
+
+                        {% if event.nbr_reservations == 0 %}
+                        <button class="btn modal-register-btn" disabled>
+                          <i class="bi bi-ticket-perforated me-1"></i>Free Entrance
+                        </button>
+                        {% elif event.nbr_reservations == current_reservations %}
+                        <button class="btn modal-register-btn" disabled>
+                          <i class="bi bi-people-fill me-1"></i>Guests List Full
+                        </button>
+                        {% else %}
+                        <button class="btn modal-register-btn" data-bs-target="#registerEvent{{ event.id }}"
+                          data-bs-toggle="modal" data-bs-dismiss="modal">
+                          <i class="bi bi-person-plus me-1"></i>Register
+                        </button>
+                        {% endif %}
                       </div>
                     </div>
                   </div>
@@ -149,42 +550,50 @@
                           <button type="reset" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-
                           {% csrf_token %}
                           <div class="mb-3">
-                            <label for="username{{ event.id }}" class="form-label">Username</label>
+                            <label for="username{{ event.id }}" class="form-label">
+                              <i class="bi bi-person me-2"></i>Username
+                            </label>
                             <input type="text" class="form-control" id="username{{ event.id }}" name="username"
                               required>
                           </div>
                           <div class="mb-3">
-                            <label for="email{{ event.id }}" class="form-label">Email</label>
+                            <label for="email{{ event.id }}" class="form-label">
+                              <i class="bi bi-envelope me-2"></i>Email
+                            </label>
                             <input type="email" class="form-control" id="email{{ event.id }}" name="email" required>
                           </div>
                         </div>
                         <div class="modal-footer">
                           <input type="hidden" name="event_id" value="{{ event.id }}">
-                          <button type="submit" class="btn btn-outline-brown">Register</button>
+                          <button type="button" class="btn modal-close-btn" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>Cancel
+                          </button>
+                          <button type="submit" class="btn modal-register-btn">
+                            <i class="bi bi-check-circle me-1"></i>Register
+                          </button>
                         </div>
                       </form>
                     </div>
                   </div>
                 </div>
-
               </div>
             </div>
           </div>
         </div>
+        {% endfor %}
       </div>
-      {% endfor %}
       {% else %}
-      <div class="col-12 d-flex justify-content-center">
-        <p>No events found.</p>
+      <div class="empty-state">
+        <i class="bi bi-calendar-x empty-state-icon"></i>
+        <p class="empty-state-text">No events found. Try adjusting your search criteria.</p>
       </div>
       {% endif %}
-      <!-- END EVENT CARD -->
 
+      <!-- Pagination -->
       {% if events.has_other_pages %}
-      <div class="col-12 d-flex justify-content-center">
+      <div class="d-flex justify-content-center">
         <nav aria-label="Page navigation">
           <ul class="pagination">
             {% if events.has_previous %}
@@ -192,7 +601,7 @@
               <a class="page-link"
                 href="?page={{ events.previous_page_number }}&q={{ request.GET.q }}&event_type={{ request.GET.event_type }}&date_filter={{ request.GET.date_filter }}"
                 aria-label="Previous">
-                <span aria-hidden="true">&laquo;</span>
+                <i class="bi bi-chevron-left"></i>
               </a>
             </li>
             {% endif %}
@@ -200,8 +609,9 @@
             {% for page in events.paginator.page_range %}
             <li class="page-item {% if events.number == page %}active{% endif %}">
               <a class="page-link"
-                href="?page={{ page }}&q={{ request.GET.q }}&event_type={{ request.GET.event_type }}&date_filter={{ request.GET.date_filter }}">{{
-                page }}</a>
+                href="?page={{ page }}&q={{ request.GET.q }}&event_type={{ request.GET.event_type }}&date_filter={{ request.GET.date_filter }}">
+                {{ page }}
+              </a>
             </li>
             {% endfor %}
 
@@ -210,20 +620,15 @@
               <a class="page-link"
                 href="?page={{ events.next_page_number }}&q={{ request.GET.q }}&event_type={{ request.GET.event_type }}&date_filter={{ request.GET.date_filter }}"
                 aria-label="Next">
-                <span aria-hidden="true">&raquo;</span>
+                <i class="bi bi-chevron-right"></i>
               </a>
             </li>
             {% endif %}
           </ul>
         </nav>
-
-
       </div>
       {% endif %}
     </div>
-
   </div>
 </div>
-<!-- END CONTAINER -->
-
 {% endblock %}

@@ -142,12 +142,13 @@
   <div class="modal fade" id="printModal" tabindex="-1" aria-labelledby="printModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
+        <form method="POST" class="needs-validation">
         <div class="modal-header bg-brown text-white">
           <h5 class="modal-title" id="printModalLabel">Print Payments</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="POST" class="needs-validation">
+          
             {% csrf_token %}
 
             <p class="text-muted mb-3">Filter payment records for export:</p>
@@ -197,10 +198,10 @@
             </div>
 
             <input type="hidden" name="action" value="print_payments">
-          </form>
+          
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-brown" data-bs-dismiss="modal">Close</button>
+          <button type="reset" class="btn btn-outline-brown" data-bs-dismiss="modal">Close</button>
           <button type="submit" class="btn btn-brown" name="format" value="pdf">
             <i class="bi bi-file-pdf me-1"></i> Export to PDF
           </button>
@@ -208,6 +209,7 @@
             <i class="bi bi-file-excel me-1"></i> Export to Excel
           </button>
         </div>
+      </form>
       </div>
     </div>
   </div>

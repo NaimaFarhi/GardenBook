@@ -185,7 +185,7 @@ class Supplier(models.Model):
 class Order(models.Model):
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
-        ('Received', 'Received'),
+        ('Delivered', 'Delivered'),
         ('Cancelled', 'Cancelled'),
     ]
 
