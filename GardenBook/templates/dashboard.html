@@ -181,7 +181,7 @@
               <h5 class="mb-0 text-brown">Last Alerts Sent</h5>
               <p class="text-muted mb-0 mt-1 small">Recent notifications sent to users</p>
             </div>
-            <a href="#" class="btn btn-sm btn-outline-brown">View All</a>
+            
           </div>
         </div>
         <div class="card-body p-0">
@@ -244,9 +244,9 @@
           </div>
         </div>
         <div class="card-footer bg-white border-0 p-3 text-center">
-          <button class="btn btn-sm btn-outline-brown">
+          <a href="{% url 'manage-users' %}" class="btn btn-sm btn-outline-brown">
             <i class="bi bi-plus-circle me-1"></i> Send New Alert
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -325,9 +325,9 @@
           </div>
         </div>
         <div class="card-footer bg-white border-0 p-3 text-center">
-          <button class="btn btn-sm btn-outline-brown">
+          <a href="{% url 'manage-users' %}" class="btn btn-sm btn-outline-brown">
             <i class="bi bi-plus-circle me-1"></i> Record New Borrow
-          </button>
+          </a>
         </div>
       </div>
     </div>
@@ -348,7 +348,7 @@
     }
 
     updateTime();
-    setInterval(updateTime, 60000); // Update every minute
+    setInterval(updateTime, 60000);
 
     // Define theme colors
     const themeColors = {
@@ -358,6 +358,8 @@
       lightGreen: '#aabda0',
       softGreen: '#e8f3e8'
     };
+
+    // Line chart data from backend
     const weeklyLabels = JSON.parse('{{ weekly_labels|safe }}');
     const weeklyDataPoints = JSON.parse('{{ weekly_data|safe }}');
     const monthlyLabels = JSON.parse('{{ monthly_labels|safe }}');
@@ -422,7 +424,7 @@
       }
     });
 
-    // Period switcher
+    // Period switcher for borrowing chart
     document.querySelectorAll('[data-period]').forEach(button => {
       button.addEventListener('click', function () {
         document.querySelectorAll('[data-period]').forEach(btn => btn.classList.remove('active'));
@@ -433,29 +435,32 @@
       });
     });
 
-    // Book Categories Chart
+    // ===== Donut Chart with dynamic data =====
     const categoriesCtx = document.getElementById('bookCategoriesChart').getContext('2d');
 
-    // Sample data - replace with actual data from your backend
-    const categoriesData = {
-      labels: ['Fiction', 'Science', 'History', 'Biography', 'Art', 'Other'],
-      datasets: [{
-        data: [30, 20, 15, 10, 15, 10],
-        backgroundColor: [
-          themeColors.brown,
-          themeColors.green,
-          themeColors.lightBrown,
-          themeColors.lightGreen,
-          themeColors.softGreen,
-          'rgba(93, 67, 47, 0.5)'
-        ],
-        borderWidth: 0
-      }]
-    };
+    // Pass these two variables from Django view
+    const categoriesLabels = JSON.parse('{{ categories_labels|safe }}');
+    const categoriesDataPoints = JSON.parse('{{ categories_data|safe }}');
+
+    const categoryColors = [
+      themeColors.brown,
+      themeColors.green,
+      themeColors.lightBrown,
+      themeColors.lightGreen,
+      themeColors.softGreen,
+      'rgba(93, 67, 47, 0.5)'
+    ];
 
     const categoriesChart = new Chart(categoriesCtx, {
       type: 'doughnut',
-      data: categoriesData,
+      data: {
+        labels: categoriesLabels,
+        datasets: [{
+          data: categoriesDataPoints,
+          backgroundColor: categoryColors.slice(0, categoriesLabels.length),
+          borderWidth: 0
+        }]
+      },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -467,32 +472,7 @@
         cutout: '65%'
       }
     });
-
-    // Handle period buttons for borrowing trends chart
-    document.querySelectorAll('[data-period]').forEach(button => {
-      button.addEventListener('click', function () {
-        // Remove active class from all buttons
-        document.querySelectorAll('[data-period]').forEach(btn => {
-          btn.classList.remove('active');
-        });
-
-        // Add active class to clicked button
-        this.classList.add('active');
-
-        // Update chart data based on selected period
-        const period = this.getAttribute('data-period');
-
-        if (period === 'weekly') {
-          borrowingChart.data = weeklyData;
-        } else if (period === 'monthly') {
-          borrowingChart.data = monthlyData;
-        } else if (period === 'yearly') {
-          borrowingChart.data = yearlyData;
-        }
-
-        borrowingChart.update();
-      });
-    });
   });
 </script>
+
 {% endblock %}

@@ -1,6 +1,49 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
+{% block style %}
+<style>
+  body {
+    background-color: #f8f5f0;
+    /* Light brown background */
+  }
+
+  .bg-light-brown {
+    background-color: #f8f5f0;
+    /* Light brown */
+  }
+
+  .text-brown {
+    color: #6b4c3a;
+    /* Dark brown text */
+  }
+
+  .btn-brown {
+    background-color: #6b4c3a;
+    /* Dark brown button */
+    color: white;
+  }
+
+  .btn-green {
+    background-color: #aabda0;
+    /* Green button */
+    color: #6b4c3a;
+  }
+
+  .btn-brown:hover {
+    background-color: #5a3d2c;
+    /* Darker brown on hover */
+  }
+
+  .rounded-20 {
+    border-radius: 100px;
+  }
+</style>
+
+{% endblock %}
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,7 +57,6 @@
   <!-- Bootstrap Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="{% static 'css/base.css' %}">
   <link rel="icon" type="image/png" href="{% static 'assets/brand/logo-white-rbg.png' %}">
 </head>
 
@@ -43,7 +85,6 @@
               </div>
 
               <div class="d-grid gap-2 mt-4">
-                <button type="submit" class="btn btn-brown">Register</button>
                 <a href="{% url 'login' %}" class="btn btn-outline-brown">Already have an account? Login</a>
               </div>
             </form>

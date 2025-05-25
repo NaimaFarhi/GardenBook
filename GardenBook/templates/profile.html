@@ -22,20 +22,6 @@
                   </div>
                 </div>
 
-                <div class="d-grid gap-2 mb-3">
-                  <a href="{% url 'edit-user' person.id %}" class="btn btn-sm btn-outline-brown">
-                    <i class="bi bi-pencil me-2"></i>Edit Profile
-                  </a>
-                  <button class="btn btn-sm btn-outline-brown" data-bs-toggle="modal"
-                    data-bs-target="#Change-pwd-modal">
-                    <i class="bi bi-key me-2"></i>Change Password
-                  </button>
-                </div>
-
-                <div class="border-top pt-3">
-                  <h6 class="text-brown mb-2">Bio</h6>
-                  <p class="small text-muted">{{ person.bio|default:"No bio provided." }}</p>
-                </div>
               </div>
 
               <!-- User Details -->
@@ -52,9 +38,10 @@
 
                     <h6 class="text-muted mb-2">Last Name</h6>
                     <p>{{ person.last_name }}</p>
-
+                    {% if request.user.role != 'Reader' %}
                     <h6 class="text-muted mb-2">Role</h6>
                     <p>{{ person.get_role_display }}</p>
+                    {% endif %}
                   </div>
 
                   <div class="col-md-6">
@@ -278,9 +265,10 @@
                     </td>
                     <td>{{wishedBook.date_added}}</td>
                     <td>
-                      <button class="btn btn-sm btn-outline-danger">
-                        <i class="bi bi-heart-break"></i>
-                      </button>
+                      <a href="{% url 'remove-wishlist' wishedBook.book.id request.user.id 'profile' %}" class="btn btn-outline-brown" data-bs-toggle="tooltip"
+                        data-bs-placement="top" title="Remove From Wishlist">
+                        <i class="bi bi-heartbreak"></i>
+                      </a>
                     </td>
                   </tr>
                   {% endfor %}
@@ -297,7 +285,7 @@
       </div>
 
       <!-- Notifications Sidebar -->
-      <div class="col-lg-4 mt-4 mt-lg-0">
+      <div class="col-lg-4 mt-4 mt-lg-0" style="overflow-y: scroll; max-height: 100rem;">
         <div class="card rounded-20 shadow-sm">
           <div class="card-header bg-white py-3">
             <h5 class="mb-0 text-brown">Notifications</h5>
@@ -342,6 +330,62 @@
       </div>
     </div>
   </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal fade" id="edit-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-brown text-white">
+          <h5 class="modal-title" id="modal-title">Edit Profile</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form method="POST" action="" class="needs-validation">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="first-name" class="form-label">First Name</label>
+              <input type="text" class="form-control" id="first-name" name="first_name" value="{{ person.first_name }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="last-name" class="form-label">Last Name</label>
+              <input type="text" class="form-control" id="last-name" name="last_name" value="{{ person.last_name }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input type="email" class="form-control" id="email" name="email" value="{{ person.email }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="phone" class="form-label">Phone</label>
+              <input type="tel" class="form-control" id="phone" name="phone" value="{{ person.phone }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="address" class="form-label">Address</label>
+              <input type="text" class="form-control" id="address" name="address" value="{{ person.address }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="city" class="form-label">City</label>
+              <input type="text" class="form-control" id="city" name="city" value="{{ person.city }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="postal-code" class="form-label">Postal Code</label>
+              <input type="text" class="form-control" id="postal-code" name="postal_code"
+                value="{{ person.postal_code }}" required>
+            </div>
+
+            <div class="mb-3">
+              <label for="country" class="form-label">Country</label>
+              <input type="text" class="form-control" id="country" name="country"
+                value="{{ person.country }}" required>
+            </div>
+
+          </form>
 
   <!-- Change Password Modal -->
   <div class="modal fade" id="Change-pwd-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">

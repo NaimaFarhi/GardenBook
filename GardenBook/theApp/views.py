@@ -5,20 +5,20 @@ from django.db.models import Count
 import json
 from django.http import HttpResponse
 from django.utils import timezone
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from weasyprint import HTML
-from .utils import generate_csv_books, generate_csv_guestsList, generate_csv_orders, generate_csv_payments, generate_csv_users, generate_event_pdf, generate_guest_list, generate_order_report, generate_payment_report, generate_person_report, generate_stock_report
-from .models import Alert, Availability, Borrow, Genre, Order, Payment, Person, Book, ReadingHistory, Reservation, Review, RoleName, Wishlist, Event
-from .forms import BorrowForm, CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, EventCreateForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
+from .utils import generate_csv_books, generate_csv_guestsList, generate_csv_orders, generate_csv_payments, generate_csv_users, generate_event_pdf, generate_guest_list, generate_order_pdf, generate_order_report, generate_payment_report, generate_person_report, generate_stock_report, update_expired_reservations
+from .models import Alert, Availability, Borrow, Genre, MembershipStatus, Order, Payment, Person, Book, ReadingHistory, Reservation, Review, RoleName, Wishlist, Event
+from .forms import CustomBookEditingForm, CustomBookCreationForm, CustomPersonEditingForm, CustomOrderCreationForm, EventForm, ReaderCreationForm, ReviewForm, StaffCreationForm, SupplierForm
 from django.db.models import Q,Sum,Min, Max,Avg
 from django.core.paginator import Paginator
 import uuid
 from django.template.loader import render_to_string
 from .decorators import role_required, owner_only, prevent_duplicate_borrow, prevent_duplicate_reservation
-
+from dal import autocomplete
 
 
 #_____________________________________________________________
@@ -75,6 +75,9 @@ def logoutUser(request):
 #_______________________________________________________________
 #for the home page
 def home(request):
+  # Update expired reservations
+  update_expired_reservations()
+
   # Get new arrivals (e.g., last 3 books added)
   new_arrivals = Book.objects.order_by('-date_creation')[:3]
 
@@ -102,9 +105,9 @@ def home(request):
   )
 
   if book_of_month == None:
-    book_of_month = Book.objects.get(id=1)
-  if book_of_week == None:
-    book_of_week = Book.objects.get(id=1)
+    book_of_month = Book.objects.first()
+  if book_of_week is None:
+    book_of_week = Book.objects.first()
 
   context = {
     'new_arrivals': new_arrivals,
@@ -124,6 +127,11 @@ def about(request):
 # + a filter to see the wishlist(liked books)
 def catalog(request):
   catalog = Book.objects.filter(~Q(availability=Availability.DELETED))
+
+  wishlist_books = []
+  if request.user.is_authenticated:
+      wishlist_books = Wishlist.objects.filter(person=request.user).values_list('book_id', flat=True)
+
 
   # Search bar query
   q = request.GET.get('q')
@@ -191,6 +199,7 @@ def catalog(request):
     'pub_year_max': pub_year_max,
     'result_count': result_count,
     'book_count': book_count,
+    'wishlist_books': list(wishlist_books),
   }
 
   return render(request, "catalog.html", context)
@@ -199,6 +208,10 @@ def catalog(request):
 # for displaying one book in detail
 def book_detail(request, pk):
   book = Book.objects.get(id=pk)
+  update_expired_reservations()
+
+  wishlist = Wishlist.objects.filter(person=request.user, book=book).exists() if request.user.is_authenticated else False
+
   reviews = book.reviews.select_related('user')
   average = book.average_rating()
   form = ReviewForm()
@@ -227,7 +240,8 @@ def book_detail(request, pk):
       'book': book,
       'reviews': reviews,
       'average_rating': average,
-      'form': form
+      'form': form,
+      'wishlist': wishlist,
   })
 
 #_______________________________________________________________
@@ -250,7 +264,7 @@ def create_book(request):
 @login_required(login_url='login')
 #for orders page
 def orders(request):
-  orders = Order.objects.all()
+  orders = Order.objects.all().order_by('-order_date')
   formSupplier = SupplierForm()
   formOrder = CustomOrderCreationForm()
 
@@ -299,7 +313,7 @@ def orders(request):
       order = Order.objects.get(id=order_id)
       
       if request.POST.get('format') == 'pdf':
-        return generate_order_report(request, [order])  # Pass a list of orders, even if it's just one
+        return generate_order_pdf(request, order)  # Pass a list of orders, even if it's just one
       elif request.POST.get('format') == 'csv':
         return generate_csv_orders([order])  # samething here
 
@@ -426,6 +440,11 @@ def dashboard(request):
   yearly_labels = [entry['year'].strftime('%Y') for entry in yearly_borrows]
   yearly_data = [entry['count'] for entry in yearly_borrows]
 
+  genre_counts = Genre.objects.annotate(book_count=Count('book'))  # assuming related_name='book'
+    
+  categories_labels = [genre.name for genre in genre_counts]
+  categories_data = [genre.book_count for genre in genre_counts]
+
   context = {
       'total_books': total_books,
       'new_monthly_stock': new_monthly_stock,
@@ -442,6 +461,11 @@ def dashboard(request):
       'monthly_data': json.dumps(monthly_data),
       'yearly_labels': json.dumps(yearly_labels),
       'yearly_data': json.dumps(yearly_data),
+
+      'categories_labels': json.dumps(categories_labels),
+      'categories_data': json.dumps(categories_data),
+
+
   }
 
   return render(request, 'dashboard.html', context)
@@ -535,7 +559,7 @@ def stock(request):
         return generate_csv_books(filtered_books)
       
       return redirect('stock')
-      
+    
   genres = Genre.objects.all()
   langs = Book.objects.values_list('lang', flat=True).distinct()
   auds = Book.objects.values_list('audience', flat=True).distinct()
@@ -576,7 +600,7 @@ def edit_book(request, pk):
 
   form = CustomBookEditingForm(instance=book)
   if request.method == 'POST':
-    form = CustomBookEditingForm(request.POST, instance=book)
+    form = CustomBookEditingForm(request.POST, instance=book, files=request.FILES)
     if form.is_valid():
       form.save()
       return redirect('stock')
@@ -605,21 +629,18 @@ def reader_borrow(request, book_id):
 @login_required(login_url='login')
 @prevent_duplicate_reservation()
 def reserve(request, book_id):
-  book = Book.objects.get(id=book_id)
-
-  if not Borrow.objects.filter(person=request.user, book=book, returned=False, is_fine_paid=False).exists():
-    Reservation.objects.create(
-      person=request.user,
-      book=book
-    )
-
-    book.is_reserved = True
-    book.save()
-    messages.success(request, "Book added to your Reservations.")
-  else:
-    messages.info(request, "You alrady borrowed this book.")
-  return redirect('book-detail', pk=book.pk)
-
+  book = get_object_or_404(Book, id=book_id)
+  print("Book found:", book)
+  print("User trying to reserve:", request.user)
+  
+  Reservation.objects.create(
+    person=request.user,
+    book=book,
+  )
+  book.is_reserved = True
+  book.save()
+    
+  return redirect('book-detail', pk=book.id)
 #_______________________________________________________________
 #for deleting a book (the book doesnt actually get deleted, 
 # it is just not shown anymore in stock except for the admin)
@@ -640,6 +661,7 @@ def change_availability(request, pk, new_status):
 @owner_only(Person)
 def profile(request, pk): 
   person = Person.objects.get(id = pk)
+
   borrowed_books = Borrow.objects.filter(borrower__id=pk)
   reserved_books = Reservation.objects.filter(person__id=pk)
   read_books =ReadingHistory.objects.filter(person__id=pk)
@@ -673,6 +695,25 @@ def add_wishlist(request, book_id, user_id, current_page):
 
   return redirect(current_page)
 
+#_________________________________________________________
+#for removing from wishlist
+@login_required(login_url='login')
+def remove_wishlist(request, book_id, user_id, current_page):
+  user = Person.objects.get(id=user_id)
+  book = Book.objects.get(id=book_id)
+
+  # Check if the wishlist item exists
+  wishlist_item = Wishlist.objects.filter(person=user, book=book).first()
+  if wishlist_item:
+    wishlist_item.delete()
+    messages.success(request, "Book removed from your wishlist.")
+  else:
+    messages.info(request, "This book is not in your wishlist.")
+
+  if current_page == 'profile':
+    return redirect('profile', pk=user_id)
+  else:
+    return redirect(current_page)
 
 #_______________________________________________________________
 #for edit a users infos
@@ -695,6 +736,10 @@ def edit_user(request, pk):
 @login_required(login_url='login')
 def users(request):
   users = Person.objects.filter(is_superuser=False)
+  available_books = Book.objects.filter(
+    ~Q(availability=Availability.DELETED), 
+    ~Q(availability=Availability.BORROWED)
+    )
   if request.user.role == 'Librarian':
     users = users.filter(role=RoleName.READER)
 
@@ -735,6 +780,7 @@ def users(request):
 
   if request.method == 'POST':
     action = request.POST.get('action')
+
     if action == 'print_users':
       format = request.POST.get('format')
       dob_from = request.POST.get('dob_from')
@@ -769,10 +815,56 @@ def users(request):
         return generate_person_report(request, selected_users)
       elif format == 'csv':
         return generate_csv_users(selected_users)
+      
+    elif action == 'add_borrow':
+      user_id = request.POST.get('user_id')
+      raw_book = request.POST.get('book')
+      print("Raw book:", raw_book)
+      print("Raw borrower:", user_id)
+
+      
+      book_isbn = raw_book.split('-')[0].strip() if raw_book else None
+
+      
+      try:
+        book = Book.objects.get(ISBN__icontains=book_isbn) if book_isbn else None
+      except Book.DoesNotExist:
+        book = None
+      print("Book found:", book)
+      # Look up borrower
+      try:
+        borrower = Person.objects.get(id=user_id) if user_id else None
+      except Person.DoesNotExist:
+        borrower = None
+      print("Borrower found:", borrower)
+      # Business logic
+      if book and borrower:
+        if book.availability == Availability.AVAILABLE:
+          Borrow.objects.create(
+            book=book,
+            borrower=borrower,
+            borrow_date=date.today(),
+            due_date=date.today() + timedelta(days=14)
+          )
+          book.availability = Availability.BORROWED
+          book.nb_borrows += 1
+          book.save()
+          messages.success(request, "Book borrowed successfully.")
+        else:
+          messages.error(request, "This book is not available for borrowing.")
+      else:
+        messages.error(request, "Invalid book or borrower selection.")
+
+      return redirect('manage-users')
+      
     
     return redirect('manage-users')
-
-  context = {'users': users, 'user_fines': user_fines}
+  print(available_books)
+  context = {
+    'users': users,
+    'user_fines': user_fines,
+    'available_books': available_books,
+    }
   return render(request, 'manageUsers.html', context)
 #________________________________________________________________
 #for suspending/banning an account
@@ -809,7 +901,7 @@ def registerStaff(request):
 @login_required(login_url='login')
 #for events
 def events(request):
-  events = Event.objects.filter(is_canceled=False)
+  events = Event.objects.filter(is_cancelled=False)
   query = request.GET.get("q", "")
   event_type = request.GET.get("event_type", "")
   date_filter = request.GET.get("date_filter", "")
@@ -880,7 +972,8 @@ def events(request):
 #for the borrows
 def borrowsReturns(request):
   borrows = Borrow.objects.all()
-  form = BorrowForm()
+  users = Person.objects.all()
+  available_books = Book.objects.filter(~Q(availability=Availability.DELETED), ~Q(availability=Availability.BORROWED))
 
   # Filtering logic (GET request)
   if request.method == 'GET':
@@ -918,6 +1011,7 @@ def borrowsReturns(request):
       borrow.returned = True
       if borrow.book.is_reserved:
         borrow.book.availability = Availability.RESERVED
+        Reservation.objects.filter(book=borrow.book).update(status="Ready for pickup")
       else:
         borrow.book.availability = Availability.AVAILABLE
 
@@ -934,21 +1028,13 @@ def borrowsReturns(request):
 
       return redirect('borrows-returns')
 
-    elif action == 'add_borrow':
-      form = BorrowForm(request.POST)
-      if form.is_valid():
-        book = form.cleaned_data['book']
-        if book.availability == Availability.BORROWED:
-          form.add_error('book', 'This book is currently borrowed.')
-        else:
-          borrow = form.save(commit=False)
-          book.availability = Availability.BORROWED
-          book.save()
-          borrow.save()
-      return redirect('borrows-returns')
 
-  context = {'borrows': borrows, 'form': form}
-  return render(request, 'borrows_returns.html', context)
+  borrows = borrows.order_by('-borrow_date')
+  context = {
+    'borrows': borrows,
+    'users': users,
+    'available_books': available_books,
+    }
   return render(request, 'borrows_returns.html', context)
 
 #________________________________________________________________
@@ -981,6 +1067,9 @@ def payment_page(request, pk, current_page):
       borrow.is_fine_paid = True
       borrow.save()
 
+      borrow.borrower.status = MembershipStatus.ACTIVE
+      borrow.borrower.save()
+
       Payment.objects.create(
         transaction_Id=str(uuid.uuid4()),
         borrow=borrow,
@@ -991,7 +1080,7 @@ def payment_page(request, pk, current_page):
 
     messages.success(request, "Payment successful.")
     if request.user.role == RoleName.READER:
-      return redirect('profile', user_id=payer.id)
+      return redirect('profile', pk=payer.id)
     else:
       return redirect('borrows-returns')
 
@@ -1112,7 +1201,8 @@ def event_staff(request):
   query = request.GET.get("q", "")
   event_type = request.GET.get("event_type", "")
   date_filter = request.GET.get("date_filter", "")
-  create_form = EventCreateForm()
+  form = EventForm()
+  
 
   # Search
   if query:
@@ -1131,20 +1221,30 @@ def event_staff(request):
   if date_filter == "year":
     events = events.filter(start_datetime__year=today.year)
   elif date_filter == "month":
-      events = events.filter(start_datetime__year=today.year, start_datetime__month=today.month)
+    events = events.filter(start_datetime__year=today.year, start_datetime__month=today.month)
   elif date_filter == "week":
-      start_of_week = today - timedelta(days=today.weekday())
-      end_of_week = start_of_week + timedelta(days=6)
-      events = events.filter(start_datetime__date__range=(start_of_week, end_of_week))
+    start_of_week = today - timedelta(days=today.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    events = events.filter(start_datetime__date__range=(start_of_week, end_of_week))
 
   types = Event.objects.values_list("event_type", flat=True).distinct()
 
-  
+  # update the event status every time the page is loaded
+  for event in events:
+    if not event.is_cancelled:
+      if event.end_datetime.date() < today:
+          event.status = 'Completed'
+      elif event.end_datetime.date() > today:
+          event.status = 'Ongoing'
+      else:
+          event.status = 'Upcoming'
+      event.save()
+
 
   context = {
       "events": events.order_by("-start_datetime"),
       "types": types,
-      "create_form": create_form,
+      "form": form,
   }
 
   return render(request, "manage_event.html", context)
@@ -1153,18 +1253,19 @@ def event_staff(request):
 #for creating a new event
 def create_event(request):
   if request.method == 'POST':
-    form = EventCreateForm(request.POST, request.FILES)
+    form = EventForm(request.POST, request.FILES)
     if form.is_valid():
       event = form.save(commit=False)
       event.created_by = request.user
       event.save()
       return redirect('manage-event')
 
+
 #_______________________________________________________________
 #for canceling an event
 def cancel_event(request, pk):
   event = Event.objects.get(id=pk)
-  event.is_canceled = True
+  event.is_cancelled = True
   event.updated_by = request.user
   event.updated_at = date.today()
   event.save()
@@ -1192,8 +1293,8 @@ def print_event(request, pk):
 #for sending a fine alert
 def send_fine_alert(request, pk):
   user = Person.objects.get(id=pk)
-  unreturned = Borrow.objects.filter(borrower=user)
-  print(unreturned)
+  unreturned = Borrow.objects.filter(borrower=user, returned=False, is_fine_paid=False)
+
 
   alert_sent = False
 
@@ -1227,4 +1328,6 @@ def mark_alert_read(request, pk):
   alert.is_read = True
   alert.save()
   return redirect('profile', pk=alert.user.id)
+
+#_______________________________________________________________
 

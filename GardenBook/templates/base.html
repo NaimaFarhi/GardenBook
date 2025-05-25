@@ -49,12 +49,12 @@
     .profile-wrapper {
       position: relative;
     }
-
   </style>
   {% block style %}{% endblock %}
 </head>
 
 <body>
+
   <!-- Header -->
   <header class="client-nav shadow-sm sticky-top bg-white">
     <div class="container">
@@ -101,8 +101,13 @@
               <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userDropdown"
                 data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="profile-wrapper">
+                  {% if request.user.profile_pic %}
                   <img src="{{ request.user.profile_pic.url }}" alt="Profile"
                     class="rounded-circle border border-2 border-green-dark" width="38" height="38">
+                  {% else %}
+                  <img src="{% static 'profile_pic2.png' %}" alt="Profile"
+                    class="rounded-circle border border-2 border-green-dark" width="38" height="38">
+                  {% endif %}
                   {% if request.user.unread_alerts > 0 %}
                   <span class="profile-notification"></span>
                   {% endif %}
@@ -143,7 +148,8 @@
 
   <!-- Main Content -->
   <main>
-    {% block content %}{% endblock %}
+    {% block content %}
+    {% endblock %}
   </main>
 
   <!-- Footer -->

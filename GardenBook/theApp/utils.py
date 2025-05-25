@@ -1,11 +1,11 @@
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 from django.http import HttpResponse
 from io import BytesIO
 from django.template.loader import render_to_string
 from weasyprint import HTML
 
-from .models import Order, Payment, Person, Book, Event
+from .models import Availability, Order, Payment, Person, Book, Event, Reservation
 
 
 
@@ -128,6 +128,11 @@ def generate_guest_list(request, event=None):
 
     if event.guests.exists():
         guests = event.guests.all()
+    else:
+        guests = []
+    # If no guests, return an empty response
+    if not guests:
+        response = HttpResponse("No guests found for this event.", content_type="text/plain")
     
     # Define table columns
     columns = ["Guest ID", "Username", "First Name", "Last Name", "email", "Phone"]
@@ -403,45 +408,108 @@ def generate_event_report(request, events=None):
 #____________________________________________________________________________
 #for print the infos of one event
 def generate_event_pdf(request, event=None):
-    if event is None:
-        event = Event.objects.first()  # or handle the case where no event is provided
+  if event is None:
+      event = Event.objects.first()  # or handle the case where no event is provided
 
-        # key value pairs for the event
-    event_details = {
-        "Title": event.title,
-        "Description": event.description,
-        "Host": event.host,
-        "Price": f"{event.event_price:.2f} MAD",
-        "Audience": event.audience,
-        "Type": event.event_type,
-        "Location": event.location,
-        "Start": event.start_datetime.strftime("%Y-%m-%d %H:%M"),
-        "End": event.end_datetime.strftime("%Y-%m-%d %H:%M"),
-        "Guests": f"{event.current_reservations}/{event.nbr_reservations}",
-        "Status": "Canceled" if event.is_canceled else ("Public" if event.is_public else "Private"),
-    }
+      # key value pairs for the event
+  event_details = {
+      "Title": event.title,
+      "Description": event.description,
+      "Host": event.host,
+      "Price": f"{event.event_price:.2f} MAD",
+      "Audience": event.audience,
+      "Type": event.event_type,
+      "Location": event.location,
+      "Start": event.start_datetime.strftime("%Y-%m-%d %H:%M"),
+      "End": event.end_datetime.strftime("%Y-%m-%d %H:%M"),
+      "Guests": f"{event.current_reservations}/{event.nbr_reservations}",
+      "Status": "Canceled" if event.is_canceled else ("Public" if event.is_public else "Private"),
+  }
 
-    context = {
-       "report": {
-            "title": "Event Details",
-            "details": event_details,
-        },
-        "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "request": request,
-    }
+  context = {
+      "report": {
+          "title": "Event Details",
+          "details": event_details,
+      },
+      "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+      "request": request,
+  }
 
-    html_string = render_to_string("oneItemTemplate.html", context)
+  html_string = render_to_string("oneItemTemplate.html", context)
 
-    # Use in-memory buffer
-    pdf_file = BytesIO()
-    HTML(string=html_string).write_pdf(target=pdf_file)
+  # Use in-memory buffer
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
 
-    # Build response
-    pdf_file.seek(0)
-    response = HttpResponse(pdf_file.read(), content_type="application/pdf")
-    response["Content-Disposition"] = 'inline; filename="event_details.pdf"'
+  # Build response
+  pdf_file.seek(0)
+  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+  response["Content-Disposition"] = 'inline; filename="event_details.pdf"'
 
-    return response
+  return response
    
-   
+
+#____________________________________________________________________________
+# for one order
+def generate_order_pdf(request, order=None):
+  if order is None:
+      order = Order.objects.first()  # or handle the case where no order is provided
+
+  # key value pairs for the order
+  order_details = {
+      "Order ID": order.id,
+      "Book Title": order.book.title,
+      "Supplier": order.supplier.name,
+      "Status": order.status,
+      "Order Date": order.order_date.strftime("%Y-%m-%d"),
+      "Expected Delivery": order.expected_delivery_date.strftime("%Y-%m-%d"),
+      "Delivery Date": order.delivery_date.strftime("%Y-%m-%d") if order.delivery_date else "N/A",
+      "Created By": str(order.created_by) if order.created_by else "N/A",
+      "Updated By": str(order.updated_by) if order.updated_by else "N/A",
+  }
+
+  context = {
+      "report": {
+          "title": "Order Details",
+          "details": order_details,
+      },
+      "current_date_time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+      "request": request,
+  }
+
+  html_string = render_to_string("oneItemTemplate.html", context)
+
+  # Use in-memory buffer
+  pdf_file = BytesIO()
+  HTML(string=html_string).write_pdf(target=pdf_file)
+
+  # Build response
+  pdf_file.seek(0)
+  response = HttpResponse(pdf_file.read(), content_type="application/pdf")
+  response["Content-Disposition"] = 'inline; filename="order_details.pdf"'
+
+  return response
+
+#____________________________________________________________________________
+def update_expired_reservations():
+    from django.utils import timezone
+
+    # Get the current date and time
+    now = timezone.now()
+
+    # Find all reservations that have expired
+    expired_reservations = Reservation.objects.filter(expiration_date__lt=now, status='Waiting')
+
+    # Update the status of each expired reservation
+    for reservation in expired_reservations:
+        
+        reservation.status = 'Expired'
+        reservation.save()
+        book = reservation.book
+        # If the reservation is expired, set the book as available
+        book.is_reserved = False
+        book.status = Availability.AVAILABLE
+        book.save()
+
+#_____________________________________________________________________________
 

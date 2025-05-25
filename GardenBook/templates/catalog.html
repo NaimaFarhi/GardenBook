@@ -241,11 +241,13 @@
     background-color: #f0e8d9;
     border-radius: 50%;
     transition: all 0.3s ease;
+    color: #5d432f;
   }
 
   .wishlist-btn:hover {
     background-color: #e8f3e8;
     transform: scale(1.1);
+    color: #402e21;
   }
 
   /* Results and Pagination */
@@ -408,7 +410,7 @@
                 <select class="form-select" name="language" id="language">
                   <option value="">Select a language</option>
                   {% for lang in langs %}
-                  <option value="{{ lang }}" >
+                  <option value="{{ lang }}">
                     {{ lang }}
                   </option>
                   {% endfor %}
@@ -468,27 +470,38 @@
               <h5 class="book-title">{{ book.title }}</h5>
               <p class="book-author">by {{ book.author }}</p>
               <p class="book-edition">{{ book.edition }}</p>
-              <div class="book-rating">
-                {% for i in "12345" %}
-                {% if book.review|floatformat:1 >= i %}
-                <i class="bi bi-star-fill"></i>
-                {% elif book.review|floatformat:1 >= i|add:"-0.5" %}
-                <i class="bi bi-star-half"></i>
+              <p class="book-availability text-muted">
+                {% if book.availability == 'Available' %}
+                <i class="bi bi-check-circle-fill text-success"></i>
+                {{ book.availability }}
                 {% else %}
-                <i class="bi bi-star"></i>
+                <i class="bi bi-x-circle-fill text-danger"></i> Not Available
                 {% endif %}
-                {% endfor %}
+              </p>
+              <div class="book-rating">
+                <i class="bi bi-star-fill"></i>
                 <span class="book-rating-text">{{ book.review }}/10</span>
               </div>
+             
             </div>
             <div class="book-footer">
               <a href="{% url 'book-detail' book.id %}" class="details-btn">
                 <i class="bi bi-info-circle me-1"></i>Details
               </a>
-              <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="wishlist-btn"
-                data-bs-toggle="tooltip" data-bs-placement="top" title="Add To Wishlist">
-                <img src="{% static 'wishlist_icon.png' %}" width="20" alt="Add to wishlist">
+              {% if request.user.role == 'Reader' %}
+              {% if book.id not in wishlist_books %}
+              <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="wishlist-btn" data-bs-toggle="tooltip"
+                data-bs-placement="top" title="Add To Wishlist">
+                <i class="bi bi-heart"></i>
               </a>
+              {% else %}
+              <a href="{% url 'remove-wishlist' book.id request.user.id 'catalog' %}" class="wishlist-btn" data-bs-toggle="tooltip"
+                data-bs-placement="top" title="Remove From Wishlist">
+                <i class="bi bi-heartbreak"></i>
+              </a>
+              {% endif %}
+
+              {% endif %}
             </div>
           </div>
           {% endfor %}

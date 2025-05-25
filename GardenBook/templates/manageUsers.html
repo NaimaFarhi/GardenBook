@@ -10,9 +10,11 @@
   <!-- Action Buttons -->
   <div class="row mb-4">
     <div class="col-12 d-flex justify-content-end gap-2">
+      {% if request.user.role == 'Administrator' %}
       <a href="{% url 'create-user' %}" class="btn btn-outline-brown">
         <i class="bi bi-person-plus me-2"></i>New User
       </a>
+      {% endif %}
       <button class="btn btn-outline-brown" data-bs-toggle="modal" data-bs-target="#print-users-modal">
         <i class="bi bi-printer me-2"></i>Print List Of Users
       </button>
@@ -168,8 +170,8 @@
                   </td>
                   <td>
                     <span class="status-indicator 
-                      {% if user.status == 'ACTIVE' %}bg-success-soft text-success
-                      {% elif user.status == 'SUSPENDED' %}bg-warning-soft text-warning
+                      {% if user.status == 'Active' %}bg-success-soft text-success
+                      {% elif user.status == 'Suspended' %}bg-warning-soft text-warning
                       {% else %}bg-danger-soft text-danger{% endif %}">
                       <i class="bi {% if user.status == 'ACTIVE' %}bi-check-circle-fill
                         {% elif user.status == 'SUSPENDED' %}bi-pause-circle-fill
@@ -179,10 +181,18 @@
                   </td>
                   <td>
                     <div class="d-flex gap-1">
+                      {% if user_fines|get_item:user.id > 0 %}
                       <a href="{% url 'send_fine_alert' user.id %}" class="btn btn-sm btn-outline-brown"
                         title="Send Alert">
                         <i class="bi bi-bell"></i>
                       </a>
+                      {% endif %}
+                      {% if user.status == 'Active' %}
+                      <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                        data-bs-target="#borrow-modal{{ user.id }}" title="Borrow Book">
+                        Borrow
+                      </button>
+                      {% endif %}
 
                       {% if request.user.is_authenticated and request.user.role == 'Administrator' %}
                       <div class="btn-group">
@@ -210,6 +220,49 @@
       </div>
     </div>
   </div>
+
+  <!-- New Borrow Modal -->
+  {% for user in users %}
+  <div class="modal fade" id="borrow-modal{{ user.id }}" tabindex="-1" aria-labelledby="borrowModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+
+
+        <form method="POST" class="needs-validation">
+          <div class="modal-header bg-brown text-white">
+            <h5 class="modal-title" id="borrowModalLabel">Add a New Borrow</h5>
+            <button type="reset" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="book" class="form-label">Select Book</label>
+              <input type="text" name="book" id="book" class="form-control" list="booklist"
+                placeholder="Search for a book..." required>
+              <small class="form-text text-muted">Start typing to search for a book by title or author</small>
+              <datalist id="booklist">
+                {% for book in available_books %}
+                <option value="{{ book.ISBN }} - {{ book.title }}">
+                  {% endfor %}
+              </datalist>
+            </div>
+
+            <input type="hidden" name="user_id" value="{{ user.id }}">
+
+          </div>
+          <div class="modal-footer">
+            <input type="hidden" name="action" value="add_borrow">
+            <button type="reset" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-brown">Add Borrow</button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
 
   <!-- Print Users Modal -->
   <div class="modal fade" id="print-users-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">

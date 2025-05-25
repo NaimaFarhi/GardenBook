@@ -183,6 +183,7 @@
                         title="Remove Book">
                         <i class="bi bi-trash"></i>
                       </a>
+                      
                     </div>
                   </td>
                 </tr>
@@ -203,6 +204,8 @@
       </div>
     </div>
   </div>
+
+
 
   <!-- Print Stock Modal -->
   <div class="modal fade" id="print-stock-modal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
@@ -226,6 +229,7 @@
                 {% for book in stock %}
                 <option value="{{ book.title }}">{{ book.title }}</option>
                 {% endfor %}
+              </datalist>
             </div>
 
             <div class="mb-3">
@@ -235,6 +239,7 @@
                 {% for book in stock %}
                 <option value="{{ book.author }}">{{ book.author }}</option>
                 {% endfor %}
+              </datalist>
             </div>
 
             <div class="mb-3">

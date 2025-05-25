@@ -47,7 +47,7 @@ class Availability(models.TextChoices):
 #______________________________________________________________________________
 class Person(AbstractUser):
     cin = models.CharField(max_length=20, unique=True, default="")
-    profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    profile_pic = models.ImageField(upload_to='profile_pics/', null=True, blank=True, default='profile_pics/profile_pic1.png') 
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     role = models.CharField(max_length=20,choices=RoleName.choices, default=RoleName.READER)
@@ -62,7 +62,7 @@ class Person(AbstractUser):
     unread_alerts = models.IntegerField(default=0)
     
     def __str__(self):
-        return self.first_name + " " + self.last_name
+        return self.cin + " - " + self.last_name + " " + self.first_name
 
     class Meta:
         ordering = ['-date_joined']
@@ -111,7 +111,7 @@ class Book(models.Model):
         return round(sum(r.rating for r in reviews) / len(reviews), 2) if reviews else 0
 
     def __str__(self):
-        return self.title 
+        return self.title + " by " + self.author + " (" + str(self.publication_year) + ")"
 
 #______________________________________________________________________________
 class Borrow(models.Model):
@@ -150,7 +150,7 @@ class Reservation(models.Model):
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     reservation_date = models.DateField(auto_now_add=True, null=True, blank=True)
-    expiration_date = models.DateField(default=date.today() + timedelta(days=2))
+    expiration_date = models.DateField(default=date.today() + timedelta(days=3))
     status = models.CharField(max_length=20, choices=[('Waiting', 'Waiting'), ('Ready for pickup', 'Ready for pickup'), ('Expired', 'Expired')], default='Waiting')
 
     # Method to check if the reservation is expired
@@ -158,7 +158,7 @@ class Reservation(models.Model):
         return date.today() > self.expiration_date
 
     def __str__(self):
-        return f"Reservation {self.id_reservation} - {self.book.title} by {self.person.username}"
+        return f"Reservation - {self.book.title} by {self.person.username}"
 
 
 #______________________________________________________________________________
@@ -213,11 +213,10 @@ class Wishlist(models.Model):
 
 #___________________________________________________________________________
 class Review(models.Model):
-    RATING_CHOICES = [(x / 2, str(x / 2)) for x in range(1, 11)]  # Allows 0.5 to 5 stars
-
+    
     user = models.ForeignKey(Person, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='reviews')
-    rating = models.FloatField(choices=RATING_CHOICES)
+    rating = models.IntegerField()
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -242,7 +241,8 @@ class Event(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     event_type = models.CharField(max_length=20, choices=EventType.choices, default="")
     is_public = models.BooleanField(default=True)
-    is_canceled = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=[('Upcoming', 'Upcoming'), ('Ongoing', 'Ongoing'), ('Completed', 'Completed')], default='Upcoming')
+    is_cancelled = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

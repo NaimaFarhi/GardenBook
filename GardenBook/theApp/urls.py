@@ -28,6 +28,7 @@ urlpatterns = [
   path('events', views.events, name='events'),
   path('borrows-returns', views.borrowsReturns, name='borrows-returns'),
   path('add-wishlist/<str:book_id>/<str:user_id>/<str:current_page>', views.add_wishlist, name='add-wishlist'),
+  path('remove-wishlist/<str:book_id>/<str:user_id>/<str:current_page>', views.remove_wishlist, name='remove-wishlist'),
   path('reader_borrow/<str:book_id>', views.reader_borrow, name='reader-borrow'),
   path('reserve/<str:book_id>', views.reserve, name='reserve'),
  

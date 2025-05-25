@@ -218,6 +218,7 @@
   .btn-wishlist:hover:not(:disabled) {
     background-color: rgba(93, 67, 47, 0.1);
     transform: translateY(-2px);
+    color: #5d432f;
   }
 
   .action-btn:disabled {
@@ -441,10 +442,18 @@
 {% block content %}
 <div class="book-detail-container">
   <div class="container">
+
+    {% if request.user.role == 'Reader' %}
     <!-- Back Link -->
     <a href="{% url 'catalog' %}" class="back-link">
       <i class="bi bi-arrow-left"></i>Back to Catalog
     </a>
+    {% else %}
+    <!-- Back Link for Admin -->
+    <a href="{% url 'stock' %}" class="back-link">
+      <i class="bi bi-arrow-left"></i>Back to Stock
+    </a>
+    {% endif %}
 
     <!-- Book Details -->
     <div class="book-detail-card">
@@ -498,7 +507,7 @@
                 <ul class="details-list">
                   <li><strong>ISBN:</strong> {{ book.ISBN }}</li>
                   <li><strong>Publisher:</strong> {{ book.edition }}</li>
-                  <li><strong>Published:</strong> {{ book.publication_year|date:"Y" }}</li>
+                  <li><strong>Published:</strong> {{ book.publication_year }}</li>
                   <li><strong>Pages:</strong> {{ book.nbPage }}</li>
                   <li><strong>Language:</strong> {{ book.lang }}</li>
                   <li><strong>Keywords:</strong> {{ book.keywords }}</li>
@@ -518,36 +527,28 @@
                 </ul>
               </div>
             </div>
-
+            {% if request.user.role == 'Reader' %}
             <!-- Action Buttons -->
             <div class="book-actions">
               <!-- Borrow Button -->
-              {% if book.availability == 'Available' and not book.is_reserved %}
-              <a href="{% url 'reader-borrow' book.id %}" class="action-btn btn-borrow">
-                <i class="bi bi-book"></i>Borrow Book
-              </a>
-              {% else %}
-              <button class="action-btn btn-borrow" disabled>
-                <i class="bi bi-book"></i>Borrow Book
-              </button>
-              {% endif %}
-
-              <!-- Reserve Button -->
-              {% if book.availability != 'Available' and not book.is_reserved %}
+              {% if not book.is_reserved and book.availability == 'Borrowed' %}
               <a href="{% url 'reserve' book.id %}" class="action-btn btn-reserve">
                 <i class="bi bi-bookmark"></i>Reserve Book
               </a>
-              {% else %}
-              <button class="action-btn btn-reserve" disabled>
-                <i class="bi bi-bookmark"></i>Reserve Book
-              </button>
               {% endif %}
 
+              {% if not Wishlist %}
               <!-- Wishlist Button -->
               <a href="{% url 'add-wishlist' book.id request.user.id 'catalog' %}" class="action-btn btn-wishlist">
                 <i class="bi bi-heart"></i>Add to Wishlist
               </a>
+              {% else %}
+              <a href="{% url 'remove-wishlist' book.id request.user.id 'catalog' %}" class="action-btn btn-wishlist">
+                <i class="bi bi-heartbreak"></i>Remove from Wishlist
+              </a>
+              {% endif %}
             </div>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -589,18 +590,8 @@
           </h4>
           <div class="average-rating">
             <span class="average-rating-label">Average Rating:</span>
-            <div class="average-rating-stars">
-              {% for i in "12345" %}
-              {% if average_rating >= i %}
-              <i class="bi bi-star-fill"></i>
-              {% elif average_rating >= i|add:"-0.5" %}
-              <i class="bi bi-star-half"></i>
-              {% else %}
-              <i class="bi bi-star"></i>
-              {% endif %}
-              {% endfor %}
-            </div>
-            <span class="average-rating-value">{{ average_rating|floatformat:1 }}/5</span>
+            
+            <span class="average-rating-value">{{ average_rating|floatformat:1 }}/10</span>
           </div>
         </div>
 
@@ -617,13 +608,9 @@
                 <span class="reviewer-name">{{ review.user.username }}</span>
               </div>
               <div class="review-rating">
-                {% for i in "12345" %}
-                {% if review.rating >= i %}
+                
                 <i class="bi bi-star-fill"></i>
-                {% else %}
-                <i class="bi bi-star"></i>
-                {% endif %}
-                {% endfor %}
+                <small>{{ review.rating }}</small>
               </div>
             </div>
             <p class="review-content">{{ review.comment }}</p>
@@ -641,4 +628,5 @@
     </div>
   </div>
 </div>
+
 {% endblock %}

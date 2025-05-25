@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'theApp.apps.TheappConfig',
     'crispy_forms',
     'crispy_bootstrap5',
+    'dal',
+    'dal_select2',
 
 ]
 

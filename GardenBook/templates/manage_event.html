@@ -90,7 +90,8 @@
                   <th>Host</th>
                   <th>Type</th>
                   <th>Price</th>
-                  <th>Date</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
                   <th>Reservations</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -111,14 +112,23 @@
                     <div class="d-flex flex-column">
                       <span>{{ event.start_datetime|date:"M d, Y" }}</span>
                       <small class="text-muted">
-                        {{ event.start_datetime|time:"H:i" }} - {{ event.end_datetime|time:"H:i" }}
+                        {{ event.start_datetime|time:"H:i" }}
+                      </small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ event.end_datetime|date:"M d, Y" }}</span>
+                      <small class="text-muted">
+                        {{ event.end_datetime|time:"H:i" }}
                       </small>
                     </div>
                   </td>
                   <td>
                     <div class="d-flex align-items-center">
                       <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                        <div class="progress-bar bg-brown" role="progressbar" {% if event.nbr_reservations > 0 %}
+                        <div class="progress-bar bg-brown" role="progressbar" 
+                        {% if event.nbr_reservations > 0 %}
                           style="width: {% widthratio event.current_reservations event.nbr_reservations 100 %}%;"
                           {% else %}
                           style="width: 0%;"
@@ -138,7 +148,7 @@
                     </span>
                     {% else %}
                     <span class="status-indicator bg-success-soft text-success">
-                      <i class="bi bi-check-circle-fill"></i> Active
+                      <i class="bi bi-check-circle-fill"></i> {{ event.status }}
                     </span>
                     {% endif %}
                   </td>
@@ -157,7 +167,7 @@
                         title="Cancel Event">
                         <i class="bi bi-x-square"></i>
                       </a>
-                      
+
                       {% endif %}
                     </div>
                   </td>
@@ -191,11 +201,17 @@
         <div class="modal-body">
           <form method="POST" enctype="multipart/form-data" action="{% url 'create-event' %}" class="needs-validation">
             {% csrf_token %}
-            {% crispy create_form %}
+            {% crispy form %}
           </form>
         </div>
+        <div class="modal-footer">
+          <button type="reset" class="btn btn-outline-brown" data-bs-dismiss="modal">Close</button>
+          <button type="submit" form="createEventForm" class="btn btn-brown">
+            <i class="bi bi-plus-lg me-1"></i> Create Event
+          </button>
       </div>
     </div>
+  </div>
   </div>
 
   <!-- Reservation List Modals -->
@@ -338,7 +354,8 @@
                     <div class="fw-medium">
                       <div class="d-flex align-items-center">
                         <div class="progress flex-grow-1 me-2" style="height: 8px;">
-                          <div class="progress-bar bg-brown" role="progressbar" {% if event.nbr_reservations > 0 %}
+                          <div class="progress-bar bg-brown" role="progressbar"
+                           {% if event.nbr_reservations > 0 %}
                             style="width: {% widthratio event.current_reservations event.nbr_reservations 100 %}%;"
                             {% else %}
                             style="width: 0%;"

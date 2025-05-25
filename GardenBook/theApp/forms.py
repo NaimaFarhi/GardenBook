@@ -4,6 +4,7 @@ from .models import Borrow, Order, Person, Book, Review, RoleName, Supplier, Eve
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Hidden
 
+
 #_____________________________________________________
 class CustomPersonCreationForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -40,10 +41,19 @@ class CustomPersonCreationForm(UserCreationForm):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'POST'
-        self.helper.add_input(Submit('submit', 'Create User', css_class="btn-green text-brown border-0 hover-shadow my-2"))
+        self.helper.add_input(Submit('submit', 'Register', css_class="btn-green text-brown border-0 hover-shadow my-2"))
 
 #____________________________________________________
 class ReaderCreationForm(CustomPersonCreationForm):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Hide unnecessary fields
+        self.fields['role'].widget = forms.HiddenInput()
+        self.fields['bio'].widget = forms.HiddenInput()
+        self.fields['status'].widget = forms.HiddenInput()
+
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
@@ -115,11 +125,10 @@ class CustomPersonEditingForm(UserChangeForm):
 class CustomBookCreationForm(forms.ModelForm):
     class Meta:
         model = Book
-        exclude = ['likes', 'nb_borrows', 'availability', 'reserved']  # excluded from the form
+        exclude = ['likes', 'nb_borrows', 'availability', 'is_reserved', 'review']  # excluded from the form
 
         widgets = {
-            'publication_year': forms.DateInput(attrs={
-                'type': 'date',
+            'publication_year': forms.NumberInput(attrs={
                 'class': 'form-control my-3'
             }),
             'description': forms.Textarea(attrs={
@@ -172,8 +181,7 @@ class CustomBookEditingForm(forms.ModelForm):
         exclude = ['likes', 'nb_borrows', 'reserved', 'review', 'date_creation']  # excluded from the form
 
         widgets = {
-            'publication_year': forms.DateInput(attrs={
-                'type': 'date',
+            'publication_year': forms.NumberInput(attrs={
                 'class': 'form-control my-3'
             }),
             'description': forms.Textarea(attrs={
@@ -280,59 +288,41 @@ class SupplierForm(forms.ModelForm):
 
 #___________________________________________________________
 #for adding a new borrow to the database
-class BorrowForm(forms.ModelForm):
-    action = forms.CharField(widget=forms.HiddenInput(), initial='add_borrow')  
-
-    class Meta:
-        model = Borrow
-        fields = ['borrower', 'book']
-
-        widgets = {
-            'borrower': forms.TextInput(attrs={
-                'class': 'form-control my-2',
-                'list': 'borrower-options' }),
-            'book': forms.TextInput(attrs={
-                'class': 'form-control my-2',
-                'list': 'book-options' }),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_method = 'POST'
-        self.helper.add_input(Hidden('action', 'add_borrow'))
-
-        # Filter borrowers to only show READER users
-        self.fields['borrower'].queryset = Person.objects.filter(role=RoleName.READER)
-        # Get data for the datalists
-        self.borrowers = Person.objects.filter(role=RoleName.READER)
-        self.books = Book.objects.all()
-
-    def clean_borrower(self):
-        name = self.cleaned_data['borrower']
-        try:
-            return Person.objects.get(full_name=name, role=RoleName.READER)
-        except Person.DoesNotExist:
-            raise forms.ValidationError("Borrower not found or is not a reader.")
-
-    def clean_book(self):
-        title = self.cleaned_data['book']
-        try:
-            return Book.objects.get(title=title)
-        except Book.DoesNotExist:
-            raise forms.ValidationError("Book not found.")
 
 #_____________________________________________________________
 class ReviewForm(forms.ModelForm):
     action = forms.CharField(widget=forms.HiddenInput(), initial='add_review')
+
     class Meta:
         model = Review
         fields = ['rating', 'comment']
         widgets = {
-            'rating': forms.RadioSelect(choices=Review.RATING_CHOICES),
-            'comment': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Write your review...'}),
+            'rating': forms.NumberInput(attrs={
+                'min': 1,
+                'max': 10,
+                'step': 1,
+                'type': 'number',
+                'class': 'form-control',
+                'placeholder': 'Rate from 1 to 10'
+            }),
+            'comment': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Write your review...',
+                'class': 'form-control'
+            }),
         }
-    
+
+    def clean_rating(self):
+        rating = self.cleaned_data.get('rating')
+        try:
+            rating = int(rating)
+        except (TypeError, ValueError):
+            raise forms.ValidationError("Please enter a whole number between 1 and 10.")
+
+        if not 1 <= rating <= 10:
+            raise forms.ValidationError("Rating must be between 1 and 10.")
+        return rating
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -342,12 +332,13 @@ class ReviewForm(forms.ModelForm):
 
 
 #_____________________________________________________________
-class EventCreateForm(forms.ModelForm):
+class EventForm(forms.ModelForm):
     class Meta:
         model = Event
         fields = [
             'title', 'host', 'poster', 'description', 'event_price', 'audience',
-            'location', 'start_datetime', 'end_datetime', 'nbr_reservations', 'event_type', 'is_public'
+            'location', 'start_datetime', 'end_datetime', 'nbr_reservations', 'event_type', 'is_public',
+            'status', 'is_cancelled'
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control my-2'}),
@@ -362,13 +353,14 @@ class EventCreateForm(forms.ModelForm):
             'nbr_reservations': forms.NumberInput(attrs={'class': 'form-control my-2'}),
             'event_type': forms.Select(attrs={'class': 'form-select my-2'}),
             'is_public': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'status': forms.Select(attrs={'class': 'form-select my-2'}),
+            'is_cancelled': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = 'POST'
-        self.helper.add_input(Submit('submit', 'Create Event', css_class="btn-green text-brown border-0 hover-shadow my-2"))
 
 
 
